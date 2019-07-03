@@ -30,12 +30,13 @@ spec:
       containers:
       - name: metrics-server
         #image: k8s.gcr.io/metrics-server-amd64:v0.3.2
-        image: mirrorgooglecontainers/metrics-server-amd64:v0.3.2
+        image: rootww/metrics-server:v0.3.2
         imagePullPolicy: IfNotPresent 
         command:
         - /metrics-server
         - --metric-resolution=30s
         - --kubelet-insecure-tls
+        - --kubelet-preferred-address-types=InternalIP
         volumeMounts:
         - name: tmp-dir
           mountPath: /tmp
