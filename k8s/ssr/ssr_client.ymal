@@ -19,7 +19,7 @@ spec:
           requests:
             memory: "64Mi"
           limits:
-            memory: "512Mi"
+            memory: "128Mi"
         volumeMounts:
         - mountPath: /etc/shadowsocksr.json
           name: conf
