@@ -1,0 +1,46 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: shadowsocksr-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: shadowsocksr-server
+    spec:
+      containers:
+      - name: shadowsocksr-server
+        image: rootww/shadowsocksr
+        env:
+          - name: SERVER_TYPE
+            value: "server"
+        resources:
+          requests:
+            memory: "64Mi"
+          limits:
+            memory: "512Mi"
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: shadowsocksr-server
+  name: shadowsocksr-server
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 8388
+    targetPort: 8388
+    nodePort: 8388
+  - name: port2
+    protocol: UDP
+    port: 8388
+    targetPort: 8388
+    nodePort: 8388
+  selector:
+    app: shadowsocksr-server
