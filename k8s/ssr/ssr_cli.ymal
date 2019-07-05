@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: shadowsocksr-client
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: shadowsocksr-client
+    spec:
+      containers:
+      - name: shadowsocksr-client
+        image: rootww/shadowsocksr
+        env:
+          - name: SERVER_TYPE
+            value: "client"
+        resources:
+          requests:
+            memory: "64Mi"
+          limits:
+            memory: "512Mi"
+        volumeMounts:
+        - mountPath: /etc/shadowsocksr.json
+          name: conf
+      volumes:
+      - name: conf
+        hostPath: 
+          path: "/etc/shadowsocksr.json"
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: shadowsocksr-client
+  name: shadowsocksr-client
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 1080
+    targetPort: 1080
+    nodePort: 1080
+  - name: port2
+    protocol: UDP
+    port: 1080
+    targetPort: 1080
+    nodePort: 1080
+  selector:
+    app: shadowsocksr-client
