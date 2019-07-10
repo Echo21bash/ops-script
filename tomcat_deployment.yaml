@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-tomcat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-tomcat
+    spec:
+      containers:
+      - name: kube-tomcat
+        image: rootww/tomcat8
+        volumeMounts:
+        - mountPath: /var/atlassian/confluence
+          name: www
+      volumes:
+      - name: www
+        hostPath: 
+          path: "/apps/data/confluence"
+      restartPolicy: Always
