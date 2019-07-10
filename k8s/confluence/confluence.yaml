@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: confluence
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: confluence
+    spec:
+      containers:
+      - name: confluence
+        image: rootww/confluence
+        volumeMounts:
+        - mountPath: /var/atlassian/confluence
+          name: data
+      volumes:
+      - name: data
+        hostPath: 
+          path: "/apps/data/confluence"
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: confluence
+  name: confluence
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 8090
+    targetPort: 8090
+    nodePort: 8089
+  selector:
+    app: confluence
