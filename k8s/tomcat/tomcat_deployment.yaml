@@ -13,10 +13,10 @@ spec:
       - name: kube-tomcat
         image: rootww/tomcat8
         volumeMounts:
-        - mountPath: /var/atlassian/confluence
+        - mountPath: /opt/tomcat/webapps
           name: www
       volumes:
       - name: www
         hostPath: 
-          path: "/apps/data/confluence"
+          path: "/apps/data/tomcat"
       restartPolicy: Always
