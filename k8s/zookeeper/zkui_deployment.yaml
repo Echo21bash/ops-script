@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-zkui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-zkui
+    spec:
+      containers:
+      - name: kube-zkui
+        image: rootww/zkui
+        env:
+          - name: ZK_SERVER
+            value: "172.26.32.172:1949"
+        resources:
+          requests:
+            memory: "256Mi"
+          limits:
+            memory: "512Mi"
+      restartPolicy: Always

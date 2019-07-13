@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kube-zkui
+  name: kube-zkui
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 9090
+  selector:
+    app: kube-zkui
