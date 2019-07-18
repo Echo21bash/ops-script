@@ -1,0 +1,27 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: InitConfiguration
+nodeRegistration:
+  name: 172.18.8.110
+localAPIEndpoint:
+  advertiseAddress: 172.18.8.110
+  bindPort: 6443
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+networking:
+  serviceSubnet: "10.96.0.0/12"
+  podSubnet: "10.100.0.0/24"
+  dnsDomain: "cluster.local"
+kubernetesVersion: v1.14.4
+controlPlaneEndpoint: ""
+apiServer:
+  extraArgs:
+    authorization-mode: Node,RBAC
+    service-node-port-range: 1-65535
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+imageRepository: k8s.gcr.io
