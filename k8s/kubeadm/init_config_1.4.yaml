@@ -1,9 +1,9 @@
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 nodeRegistration:
-  name: 172.18.8.110
+  name: 127.0.0.1
 localAPIEndpoint:
-  advertiseAddress: 172.18.8.110
+  advertiseAddress: 127.0.0.1
   bindPort: 6443
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
