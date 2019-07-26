@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-tomcat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-tomcat
+    spec:
+      containers:
+      - name: kube-tomcat
+        image: rootww/tomcat:8.5.41-jdk8-apline
+        volumeMounts:
+        - mountPath: /opt/tomcat/webapps
+          name: tomcat-www
+      restartPolicy: Always
+      volumes:
+        - name: tomcat-www
+          persistentVolumeClaim:
+            claimName: tomcat-www
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: tomcat-www
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
