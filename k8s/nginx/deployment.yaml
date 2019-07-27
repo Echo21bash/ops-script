@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: nginx-www
+      restartPolicy: Always
+      volumes:
+        - name: nginx-www
+          persistentVolumeClaim:
+            claimName: nginx-www
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nginx-www
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
