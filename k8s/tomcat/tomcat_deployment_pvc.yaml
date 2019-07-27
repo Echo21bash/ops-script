@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: kube-tomcat
-        image: rootww/tomcat:8.5.41-jdk8-apline
+        image: rootww/tomcat:8.5.41-jdk8-alpine
         volumeMounts:
         - mountPath: /opt/tomcat/webapps
           name: tomcat-www
