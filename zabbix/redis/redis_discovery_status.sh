@@ -1,4 +1,5 @@
 #!/bin/bash
+#查找redis的基础目录，根据实际情况修改
 find_base_dir=/apps/base-env
 home_dir=`find ${find_base_dir} -name redis.conf 2>/dev/null |awk -F "/etc/redis.conf" '{print $1}'`
 deploy_mumber=`find ${find_base_dir} -name redis.conf 2>/dev/null |awk -F "/etc/redis.conf" '{print $1}'|wc -l`
