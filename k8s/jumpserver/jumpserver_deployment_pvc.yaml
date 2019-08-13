@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-jumpserver
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-jumpserver
+    spec:
+      containers:
+      - name: kube-jumpserver
+        image: jumpserver/jms_all
+        volumeMounts:
+        - mountPath: /opt/jumpserver/data/media
+          name: jumpserver-media
+      restartPolicy: Always
+      volumes:
+        - name: jumpserver-media
+          persistentVolumeClaim:
+            claimName: jumpserver-media
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jumpserver-media
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
