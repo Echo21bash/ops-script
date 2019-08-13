@@ -12,6 +12,27 @@ spec:
       containers:
       - name: kube-jumpserver
         image: jumpserver/jms_all
+        env:
+        - name: SECRET_KEY
+          value: "kuaixiu"
+        - name: BOOTSTRAP_TOKEN
+          value: "kuaixiu"
+        - name: DB_HOST
+          value: "127.0.0.1"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: ""
+        - name: DB_NAME
+          value: "jumpserver"
+        - name: REDIS_HOST
+          value: "127.0.0.1"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          value: ""
         volumeMounts:
         - mountPath: /opt/jumpserver/data/media
           name: jumpserver-media
