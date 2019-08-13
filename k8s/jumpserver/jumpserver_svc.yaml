@@ -11,5 +11,10 @@ spec:
   - port: 80
     targetPort: 80
     nodePort: 80
+    name: jumpserver-ui
+  - port: 2222
+    targetPort: 2222
+    nodePort: 2222
+    name: jumpserver-ssh
   selector:
     app: kube-jumpserver
