@@ -1,1 +1,32 @@
-
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-redis
+spec:
+  replicas: 6
+  template:
+    metadata:
+      labels:
+        app: kube-redis
+    spec:
+      containers:
+      - name: kube-redis
+        image: rootww/redis
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "anything"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
