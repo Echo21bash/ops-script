@@ -1,16 +1,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: kube-redis-cluster
+  name: redis-cluster
 spec:
+  selector:
+    matchLabels:
+      app: redis-cluster
+  serviceName: redis-cluster
   replicas: 6
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
   template:
     metadata:
       labels:
-        app: kube-redis
+        app: redis-cluster
     spec:
       containers:
-      - name: kube-redis
+      - name: redis-cluster
+        imagePullPolicy: Always
         image: rootww/redis
         env:
           - name: REDIS_RUN_MODE
