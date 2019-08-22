@@ -12,6 +12,9 @@ spec:
       containers:
       - name: kube-redis
         image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
         volumeMounts:
         - mountPath: /opt/redis/data
           name: redis-data
