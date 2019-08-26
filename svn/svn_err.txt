@@ -1,0 +1,8 @@
+SVN无法查看历史，报错Item is not readable的解决
+	这个是服务端仓库配置问题，根据我们是否需要允许匿名访问，分为两种情况解决。
+	1、允许匿名访问（只读）
+		svnserve.conf 文件中 anon-access 设为 read
+		authz 文件中在 [/] 下添加 * = r
+	2、禁止匿名访问（读写都需要用户名、密码）
+		svnserve.conf 文件中 anon-access 设为 none
+		authz 文件中在 [/] 下只需要配置相关的用户，不要添加 * = r 了
