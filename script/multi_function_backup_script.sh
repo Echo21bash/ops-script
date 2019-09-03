@@ -32,7 +32,6 @@ mysql_port=()
 mysql_db_num=()
 #需要备份的数据库按顺序添加
 db_name=()
-#外循环次数控制
 
 enable_backup_svn=0
 #需要备份的目录
@@ -143,7 +142,7 @@ fi
 }
 
 backup_sql_control(){
-
+#外循环次数控制
 num=$(expr ${#mysql_user[@]} - 1)
 mysqldump --help>/dev/null 2>&1
 if [ $? = 0 ];then
