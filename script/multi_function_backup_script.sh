@@ -118,11 +118,11 @@ fi
 }
 
 #全量备份
-if [[ ${svn_full_back} = 0 && ${svn_incremental_back} = 1 ]];then
+if [[ ${svn_full_back} = 1 && ${svn_incremental_back} = 0 ]];then
 	_full_back
 fi
 #全量备份加增量
-if [[ ${svn_full_back} = 0 && ${svn_incremental_back} = 0 ]];then
+if [[ ${svn_full_back} = 1 && ${svn_incremental_back} = 1 ]];then
 	if [[ -f ${backup_home_dir}/${project_name}-svn-$(date -d "${svn_back_cycle} days ago" +%Y%m%d).full.dump.tar.gz ]];then
 		svn_last_ver=$(svnlook youngest ${svn_project_dir}) && echo ${svn_last_ver}>/tmp/svn_last_ver.txt
 		_full_back
@@ -135,7 +135,7 @@ if [[ ${svn_full_back} = 0 && ${svn_incremental_back} = 0 ]];then
 	fi
 fi
 #固定版本步长
-if [[ ${svn_fixed_ver_back} = 0 ]];then
+if [[ ${svn_fixed_ver_back} = 1 ]];then
 	svn_last_ver=$(svnlook youngest ${svn_project_dir})
 	svn_old_ver=$(((${svn_last_ver}-${svn_back_size})))
 	[[ ${svn_old_ver} < 0 ]] && svn_old_ver=0
