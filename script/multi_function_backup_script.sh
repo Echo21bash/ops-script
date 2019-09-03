@@ -1,7 +1,6 @@
 #!/bin/bash
 #多功能备份脚本
 #2019.2
-#by---wang2017
 
 #本地备份存放目录
 backup_home_dir=/data/backup
