@@ -11,6 +11,8 @@ project_name='my-web'
 #备份保留时长(天)
 backup_save_time='90'
 
+#是否允许通过ftp上传备份文件
+#需要lftp支持
 enable_ftp='0'
 ftp_host='127.0.0.1'
 ftp_port='21'
