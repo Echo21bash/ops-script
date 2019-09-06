@@ -139,7 +139,7 @@ case "${project_name}" in
 		project_type=$(echo $project_name | grep -Eoi 'web|service')
 		service_name=$(echo $project_name | grep -Eoi 'kuaixiu-[a-z]{3,10}')
 		project_file_name=${original_project_name}.war
-		back_file_name=${project_name}-${project_type}.${deploy_data}.tar.gz
+		back_file_name=${project_name}.${deploy_data}.tar.gz
 		back_file_dir=${remote_www_dir}/tomcat-web/${project_dir_name}
 		back_file=${project_type}
 		deploy_dir=${remote_www_dir}/tomcat-web/${project_dir_name}/${project_type}
