@@ -16,17 +16,17 @@ do
     port=`cat "$j/etc/redis.conf" | grep ^port | grep -oE [0-9]+`
     passwd=`cat "$j/etc/redis.conf" | grep ^requirepass | awk '{print $2}'`
     if [[ "$i" < "${deploy_mumber}" ]];then
-       echo -e '\t\t{\n'
-       echo -e "\t\t\t\"{#BASE_DIR}\":\"${base_dir}\",\n"
-       echo -e "\t\t\t\"{#IP}\":\"${ip}\",\n"
-       echo -e "\t\t\t\"{#PORT}\":\"${port}\"\n"
-       echo -e '\t\t},'
+        echo -e '\t\t{\n'
+        echo -e "\t\t\t\"{#BASE_DIR}\":\"${base_dir}\",\n"
+        echo -e "\t\t\t\"{#IP}\":\"${ip}\",\n"
+        echo -e "\t\t\t\"{#PORT}\":\"${port}\"\n"
+        echo -e '\t\t},'
     else
-       echo -e '\t\t{\n'
-       echo -e "\t\t\t\"{#BASE_DIR}\":\"${base_dir}\",\n"
-       echo -e "\t\t\t\"{#IP}\":\"${ip}\",\n"
-       echo -e "\t\t\t\"{#PORT}\":\"${port}\"\n"
-       echo -e '\t\t}'
+        echo -e '\t\t{\n'
+        echo -e "\t\t\t\"{#BASE_DIR}\":\"${base_dir}\",\n"
+        echo -e "\t\t\t\"{#IP}\":\"${ip}\",\n"
+        echo -e "\t\t\t\"{#PORT}\":\"${port}\"\n"
+        echo -e '\t\t}'
     fi
     let "i=i+1"
 done
