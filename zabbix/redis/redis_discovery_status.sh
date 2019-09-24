@@ -36,26 +36,26 @@ echo -e '}'
 }
 
 redis_status(){
-	ip=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^bind | grep -oE [0-9.]+ | head -1`
-	port=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^port | grep -oE [0-9]+`
-	passwd=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^requirepass | awk '{print $2}'`
-	if [[ -z ${passwd} ]];then
-		if [[ ${arg} = 'ping' ]];then
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} ping 2>/dev/null | grep -q PONG && echo 1 || echo 0
-		elif [[ ${arg} = 'redis_mode' ]];then
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}'
-		else
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}' | grep -oE [0-9.]+
-		fi
+ip=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^bind | grep -oE [0-9.]+ | head -1`
+port=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^port | grep -oE [0-9]+`
+passwd=`cat "${find_base_dir}/${base_dir}/etc/redis.conf" | grep ^requirepass | awk '{print $2}'`
+if [[ -z ${passwd} ]];then
+	if [[ ${arg} = 'ping' ]];then
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} ping 2>/dev/null | grep -q PONG && echo 1 || echo 0
+	elif [[ ${arg} = 'redis_mode' ]];then
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}'
 	else
-		if [[ ${arg} = 'ping' ]];then
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} ping 2>/dev/null | grep -q PONG && echo 1 || echo 0
-		elif [[ ${arg} = 'redis_mode' ]];then
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}'
-		else
-			${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} info 2>/dev/null | grep ^${arg} | awk -F ':' '{print $2}' | grep -oE [0-9.]+
-		fi
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}' | grep -oE [0-9.]+
 	fi
+else
+	if [[ ${arg} = 'ping' ]];then
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} ping 2>/dev/null | grep -q PONG && echo 1 || echo 0
+	elif [[ ${arg} = 'redis_mode' ]];then
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} info 2>/dev/null| grep ^${arg} | awk -F ':' '{print $2}'
+	else
+		${find_base_dir}/${base_dir}/bin/redis-cli -h ${ip} -p ${port} -a ${passwd} info 2>/dev/null | grep ^${arg} | awk -F ':' '{print $2}' | grep -oE [0-9.]+
+	fi
+fi
 }
 if [[ $1 = 'discovery' ]];then
 	discovery_redis
