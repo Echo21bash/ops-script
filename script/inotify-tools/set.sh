@@ -15,6 +15,8 @@ config(){
 	cat >./config<<-EOF
 	#监控目录设置可以多个
 	file_dir=(${file_dir[@]})
+	#监控文件后缀
+	file_type=${file_type}
 	#日志目录
 	logs_dir=${logs_dir}
 	#文件监控周期秒
