@@ -16,7 +16,7 @@ creat_all_file_name(){
 	for i in ${file_dir[@]};
 	do
 		if [ -d $i ];then
-			find ${i}/* -maxdepth 0 -name "*${file_type}" >> ${file_list}
+			find ${i} -maxdepth 1 -name "*${file_type}" >> ${file_list}
 		fi
 	done
 }
