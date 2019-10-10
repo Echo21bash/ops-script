@@ -1,5 +1,6 @@
 #!/bin/bash
-
+#  在当前目录生成配置文件config
+#  by hebaodanroot
 . ./base.sh
 
 config(){
