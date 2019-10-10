@@ -15,7 +15,9 @@ creat_all_file_name(){
 	> ${file_list}
 	for i in ${file_dir[@]};
 	do
-		find ${i}/* -maxdepth 0 -name "*.dat" >> ${file_list}
+		if [ -d $i ];then
+			find ${i}/* -maxdepth 0 -name "*.dat" >> ${file_list}
+		fi
 	done
 }
 
@@ -32,10 +34,9 @@ delete_file(){
 	total_num=`awk 'END{print NR}' $read_report`
 	save_num=`echo ${total_num}-${total_num}*${ratio}|bc`
 	#生成删除文件列表
-	#awk 'NR>'${save_num}'{print "'${file_dir}'/"$2}' ${read_report} >${delete_file}
-	#awk '{if ($1<'${access}')print "'${file_dir}'/"$2}' ${read_report} >>${delete_file}
 	awk 'NR>'${save_num}'{print $2}' ${read_report} >${delete_file}
 	awk '{if ($1<'${access}')print $2}' ${read_report} >>${delete_file}
+	#删除文件
 	awk '{print}' ${delete_file} | xargs -n 1 rm -rf
 }
 
