@@ -1,0 +1,10 @@
+#监控目录设置可以多个
+file_dir=(/test /test1)
+#日志目录
+logs_dir=/opt/logs
+#文件监控周期秒
+time_out=120
+#删除的比例
+ratio=0
+#删除次数临界值
+access=0
