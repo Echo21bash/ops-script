@@ -37,7 +37,7 @@ listen_file(){
 add_report(){
 	report=$(cat /tmp/report.txt | grep -o filename)
 	if [[ -n ${report} ]];then
-		awk 'NR==FNR{a[$2]=$0;print $2"\t"$3}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
+		awk 'NR==FNR{a[$3]=$0;print $2"\t"$3}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
 		
 	fi
 }
