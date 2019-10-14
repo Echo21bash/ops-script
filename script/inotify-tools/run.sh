@@ -33,7 +33,7 @@ listen_file(){
 }
 
 add_report(){
-	report=$(cat /tmp/report.txt | grep -E -o ^total)
+	report=$(cat /tmp/report.txt | grep -o filename)
 	if [[ -n ${report} ]];then
 		awk 'NR==FNR{a[$2]=$0;print}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
 		
