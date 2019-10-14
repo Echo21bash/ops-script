@@ -23,11 +23,20 @@ creat_all_file_name(){
 
 listen_file(){
 
-	inotifywatch -v -t ${time_out} -e access  --fromfile ${file_list} | awk '{print $2"\t"$3}' > /tmp/report.txt     
+	inotifywatch -v -t ${time_out} -e access  --fromfile ${file_list} | awk '{print $2"\t"$3}' > /tmp/report.txt
 }
 
 add_report(){
-	awk 'NR==FNR{a[$2]=$0;print}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
+	report=$(cat /tmp/report.txt | wc -l)
+	if [[ -n ${report} ]];then
+		while :
+		do
+			awk 'NR==FNR{a[$2]=$0;print}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
+			if [ $? = 0 ];then
+				break
+			fi
+		done
+	fi
 }
 
 delete_file(){
