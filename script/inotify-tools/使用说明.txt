@@ -1,4 +1,4 @@
-1、安装inotify-tools
+1、安装inotify-tools及其他组件
 	##查看系统版本
 		cat /etc/redhat-release
 	##配置yum源
@@ -7,7 +7,7 @@
 		如果系统是centos6
 		wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-6.repo
 	##安装工具
-		yum install inotify-tools -y
+		yum install inotify-tools bc -y
 		
 2、修改inotify最大限制
 		echo 999999 >/proc/sys/fs/inotify/max_user_watches
