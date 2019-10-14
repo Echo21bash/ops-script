@@ -28,7 +28,7 @@ listen_file(){
 
 add_report(){
 	report=$(cat /tmp/report.txt | wc -l)
-	if [[ ${report} = 0 ]];then
+	if [[ ${report} > 0 ]];then
 		while :
 		do
 			awk 'NR==FNR{a[$2]=$0;print}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
