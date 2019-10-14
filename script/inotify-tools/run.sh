@@ -25,9 +25,11 @@ listen_file(){
 
 	while :
 	do
-		inotifywatch -v -t ${time_out} -e access  --fromfile ${file_list} | awk '{print $2"\t"$3}' > /tmp/report.txt
+		inotifywatch -v -t ${time_out} -e access  --fromfile ${file_list} > /tmp/report.txt
 		if [ $? = 0 ];then
 			break
+		else
+			creat_all_file_name
 		fi
 	done
 }
@@ -35,7 +37,7 @@ listen_file(){
 add_report(){
 	report=$(cat /tmp/report.txt | grep -o filename)
 	if [[ -n ${report} ]];then
-		awk 'NR==FNR{a[$2]=$0;print}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
+		awk 'NR==FNR{a[$2]=$0;print $2"\t"$3}NR>FNR{if($1 in a);else print 0"\t"$0}' /tmp/report.txt ${file_list} >${read_report}
 		
 	fi
 }
