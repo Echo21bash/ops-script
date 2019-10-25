@@ -9,8 +9,7 @@
 
 . /etc/profile
 
-for i in ./*.sh; 
-do
+for i in ./*.sh; do
     if [[ -r "$i" && "$i" != './main.sh' ]]; then
         . "$i"
     fi
@@ -115,7 +114,6 @@ esac
 
 tools(){
 output_option '请选择进行的操作' '优化系统配置 查看系统详情 升级内核版本 创建用户并将其加入visudo 安装WireGuard-VPN 多功能备份脚本 主机ssh互信' 'tool'
-
 case "$tool" in
 	1)system_optimize_set
 	;;
@@ -136,7 +134,7 @@ esac
 
 main(){
 
-output_option '请选择需要安装的服务' '基础环境 WEB服务 数据库服务 中间件服务 存储服务 运维平台 MySQL工具箱 运维工具箱' 'mian'
+output_option '请选择需要安装的服务' '基础环境 WEB服务 数据库服务 中间件服务 存储服务 运维平台 其他工具' 'mian'
 
 case "$mian" in
 	1)basic_environment
@@ -151,10 +149,9 @@ case "$mian" in
 	;;
 	6)operation_platform
 	;;
-	7)mysql_tool
+	7)tools
 	;;
-	8)tools
-	;;
+
 esac
 }
 
