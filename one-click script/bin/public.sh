@@ -222,5 +222,4 @@ sys_info_detail(){
   #当前在线用户
   echo -e "${info} 当前在线用户:"
   who
-
 }
