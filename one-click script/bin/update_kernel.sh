@@ -1,6 +1,6 @@
 #!/bin/bash
+
 #yum升级内核
-. ./public.sh
 update_kernel(){
 	diy_echo '升级内核又很小几率升级失败，请备份重要文件。' "${yellow}" "${warning}"
 	diy_echo "当前内核版本是：${kel}" "${info}"
@@ -56,6 +56,3 @@ update_kernel(){
         exit 0
     fi
 }
-colour_keyword
-sys_info
-update_kernel
