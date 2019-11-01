@@ -1,3 +1,4 @@
+[mysqld3306]
 port    = 3306
 socket  = /usr/local/mysql/data/mysql.sock
 basedir = /usr/local/mysql
