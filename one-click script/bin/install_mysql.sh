@@ -105,6 +105,7 @@ mysql_config(){
 	if [[ ${deploy_mode} = '1' ]];then
 		sed -i "s#^port    = 3306#port    = ${mysql_port}#" ${home_dir}/my.cnf
 	else
+		sed -i "s#^[mysqld3306]#[mysqld${mysql_port}]#" ${home_dir}/my.cnf
 		sed -i "s#^mysqld     = /usr/local/mysql/bin/mysqld#mysqld    = ${home_dir}/bin/mysqld#" ${home_dir}/my.cnf
 		sed -i "s#^mysqladmin = /usr/local/mysql/bin/mysqladmin#mysqladmin = ${home_dir}/bin/mysqladmin#" ${home_dir}/my.cnf
 	fi
