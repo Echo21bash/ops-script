@@ -20,8 +20,8 @@ update_kernel(){
 			exit 1
 		fi
 
-		yum --enablerepo=elrepo-kernel install  -y kernel-ml kernel-ml-devel
-
+		yum --enablerepo=elrepo-kernel install  -y kernel-lt kernel-lt-devel
+		#yum --enablerepo=elrepo-kernel install  -y kernel-ml kernel-ml-devel
 		if [[ $? != '0' ]];then
 			diy_echo "安装内核失败, 请检查" "${red}" "${error}"
 			exit 1
@@ -77,6 +77,7 @@ load_bcache_mod(){
 install_bcache_tools(){
 	diy_echo '安装依赖和工具' "${yellow}" "${info}"
 	yum install libblkid-devel -y && rpm -ivh bcache-tools-1.0.8-1.10.el7.centos.x86_64.rpm
+	\cp ./bcache-status /usr/sbin && chmod +x /usr/sbin/bcache-status
 }
 
 colour_keyword

@@ -27,7 +27,7 @@ bcache_set(){
 
 creat_bcache_dev(){
 
-	make-bcache -C $dev_c -B ${dev_b[@]} --wipe-bcache
+	make-bcache -C $dev_c -B ${dev_b[@]} --wipe-bcache --block 4k --bucket 2M
 	if [ $? = 0 ];then
 		#配置并优化
 		mkdir -p /etc/tmpfiles.d
@@ -40,7 +40,6 @@ creat_bcache_dev(){
 			echo "w /sys/fs/bcache/$j/congested_read_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
 			echo "w /sys/fs/bcache/$j/congested_write_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
 		done
-
 	else
 		diy_echo '创建bcache设备失败' "${red}" "${error}"
 		exit 1
@@ -75,7 +74,7 @@ del_bcache_dev(){
 		for a in ${bcache_backing_dev_uuid[@]}
 		do
 			if [[ $j = $a ]];then
-				echo "$j">/sys/block/$bcache_name[$i]/bcache/detach && diy_echo "解绑${bcache_name[$i]}"
+				echo "$j">/sys/block/$bcache_name[$i]/bcache/detach && diy_echo "解绑${bcache_name[$i]}完成"
 			fi
 		done
 		((i++))
@@ -83,13 +82,14 @@ del_bcache_dev(){
 	#停止后端设备
 	for x in ${bcache_name[@]}
 	do
-		echo "1">/sys/block/$x/bcache/stop && diy_echo "停止$x的后端设备"
+		echo "1">/sys/block/$x/bcache/stop && diy_echo "停止$x的后端设备完成"
+		umount /dev/$x && diy_echo "卸载$x设备完成"
 	done
 	#停止缓存设备
 	i=0
 	for j in ${bcache_cacahe_dev_uuid[@]}
 	do
-		echo "1" >/sys/fs/bcache/$j/unregister && diy_echo "停止缓存设备${bcache_cacahe_dev[$i]}"
+		echo "1" >/sys/fs/bcache/$j/unregister && diy_echo "停止缓存设备${bcache_cacahe_dev[$i]}完成"
 	done
 	if [ -f /etc/tmpfiles.d/bcache.conf ];then
 		rm -rf /etc/tmpfiles.d/bcache.conf.back
