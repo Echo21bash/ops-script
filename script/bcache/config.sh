@@ -3,7 +3,7 @@
 . ./public.sh
 bcache_set(){
 
-	output_option '选择操作' '全新配置bcache缓存 清除bcache配置及设备 查看状态' 'ops'
+	output_option '选择操作' '全新配置bcache缓存 清除bcache配置及设备' 'ops'
 	all_dev=`lsblk -d  | awk 'NR>1{print "/dev/"$1}' | grep -v /dev/sda`
 	if [[ ${ops} = '1' ]];then
 		output_option '选择缓存设备' "$all_dev" 'dev_c'
@@ -12,8 +12,9 @@ bcache_set(){
 		output_option '选择后端设备可多选' "$other_dev" 'dev_b'
 		dev_b=(${output_value[@]})
 		creat_bcache_dev
-	fi
-	if [[ ${ops} = '2' ]];then
+		conf_bcache_dev
+	
+	 elif [[ ${ops} = '2' ]];then
 		diy_echo '清除配置前请先卸载设备' "${yellow}" "${info}"
 		input_option "是否清除配置?" "n"
 		clear=${input_value}
@@ -27,24 +28,34 @@ bcache_set(){
 
 creat_bcache_dev(){
 
-	make-bcache -C $dev_c -B ${dev_b[@]} --wipe-bcache --block 4k --bucket 2M
+	make-bcache -C ${dev_c} -B ${dev_b[@]} --wipe-bcache --block 4k --bucket 2M
 	if [ $? = 0 ];then
 		#配置并优化
-		mkdir -p /etc/tmpfiles.d
-		for x in ${bcache_name[@]}
-		do
-			echo "w /sys/block/$x/bcache/sequential_cutoff  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
-		done
-		for j in ${bcache_cacahe_dev_uuid[@]}
-		do
-			echo "w /sys/fs/bcache/$j/congested_read_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
-			echo "w /sys/fs/bcache/$j/congested_write_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
-		done
+		sleep 5
+		bcache_cacahe_dev_uuid=(`ll /sys/fs/bcache/ | grep -oE "[a-z0-9\-]{36,}"`)
+		bcache_name=(`ls /sys/block | grep -E "bcache[0-9]{1,}"`)
+		[[ -n ${bcache_cacahe_dev_uuid[@]} && -n ${bcache_name[@]} ]] && diy_echo '创建bcache设备成功' "${green}" "${info}"
+		
 	else
 		diy_echo '创建bcache设备失败' "${red}" "${error}"
 		exit 1
 	fi
+}
 
+conf_bcache_dev(){
+
+		mkdir -p /etc/tmpfiles.d
+		for name in ${bcache_name[@]}
+		do
+			echo "w /sys/block/$name/bcache/sequential_cutoff  - - - - 104857600" >> /etc/tmpfiles.d/bcache.conf
+			echo "w /sys/block/$name/bcache/readahead  - - - - 104857600" >> /etc/tmpfiles.d/bcache.conf
+		done
+
+		for uuid in ${bcache_cacahe_dev_uuid[@]}
+		do
+			echo "w /sys/fs/bcache/$uuid/congested_read_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
+			echo "w /sys/fs/bcache/$uuid/congested_write_threshold_us  - - - - 0" >> /etc/tmpfiles.d/bcache.conf
+		done
 
 }
 
@@ -106,7 +117,6 @@ check_bcache_mod(){
 }
 
 colour_keyword
-sys_info
 check_bcache_mod
 bcache_set
 
