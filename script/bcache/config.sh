@@ -4,12 +4,14 @@
 bcache_set(){
 
 	output_option '选择操作' '全新配置bcache缓存 清除bcache配置及设备' 'ops'
-	all_dev=`lsblk -d  | awk 'NR>1{print "/dev/"$1}' | grep -v /dev/sda`
+	all_dev=(`lsblk -d  | awk 'NR>1{print "/dev/"$1}' | grep -v /dev/sda`)
 	if [[ ${ops} = '1' ]];then
-		output_option '选择缓存设备' "$all_dev" 'dev_c'
-		dev_c=(${output_value})
-		other_dev=`lsblk -d  | awk 'NR>1{print "/dev/"$1}' | grep -v /dev/sda | grep -v "$dev_c"`
-		output_option '选择后端设备可多选' "$other_dev" 'dev_b'
+		output_option '选择缓存模式' "writethrough writeback writearound" 'cache_mode'
+		cache_mode=${output_value}
+		output_option '选择缓存设备' "${all_dev[@]}" 'dev_c'
+		dev_c=${output_value}
+		other_dev=(`lsblk -d  | awk 'NR>1{print "/dev/"$1}' | grep -v /dev/sda | grep -v "$dev_c"`)
+		output_option '选择后端设备可多选' "${other_dev[@]}" 'dev_b'
 		dev_b=(${output_value[@]})
 		creat_bcache_dev
 		conf_bcache_dev
@@ -34,8 +36,10 @@ creat_bcache_dev(){
 		sleep 5
 		bcache_cacahe_dev_uuid=(`ll /sys/fs/bcache/ | grep -oE "[a-z0-9\-]{36,}"`)
 		bcache_name=(`ls /sys/block | grep -E "bcache[0-9]{1,}"`)
-		[[ -n ${bcache_cacahe_dev_uuid[@]} && -n ${bcache_name[@]} ]] && diy_echo '创建bcache设备成功' "${green}" "${info}"
-		
+		if [[ -n ${bcache_cacahe_dev_uuid[@]} && -n ${bcache_name[@]} ]];then
+ 			diy_echo '创建bcache设备成功，然后进行格式化bcache及挂载' "${green}" "${info}"
+		fi
+
 	else
 		diy_echo '创建bcache设备失败' "${red}" "${error}"
 		exit 1
@@ -47,6 +51,7 @@ conf_bcache_dev(){
 		mkdir -p /etc/tmpfiles.d
 		for name in ${bcache_name[@]}
 		do
+			echo "w /sys/block/$name/bcache/cache_mode  - - - - ${cache_mode}" >> /etc/tmpfiles.d/bcache.conf
 			echo "w /sys/block/$name/bcache/sequential_cutoff  - - - - 104857600" >> /etc/tmpfiles.d/bcache.conf
 			echo "w /sys/block/$name/bcache/readahead  - - - - 104857600" >> /etc/tmpfiles.d/bcache.conf
 		done
@@ -119,5 +124,3 @@ check_bcache_mod(){
 colour_keyword
 check_bcache_mod
 bcache_set
-
-

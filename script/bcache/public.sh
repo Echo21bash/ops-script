@@ -69,50 +69,60 @@ input_option(){
 }
 
 output_option(){
-#$1选项描述、$2选项、$3变量名
-#例output_option '选项描述' '选项一 选项二' '变量名'
+	#第一个参数为选项描述，最后一个参数为变量名，中间为选项
+	#选项支持数组和以空格隔开的字符串
+	#输出选项
 	diy_echo "$1" "" "${info}"
-	#将字符串分割成数组
-	option=($2)
+	#所有参数转化为数组
+	all_option=($@)
 	#数组长度
-	length=${#option[@]}
-	
+	len=${#all_option[@]}
+	#数组最后一项内容
+	last_option=${all_option[@]: -1}
+	#最后一个下标号
+	last_option_subscript=$((($len-1)))
+
 	local i
+	local j
 	i=0
-	for item in ${option[@]}
+	j=0
+	for item in ${all_option[@]}
 	do
-		i=`expr ${i} + 1`
-		diy_echo "[${green}${i}${plain}] ${item}"
+		if [[ $i > 0 && $i < $last_option_subscript ]];then
+			#选项数组
+			item_option[$j]=${all_option[$i]}
+			((j++))
+ 			diy_echo "[${green}${j}${plain}] ${item}"
+		fi
+		((i++))
 	done
+
 	#清空output
 	output=()
 	stty erase '^H' && read -t 30 -p "请输入数字(30s后选择默认1):" output
-	
 	if [[ -z ${output} ]];then
 		output=1
 	fi
-	
+
 	output=(${output})
+	#只允许
 	only_allow_numbers ${output[@]}
 	if [[ $? != '0' ]];then
 		diy_echo "输入错误请重新选择" "${red}" "${error}"
-		output_option "$1" "$2" "$3"
+		exit 1
 	fi
 	#清空output_value
 	output_value=()
-	local j
-	j=0
+	local k
+	k=0
 	for item in ${output[@]}
-	do
-		if [[ ${item} -gt '0' && ${item} -le ${length} ]];then
-			(($3[$j]=$item))
-			i=$(((${item}-1)))
-			output_value[$j]=${option[$i]}
-		else
-			diy_echo "输入错误请重新选择" "${red}" "${error}"
-			output_option "$1" "$2" "$3"
-		fi
-		((j++))
+	do	
+		#选项数组
+		(($last_option[$k]=$item))
+		((item--))
+		#选项对应内容数组
+		output_value[$k]=${item_option[$item]}
+		((k++))
 	done
 	a=${output_value[@]}
 	diy_echo "你的选择是 $(diy_echo "${a}" "${green}")"
@@ -120,7 +130,7 @@ output_option(){
 }
 
 only_allow_numbers(){
-	#$1传入值
+	#判断纯数字正确返回0
 	local j=0
 	for ((j=0;j<$#;j++))
 	do
