@@ -8,18 +8,13 @@
 ###########################################################
 
 . /etc/profile
-
-for i in ./*.sh; do
-    if [[ -r "$i" && "$i" != './main.sh' ]]; then
-        . "$i"
-    fi
-done
+. ./public.sh
 
 mysql_tool(){
 output_option 'MySQL常用脚本' '添加MySQL备份脚本  找回MySQLroot密码 ' 'num'
 
 case "$num" in
-	1)multi_function_backup_script_set
+	1)backup_script_set.sh
 	;;
 	2)reset_mysql_passwd
 	;;
@@ -30,7 +25,7 @@ basic_environment(){
 
 output_option '请选择要安装的环境' 'JDK PHP Ruby Nodejs' 'num'
 case "$num" in
-	1)java_install_ctl
+	1)install_java.sh
 	;;
 	2)php_install_ctl
 	;;
@@ -123,7 +118,7 @@ case "$tool" in
 	;;
 	4)add_sysuser && add_sysuser_sudo
 	;;
-	5)wireguard_order
+	5)wireguard_install_ctl
 	;;
 	6)multi_function_backup_script_set
 	;;

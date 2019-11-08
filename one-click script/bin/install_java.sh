@@ -1,4 +1,5 @@
-
+#install java script
+. ./public.sh
 check_java(){
 	#检查旧版本
 	echo -e "${info} 正在检查预装openjava..."
@@ -36,11 +37,10 @@ install_java(){
 	fi
 }
 
-java_install_ctl(){
-	install_version java
-	install_selcet
-	install_dir_set
-	download_unzip
-	install_java
-	clear_install
-}
+
+install_version java
+install_selcet
+install_dir_set
+download_unzip
+install_java
+clear_install
