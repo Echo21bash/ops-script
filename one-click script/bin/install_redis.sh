@@ -1,4 +1,6 @@
-#install redis script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 redis_install_set(){
 
 	output_option '请选择安装模式' '单机模式 集群模式' 'deploy_mode'
@@ -176,14 +178,11 @@ redis_cluster_description(){
 	fi
 }
 
-redis_install_ctl(){
-
-	install_version redis
-	install_selcet
-	redis_install_set
-	install_dir_set redis
-	download_unzip redis
-	redis_install
-	service_control redis
-	clear_install
-}
+install_version redis
+install_selcet
+redis_install_set
+install_dir_set redis
+download_unzip redis
+redis_install
+service_control redis
+clear_install

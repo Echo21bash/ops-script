@@ -9,7 +9,7 @@
 
 . /etc/profile
 . ./public.sh
-
+. ./tools.sh
 mysql_tool(){
 output_option 'MySQL常用脚本' '添加MySQL备份脚本  找回MySQLroot密码 ' 'num'
 
@@ -27,11 +27,11 @@ output_option '请选择要安装的环境' 'JDK PHP Ruby Nodejs' 'num'
 case "$num" in
 	1)install_java.sh
 	;;
-	2)php_install_ctl
+	2)install_php.sh
 	;;
-	3)ruby_install_ctl
+	3)install_ruby.sh
 	;;
-	4)node_install_ctl
+	4)install_node.sh
 	;;
 esac
 }
@@ -40,9 +40,9 @@ web_services(){
 
 output_option '请选择要安装的软件' 'Nginx Tomcat' 'num'
 case "$num" in
-	1)nginx_install_ctl
+	1)install_nginx.sh
 	;;
-	2)tomcat_install_ctl
+	2)install_tomcat.sh
 	;;
 esac
 }
@@ -51,13 +51,13 @@ database_services(){
 
 output_option '请选择要安装的软件' 'MySQL mongodb Redis Memcached' 'num'
 case "$num" in
-	1)mysql_install_ctl
+	1)install_mysql.sh
 	;;
-	2)mongodb_inistall_ctl
+	2)install_mongodb.sh
 	;;
-	3)redis_install_ctl
+	3)install_redis.sh
 	;;
-	4)memcached_inistall_ctl
+	4)install_memcached.sh
 	;;
 esac
 }
@@ -66,13 +66,13 @@ middleware_services(){
 
 output_option '请选择要安装的软件' 'ActiveMQ RocketMQ Zookeeper Kafka' 'num'
 case "$num" in
-	1)activemq_install_ctl
+	1)install_activemq.sh
 	;;
-	2)rocketmq_install_ctl
+	2)install_rocketmq.sh
 	;;
-	3)zookeeper_install_ctl
+	3)install_zookeeper.sh
 	;;
-	4)kafka_install_ctl
+	4)install_kafka.sh
 	;;
 esac
 }
@@ -81,15 +81,15 @@ storage_service(){
 
 output_option '请选择要安装的软件' 'FTP SFTP 对象存储服务(OSS/minio) FastDFS NFS' 'num'
 case "$num" in
-	1)ftp_install_ctl
+	1)install_ftp.sh
 	;;
 	2)add_sysuser && add_sysuser_sftp
 	;;
-	3)minio_install_ctl
+	3)install_minio.sh
 	;;
-	4)fastdfs_install_ctl
+	4)install_fastdfs.sh
 	;;
-	5)nfs_install_ctl
+	5)install_nfs.sh
 	;;
 esac
 }
@@ -97,11 +97,11 @@ esac
 operation_platform(){
 output_option '请选择要安装的平台' 'K8S系统 ELK日志平台 Zabbix监控 Rancher平台(k8s集群管理)' 'platform'
 case "$platform" in
-	1)k8s_install_ctl
+	1)install_k8s.sh
 	;;
 	2)elk_install_ctl
 	;;
-	3)zabbix_install_ctl
+	3)install_zabbix.sh
 	;;
 esac
 
@@ -110,7 +110,7 @@ esac
 tools(){
 output_option '请选择进行的操作' '优化系统配置 查看系统详情 升级内核版本 创建用户并将其加入visudo 安装WireGuard-VPN 多功能备份脚本 主机ssh互信' 'tool'
 case "$tool" in
-	1)system_optimize_set
+	1)system_optimize.sh
 	;;
 	2)sys_info_detail
 	;;
@@ -118,9 +118,9 @@ case "$tool" in
 	;;
 	4)add_sysuser && add_sysuser_sudo
 	;;
-	5)wireguard_install_ctl
+	5)install_wireguard.sh
 	;;
-	6)multi_function_backup_script_set
+	6)backup_script_set.sh
 	;;
 	7)auto_ssh_keygen
 	;;
@@ -148,6 +148,22 @@ case "$mian" in
 	;;
 
 esac
+}
+
+elk_install_ctl(){
+	diy_echo "为了兼容性所有组件最好选择一样的版本" "${yellow}" "${info}"
+	output_option "选择安装的组件" "elasticsearch logstash kibana filebeat" "elk_module"
+
+	elk_module=${output_value[@]}
+	if [[ ${output_value[@]} =~ 'elasticsearch' ]];then
+		install_elasticsearch.sh
+	elif [[ ${output_value[@]} =~ 'logstash' ]];then
+		install_logstash.sh
+	elif [[ ${output_value[@]} =~ 'kibana' ]];then
+		install_kibana.sh
+	elif [[ ${output_value[@]} =~ 'filebeat' ]];then
+		install_filebeat.sh
+	fi	
 }
 
 clear

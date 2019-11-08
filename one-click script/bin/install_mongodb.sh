@@ -1,4 +1,6 @@
-#mongodb install script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 mongodb_install_set(){
 	if [[ ${os_bit} = '32' ]];then
 		diy_echo "该版本不支持32位系统" "${red}" "${error}"
@@ -50,12 +52,12 @@ add_mongodb_service(){
 	add_system_service mongodb ${home_dir}/mongodb_init
 }
 
-mongodb_inistall_ctl(){
-	install_version mongodb
-	install_selcet
-	mongodb_install_set
-	install_dir_set
-	download_unzip
-	mongodb_install
-	clear_install
-}
+
+install_version mongodb
+install_selcet
+mongodb_install_set
+install_dir_set
+download_unzip
+mongodb_install
+clear_install
+

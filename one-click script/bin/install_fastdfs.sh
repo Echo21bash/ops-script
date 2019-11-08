@@ -1,4 +1,6 @@
-#install nfs script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 nfs_install_ctl(){
 	input_option "请输入要共享的目录:" "/data/nfs" "nfs_dir"
 	nfs_dir=${input_value}
@@ -10,3 +12,4 @@ nfs_install_ctl(){
 	start_arg='y'
 	service_control nfs
 }
+nfs_install_ctl

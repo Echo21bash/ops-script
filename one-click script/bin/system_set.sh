@@ -1,50 +1,51 @@
-
-#添加系统用户
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 add_sysuser(){
-  echo -e "${info} Start adding system users"
-  while true
-  do
-    read -p "Please enter a new username:" name
-    NAME=`awk -F':' '{print $1}' /etc/passwd|grep -wx $name 2>/dev/null|wc -l`
-    if [[ ${name} = '' ]];then
-      echo -e "${error} Username cannot be empty, please re-enter"
-      continue
-    elif [ $NAME -eq 1 ];then
-      echo -e "${error} User name already exists, please re-enter"
-      continue
+	echo -e "${info} Start adding system users"
+	while true
+	do
+		read -p "Please enter a new username:" name
+		NAME=`awk -F':' '{print $1}' /etc/passwd|grep -wx $name 2>/dev/null|wc -l`
+		if [[ ${name} = '' ]];then
+		echo -e "${error} Username cannot be empty, please re-enter"
+		continue
+	elif [ $NAME -eq 1 ];then
+		echo -e "${error} User name already exists, please re-enter"
+		continue
+	fi
+	useradd ${name}
+	if [ $? = '0' ];then
+		echo -e "${info} Added system user success"
+	else
+		echo -e "${error} Failed to add system user"
+		exit
     fi
-    useradd ${name}
-    if [ $? = '0' ];then
-      echo -e "${info} Added system user success"
-    else
-      echo -e "${error} Failed to add system user"
-      exit
-    fi
-   break
-  done
-  #create password
-  while true
-  do
-    read -p "Create a password for $name:" pass1
-      if [ ${#pass1} -eq 0 ];then
-        echo "Password cannot empty please re-enter"
-        continue
-      fi
-      read -p "Please enter your password again:" pass2
-      if [ "$pass1" != "$pass2" ];then
-         echo "The password input is not the same, please re-enter"
-         continue
-      fi
-    echo "$pass2" | passwd --stdin $name
-    if [ $? = '0' ];then
-      echo -e "${info} Create a password for $name success"
-    else
-      echo -e "${error} Failed to create a password for $name"
-      exit
-    fi
-    break
-  done
-  sleep 1
+	break
+	done
+	#create password
+	while true
+	do
+		read -p "Create a password for $name:" pass1
+		if [ ${#pass1} -eq 0 ];then
+			echo "Password cannot empty please re-enter"
+			continue
+		fi
+		read -p "Please enter your password again:" pass2
+		if [ "$pass1" != "$pass2" ];then
+			echo "The password input is not the same, please re-enter"
+			continue
+		fi
+		echo "$pass2" | passwd --stdin $name
+		if [ $? = '0' ];then
+			echo -e "${info} Create a password for $name success"
+		else
+			echo -e "${error} Failed to create a password for $name"
+			exit
+		fi
+		break
+	done
+	sleep 1
 }
 
 #日志切割

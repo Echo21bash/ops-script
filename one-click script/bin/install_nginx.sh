@@ -1,4 +1,6 @@
-#nginx install script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 nginx_install_set(){
 	input_option '是否添加额外模块' 'n' 'add'
 	add=${input_value}
@@ -88,17 +90,13 @@ add_nginx_service(){
 	add_system_service nginx ${home_dir}/init
 }
 
-nginx_install_ctl(){
-
-	install_version nginx
-	install_selcet
-	nginx_install_set
-	install_dir_set
-	download_unzip
-	nginx_install
-	nginx_compile
-	nginx_config
-	add_nginx_service
-	clear_install
-	
-}
+install_version nginx
+install_selcet
+nginx_install_set
+install_dir_set
+download_unzip
+nginx_install
+nginx_compile
+nginx_config
+add_nginx_service
+clear_install

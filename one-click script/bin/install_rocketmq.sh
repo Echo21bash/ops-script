@@ -1,4 +1,6 @@
-#install rocketmq script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 rocketmq_install_set(){
 
 	output_option '请选择安装模式' '单机模式 集群模式' 'deploy_mode'
@@ -200,13 +202,11 @@ add_rocketmq_service(){
 	
 }
 
-rocketmq_install_ctl(){
-	install_version rocketmq
-	install_selcet
-	rocketmq_install_set
-	install_dir_set
-	download_unzip
-	rocketmq_install
-	clear_install
-}
+install_version rocketmq
+install_selcet
+rocketmq_install_set
+install_dir_set
+download_unzip
+rocketmq_install
+clear_install
 

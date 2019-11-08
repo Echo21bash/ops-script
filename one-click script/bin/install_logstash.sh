@@ -1,4 +1,6 @@
-#install logstash script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 logstash_install_set(){
 echo
 }
@@ -29,12 +31,10 @@ add_logstash_service(){
 	add_system_service logstash ${home_dir}/init
 }
 
-logstash_install_ctl(){
-	install_version logstash
-	install_selcet
-	logstash_install_set
-	install_dir_set
-	download_unzip
-	logstash_install
-	clear_install
-}
+install_version logstash
+install_selcet
+logstash_install_set
+install_dir_set
+download_unzip
+logstash_install
+clear_install

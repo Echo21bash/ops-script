@@ -1,4 +1,6 @@
-#install kibana script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 kibana_install_set(){
 	input_option "输入http端口号" "5601" "kibana_port"
 	input_option "输入elasticsearch服务http地址" "127.0.0.1:9200" "elasticsearch_ip"
@@ -28,12 +30,10 @@ add_kibana_service(){
 	add_system_service kibana ${home_dir}/kibana_init
 }
 
-kibana_install_ctl(){
-	install_version kibana
-	install_selcet
-	kibana_install_set
-	install_dir_set
-	download_unzip
-	kibana_install
-	clear_install
-}
+install_version kibana
+install_selcet
+kibana_install_set
+install_dir_set
+download_unzip
+kibana_install
+clear_install

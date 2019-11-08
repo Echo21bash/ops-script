@@ -1,4 +1,6 @@
-#install elasticsearch script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 elasticsearch_install_set(){
 	output_option "选择安装模式" "单机 集群" "deploy_mode"
 	if [[ ${deploy_mode} = '1' ]];then
@@ -103,12 +105,10 @@ add_elasticsearch_service(){
 	fi
 }
 
-elasticsearch_install_ctl(){
-	install_version elasticsearch
-	install_selcet
-	elasticsearch_install_set
-	install_dir_set
-	download_unzip
-	elasticsearch_install
-	clear_install
-}
+install_version elasticsearch
+install_selcet
+elasticsearch_install_set
+install_dir_set
+download_unzip
+elasticsearch_install
+clear_install

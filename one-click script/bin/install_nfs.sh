@@ -1,4 +1,8 @@
-#install fastdfs script
+#!/bin/bash
+
+. ./public.sh
+. ./install_version.sh
+
 fastdfs_install_set(){
 	output_option '安装模式' '单机 集群' 'deploy_mode'
 	output_option '安装的模块' 'tracker storage' 'install_module'
@@ -81,13 +85,12 @@ add_fastdfs_service(){
 
 }
 
-fastdfs_install_ctl(){
-	install_selcet
-	fastdfs_install_set
-	install_dir_set fastdfs
-	download_unzip 
-	fastdfs_install
-	fastdfs_config
-	add_fastdfs_service
-	clear_install
-}
+
+install_selcet
+fastdfs_install_set
+install_dir_set fastdfs
+download_unzip 
+fastdfs_install
+fastdfs_config
+add_fastdfs_service
+clear_install

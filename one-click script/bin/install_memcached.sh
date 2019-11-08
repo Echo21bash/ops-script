@@ -1,4 +1,6 @@
-#install memcached script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 memcached_inistall_set(){
 
 	output_option "请选择安装版本" "普通版 集成repcached补丁版" "branch"
@@ -85,15 +87,11 @@ add_memcached_service(){
 	fi
 }
 
-memcached_inistall_ctl(){
-
-	install_version memcached
-	install_selcet
-	memcached_inistall_set
-	install_dir_set
-	download_unzip
-	memcached_install
-	service_control
-	clear_install
-
-}
+install_version memcached
+install_selcet
+memcached_inistall_set
+install_dir_set
+download_unzip
+memcached_install
+service_control
+clear_install

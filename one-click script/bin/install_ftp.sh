@@ -1,4 +1,6 @@
-#install vsftp script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 ftp_install_set(){
 	input_option '是否快速配置vsftp服务' 'y' 'vsftp'
 	vsftp=${input_value}
@@ -131,9 +133,7 @@ ftp_config(){
 
 }
 
-ftp_install_ctl(){
-	ftp_install_set
-	ftp_install
-	ftp_config
-	service_control vsftpd.service
-}
+ftp_install_set
+ftp_install
+ftp_config
+service_control vsftpd.service

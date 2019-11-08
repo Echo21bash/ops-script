@@ -1,5 +1,4 @@
-
-
+#install version
 install_version(){
 	#需要传参$1软件名称
 	soft_name="$1"

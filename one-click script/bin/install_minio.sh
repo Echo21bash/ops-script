@@ -1,4 +1,6 @@
-#install minio script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 minio_install_set(){
 	output_option "请选择安装模式" "单机模式 集群模式" "deploy_mode"
 	input_option "请输入minio端口" "9000" "minio_port"
@@ -33,12 +35,12 @@ add_minio_service(){
 	add_system_service minio ${home_dir}/init
 }
 
-minio_install_ctl(){
-	install_selcet
-	minio_install_set
-	install_dir_set minio
-	download_unzip
-	minio_config
-	add_minio_service
-	service_control minio
-}
+
+install_selcet
+minio_install_set
+install_dir_set minio
+download_unzip
+minio_config
+add_minio_service
+service_control minio
+

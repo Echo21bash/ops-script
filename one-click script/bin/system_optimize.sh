@@ -1,4 +1,6 @@
-
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 system_optimize_set(){
 	output_option "选择需要优化的项(可多选)" "\
 	 替换为国内YUM源\
@@ -208,3 +210,4 @@ system_optimize_permission(){
 	sed -i 's#^exec.*# #exec /sbin/shutdown -r now "Control-Alt-Delete pressed"#'/etc/init/control-alt-delete.conf
 	echo -e "${info} 锁定关键文件系统完成"
 }
+system_optimize_set

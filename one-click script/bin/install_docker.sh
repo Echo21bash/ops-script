@@ -1,4 +1,6 @@
-#install docker script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 docker_install(){
 
 	[[ -n `which docker 2>/dev/null` ]] && diy_echo "检测到可能已经安装docker请检查..." "${yellow}" "${warning}" && exit 1
@@ -29,3 +31,4 @@ docker_install(){
 	  }
 	EOF
 }
+docker_install

@@ -1,4 +1,6 @@
-#install zabbix script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 zabbix_set(){
 	output_option "请选择要安装的模块" "zabbix-server zabbix-agent zabbix-java zabbix-proxy" "install_module"
 	install_module_value=(${output_value[@]})
@@ -100,16 +102,12 @@ add_zabbix_service(){
 	fi
 }
 
-zabbix_install_ctl(){
-
-	install_version zabbix
-	install_selcet
-	zabbix_set
-	install_dir_set
-	download_unzip
-	zabbix_install
-	zabbix_config
-	add_zabbix_service
-	clear_install
-
-}
+install_version zabbix
+install_selcet
+zabbix_set
+install_dir_set
+download_unzip
+zabbix_install
+zabbix_config
+add_zabbix_service
+clear_install

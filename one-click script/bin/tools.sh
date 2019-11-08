@@ -1,4 +1,6 @@
-
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 auto_ssh_keygen(){
 	expect_dir=`which expect 2>/dev/null`
 	[ -z ${expect_dir} ] && yum install expect -y
@@ -34,29 +36,29 @@ add_sysuser_sudo(){
 }
 
 add_sysuser_sftp(){
-  #set sftp homedir
-  echo -e "${info} Please enter sftp home directory"
-  read -p "(default:/data/${name}/sftp)" sftp_dir
-  if [[ ${sftp_dir} = '' ]];then
-    sftp_dir="/data/${name}/sftp"
-  fi
-  if [[ ! -d ${sftp_dir} ]];then
-    mkdir -p ${sftp_dir}
-  fi
-  #父目录
-  dname=$(dirname ${sftp_dir})
-  groupadd sftp_users>/dev/null 2>&1
-  usermod -G sftp_users -d ${dname} -s /sbin/nologin ${name}>/dev/null 2>&1
-  chown -R ${name}.sftp_users ${sftp_dir}
-  sed -i 's[^Subsystem.*sftp.*/usr/libexec/openssh/sftp-server[#Subsystem	sftp	/usr/libexec/openssh/sftp-server[' /etc/ssh/sshd_config
-  if [[ -z `grep -E '^ForceCommand    internal-sftp' /etc/ssh/sshd_config` ]];then
+	#set sftp homedir
+	echo -e "${info} Please enter sftp home directory"
+	read -p "(default:/data/${name}/sftp)" sftp_dir
+	if [[ ${sftp_dir} = '' ]];then
+		sftp_dir="/data/${name}/sftp"
+	fi
+	if [[ ! -d ${sftp_dir} ]];then
+		mkdir -p ${sftp_dir}
+	fi
+	#父目录
+	dname=$(dirname ${sftp_dir})
+	groupadd sftp_users>/dev/null 2>&1
+	usermod -G sftp_users -d ${dname} -s /sbin/nologin ${name}>/dev/null 2>&1
+	chown -R ${name}.sftp_users ${sftp_dir}
+	sed -i 's[^Subsystem.*sftp.*/usr/libexec/openssh/sftp-server[#Subsystem	sftp	/usr/libexec/openssh/sftp-server[' /etc/ssh/sshd_config
+	if [[ -z `grep -E '^ForceCommand    internal-sftp' /etc/ssh/sshd_config` ]];then
 		cat >>/etc/ssh/sshd_config<<EOF
 Subsystem       sftp    internal-sftp
 Match Group sftp_users
 ChrootDirectory %h
 ForceCommand    internal-sftp
 EOF
-  fi
+	fi
 }
 
 update_kernel(){

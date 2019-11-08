@@ -1,4 +1,6 @@
-#Tomcat install scrpit
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 tomcat_set(){
 	input_option "请输入部署个数" "1" "tomcat_num"
 	[[ ${tomcat_num} > 1 ]] && diy_echo "部署多个tomcat服务一定要避免端口冲突" "${yellow}" "${warning}"
@@ -84,12 +86,11 @@ add_tomcat_service(){
 	add_system_service ${service_name} ${home_dir}/init
 }
 
-tomcat_install_ctl(){
-	install_version tomcat
-	install_selcet
-	tomcat_set
-	install_dir_set
-	download_unzip
-	tomcat_install
-	clear_install
-}
+
+install_version tomcat
+install_selcet
+tomcat_set
+install_dir_set
+download_unzip
+tomcat_install
+clear_install

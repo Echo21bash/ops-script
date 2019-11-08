@@ -1,4 +1,6 @@
-#install wireguard script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 wireguard_install(){
 	if [[ ${os_release} < '7' ]];then
 		echo -e "${error} wireguard只支持Centos7"
@@ -79,8 +81,8 @@ wireguard_config(){
 	fi
 }
 
-wireguard_install_ctl(){
-	wireguard_install
-	wireguard_config
-	service_control wg-quick@wg0
-}
+
+wireguard_install
+wireguard_config
+service_control wg-quick@wg0
+

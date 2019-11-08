@@ -1,4 +1,6 @@
-#install kafka script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 kafka_install_set(){
 	output_option '请选择安装模式' '单机模式 集群模式' 'deploy_mode'
 	if [[ ${deploy_mode} = '1' ]];then
@@ -61,12 +63,10 @@ add_kafka_service(){
 	fi
 }
 
-kafka_install_ctl(){
-	install_version kafka
-	install_selcet
-	kafka_install_set
-	install_dir_set
-	download_unzip
-	kafka_install
-	clear_install
-}
+install_version kafka
+install_selcet
+kafka_install_set
+install_dir_set
+download_unzip
+kafka_install
+clear_install

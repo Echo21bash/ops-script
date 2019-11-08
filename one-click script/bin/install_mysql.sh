@@ -1,4 +1,7 @@
 #!/bin/bash
+. ./public.sh
+. ./install_version.sh
+
 mysql_install_set(){
 	output_option '请选择mysql版本' 'mysql普通版 galera版(wsrep补丁)' 'branch'
 	output_option '请选择安装模式' '单机单实例 单机多实例(mysqld_multi)' 'deploy_mode'
@@ -158,12 +161,12 @@ mysql_first_password_set(){
 	fi
 }
 
-mysql_install_ctl(){
-	install_version mysql
-	install_selcet
-	mysql_install_set
-	install_dir_set 
-	download_unzip 
-	mysql_install
-	clear_install
-}
+
+install_version mysql
+install_selcet
+mysql_install_set
+install_dir_set 
+download_unzip 
+mysql_install
+clear_install
+

@@ -1,4 +1,6 @@
-#install k8s script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 k8s_env_check(){
 
 	[[ ${os_release} < "7" ]] && diy_echo "k8s只支持CentOS7" "${red}" "${error}" && exit 1
@@ -205,19 +207,16 @@ k8s_apply(){
 
 }
 
-k8s_install_ctl(){
-	install_version k8s
-	install_selcet
-	k8s_install_set
-	k8s_env_check
-	online_version
-	k8s_env_conf
-	k8s_install
-	k8s_mirror
-	k8s_conf_before
-	k8s_init_config
-	k8s_init
-	k8s_conf_after
-	k8s_apply
-}
-
+install_version k8s
+install_selcet
+k8s_install_set
+k8s_env_check
+online_version
+k8s_env_conf
+k8s_install
+k8s_mirror
+k8s_conf_before
+k8s_init_config
+k8s_init
+k8s_conf_after
+k8s_apply

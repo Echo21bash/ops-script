@@ -1,4 +1,6 @@
-#install zookeeper script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 zookeeper_install_set(){
 
 	output_option '请选择安装模式' '单机模式 集群模式' 'deploy_mode'
@@ -114,12 +116,10 @@ add_zookeeper_service(){
 	fi
 }
 
-zookeeper_install_ctl(){
-	install_version zookeeper
-	install_selcet
-	zookeeper_install_set
-	install_dir_set
-	download_unzip
-	zookeeper_install
-	clear_install
-}
+install_version zookeeper
+install_selcet
+zookeeper_install_set
+install_dir_set
+download_unzip
+zookeeper_install
+clear_install

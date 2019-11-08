@@ -1,4 +1,6 @@
-
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 ruby_install_set(){
 	output_option "请选择安装方式" "编译安装 RVM安装" "install_method"
 }
@@ -28,14 +30,12 @@ ruby_install(){
 	fi
 }
 
-ruby_install_ctl(){
-	install_version ruby
-	ruby_install_set
-	if [[ ${install_method} = '1' ]];then
-		install_selcet
-		install_dir_set
-		download_unzip
-	fi
-	ruby_install
-	clear_install
-}
+install_version ruby
+ruby_install_set
+if [[ ${install_method} = '1' ]];then
+	install_selcet
+	install_dir_set
+	download_unzip
+fi
+ruby_install
+clear_install

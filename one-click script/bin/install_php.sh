@@ -1,4 +1,6 @@
-#install php script
+#!/bin/bash
+. ./public.sh
+. ./install_version.sh
 php_install_set(){
 	output_option '请选择安装模式' 'PHP作为httpd模块 FastCGI(php-fpm)模式 PHP同时开启两个种模式' 'php_mode'
 	input_option '是否添加额外模块' 'n' 'add'
@@ -145,15 +147,12 @@ php_config(){
 	add_sys_env "PATH=${home_dir}/bin:\$PATH PATH=${home_dir}/sbin:\$PATH"
 }
 
-php_install_ctl(){
 
-	install_version php
-	install_selcet
-	php_install_set
-	install_dir_set
-	download_unzip
-	php_install_depend
-	php_install
-	clear_install
-	
-}
+install_version php
+install_selcet
+php_install_set
+install_dir_set
+download_unzip
+php_install_depend
+php_install
+clear_install

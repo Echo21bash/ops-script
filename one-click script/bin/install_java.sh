@@ -1,5 +1,6 @@
-#install java script
+#!/bin/bash
 . ./public.sh
+. ./install_version.sh
 check_java(){
 	#检查旧版本
 	echo -e "${info} 正在检查预装openjava..."
@@ -36,7 +37,6 @@ install_java(){
 		exit 1
 	fi
 }
-
 
 install_version java
 install_selcet
