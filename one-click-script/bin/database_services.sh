@@ -94,7 +94,7 @@ mysql_multi_config_c(){
 mysql_config(){
 
 	#通用配置
-	sed -i "s#socket  = /usr/local/mysql/data/#socket  = ${mysql_data_dir}#" ${home_dir}/my.cnf
+	sed -i "s#socket  = /usr/local/mysql/data#socket  = ${mysql_data_dir}#" ${home_dir}/my.cnf
 	sed -i "s#basedir = /usr/local/mysql#basedir = ${home_dir}#" ${home_dir}/my.cnf
 	sed -i "s#datadir = /usr/local/mysql/data#datadir = ${mysql_data_dir}#" ${home_dir}/my.cnf
 	#版本区别配置
