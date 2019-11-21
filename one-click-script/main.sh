@@ -6,17 +6,17 @@
 #                                                        
 #                            by---wang2017.7
 ###########################################################
-
-. bin/public.sh
-. bin/version_down_unzip.sh
-. bin/system_set.sh
-. bin/tools.sh
-. bin/basic_environment.sh
-. bin/web_services.sh
-. bin/database_services.sh
-. bin/middleware_services.sh
-. bin/storage_service.sh
-. bin/operation_platform.sh
+workdir=$(cd $(dirname $0); pwd)
+. ${workdir}/bin/public.sh
+. ${workdir}/bin/version_down_unzip.sh
+. ${workdir}/bin/system_set.sh
+. ${workdir}/bin/tools.sh
+. ${workdir}/bin/basic_environment.sh
+. ${workdir}/bin/web_services.sh
+. ${workdir}/bin/database_services.sh
+. ${workdir}/bin/middleware_services.sh
+. ${workdir}/bin/storage_service.sh
+. ${workdir}/bin/operation_platform.sh
 
 mysql_tool(){
 output_option 'MySQL常用脚本' '添加MySQL备份脚本  找回MySQLroot密码 ' 'num'

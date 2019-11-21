@@ -76,19 +76,19 @@ mysql_initialization(){
 }
 
 mysql_standard_config(){
-	cat ../config/mysql_standard_config.cnf >${home_dir}/my.cnf
+	cat ${workdir}/config/mysql_standard_config.cnf >${home_dir}/my.cnf
 }
 
 mysql_multi_config_a(){
-	cat ../config/mysql_multi_config_a.cnf >${home_dir}/my.cnf
+	cat ${workdir}/config/mysql_multi_config_a.cnf >${home_dir}/my.cnf
 }
 
 mysql_multi_config_b(){
-	cat ../config/mysql_multi_config_b.cnf >>${home_dir}/my.cnf
+	cat ${workdir}/config/mysql_multi_config_b.cnf >>${home_dir}/my.cnf
 }
 
 mysql_multi_config_c(){
-	cat ../config/mysql_multi_config_c.cnf >>${home_dir}/my.cnf
+	cat ${workdir}/config/mysql_multi_config_c.cnf >>${home_dir}/my.cnf
 }
 
 mysql_config(){
