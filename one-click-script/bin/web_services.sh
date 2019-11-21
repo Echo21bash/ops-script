@@ -71,9 +71,9 @@ memory_overflow_config(){
 	sed -i ''$N'i# JAVA_OPTS (Optional) Java runtime options used when any command is executed.' ${home_dir}/bin/catalina.sh
 	
 	if [[ ${java_version} < '1.8' ]];then
-		sed -i '/^# JAVA_OPTS.*/r ../config/tomcat_jvm7' ${home_dir}/bin/catalina.sh
+		sed -i "/^# JAVA_OPTS.*/r ${workdir}/config/tomcat_jvm7.txt" ${home_dir}/bin/catalina.sh
 	else
-		sed -i '/^# JAVA_OPTS.*/r ../config/tomcat_jvm8' ${home_dir}/bin/catalina.sh
+		sed -i "/^# JAVA_OPTS.*/r ${workdir}/config/tomcat_jvm8.txt" ${home_dir}/bin/catalina.sh
 	fi
 }
 
@@ -139,38 +139,7 @@ nginx_compile(){
 
 nginx_config(){
 	conf_dir=${home_dir}/conf
-	cat >/tmp/nginx.tmp<<EOF
-    server_names_hash_bucket_size 128;
-    large_client_header_buffers 4 32k;
-    client_header_buffer_size 32k;
-    client_max_body_size 100m;
-    client_header_timeout 120s;
-    client_body_timeout 120s;
-	 
-    proxy_buffer_size 64k;
-    proxy_buffers   4 32k;
-    proxy_busy_buffers_size 64k;
-    proxy_connect_timeout 120s;
-    proxy_send_timeout 120s;
-    proxy_read_timeout 120s;
-    
-	server_tokens off;
-    sendfile   on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 60;
-     
-    gzip  on;
-    gzip_min_length 1k;
-    gzip_buffers 4 16k;
-    gzip_comp_level 3;
-    gzip_http_version 1.0;
-    gzip_types text/plain application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
-    gzip_vary on;
-    gzip_disable "MSIE [1-6]\.";
-EOF
-	sed -i '/logs\/access.log/,/#gzip/{//!d}' ${conf_dir}/nginx.conf
-	sed -i '/#gzip/r /tmp/nginx.tmp' ${conf_dir}/nginx.conf && rm -rf /tmp/nginx.tmp
+	cat ${workdir}/config/nginx.conf >${conf_dir}/nginx.conf
 	add_log_cut nginx ${home_dir}/logs/*.log
 }
 
