@@ -1,6 +1,5 @@
 #!/bin/bash
-. ./public.sh
-. ./install_version.sh
+
 system_optimize_set(){
 	output_option "选择需要优化的项(可多选)" "\
 	 替换为国内YUM源\

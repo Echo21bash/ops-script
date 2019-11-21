@@ -7,14 +7,22 @@
 #                            by---wang2017.7
 ###########################################################
 
-. /etc/profile
-. ./bin/public.sh
-. ./bin/tools.sh
+. bin/public.sh
+. bin/version_down_unzip.sh
+. bin/system_set.sh
+. bin/tools.sh
+. bin/basic_environment.sh
+. bin/web_services.sh
+. bin/database_services.sh
+. bin/middleware_services.sh
+. bin/storage_service.sh
+. bin/operation_platform.sh
+
 mysql_tool(){
 output_option 'MySQL常用脚本' '添加MySQL备份脚本  找回MySQLroot密码 ' 'num'
 
 case "$num" in
-	1)sh ./bin/backup_script_set.sh
+	1)multi_function_backup_script_set
 	;;
 	2)reset_mysql_passwd
 	;;
@@ -25,13 +33,13 @@ basic_environment(){
 
 output_option '请选择要安装的环境' 'JDK PHP Ruby Nodejs' 'num'
 case "$num" in
-	1)sh ./bin/install_java.sh
+	1)java_install_ctl
 	;;
-	2)sh ./bin/install_php.sh
+	2)php_install_ctl
 	;;
-	3)sh ./bin/install_ruby.sh
+	3)ruby_install_ctl
 	;;
-	4).sh ./bin/install_node.sh
+	4)node_install_ctl
 	;;
 esac
 }
@@ -40,9 +48,9 @@ web_services(){
 
 output_option '请选择要安装的软件' 'Nginx Tomcat' 'num'
 case "$num" in
-	1)sh ./bin/install_nginx.sh
+	1)nginx_install_ctl
 	;;
-	2)sh ./bin/install_tomcat.sh
+	2)tomcat_install_ctl
 	;;
 esac
 }
@@ -51,13 +59,13 @@ database_services(){
 
 output_option '请选择要安装的软件' 'MySQL mongodb Redis Memcached' 'num'
 case "$num" in
-	1)sh ./bin/install_mysql.sh
+	1)mysql_install_ctl
 	;;
-	2)sh ./bin/install_mongodb.sh
+	2)mongodb_inistall_ctl
 	;;
-	3)sh ./bin/install_redis.sh
+	3)redis_install_ctl
 	;;
-	4)sh ./bin/install_memcached.sh
+	4)memcached_inistall_ctl
 	;;
 esac
 }
@@ -66,13 +74,13 @@ middleware_services(){
 
 output_option '请选择要安装的软件' 'ActiveMQ RocketMQ Zookeeper Kafka' 'num'
 case "$num" in
-	1)sh ./bin/install_activemq.sh
+	1)activemq_install_ctl
 	;;
-	2)sh ./bin/install_rocketmq.sh
+	2)rocketmq_install_ctl
 	;;
-	3)sh ./bin/install_zookeeper.sh
+	3)zookeeper_install_ctl
 	;;
-	4)sh ./bin/install_kafka.sh
+	4)kafka_install_ctl
 	;;
 esac
 }
@@ -81,15 +89,15 @@ storage_service(){
 
 output_option '请选择要安装的软件' 'FTP SFTP 对象存储服务(OSS/minio) FastDFS NFS' 'num'
 case "$num" in
-	1)sh ./bin/install_ftp.sh
+	1)ftp_install_ctl
 	;;
 	2)add_sysuser && add_sysuser_sftp
 	;;
-	3)sh ./bin/install_minio.sh
+	3)minio_install_ctl
 	;;
-	4)sh ./bin/install_fastdfs.sh
+	4)fastdfs_install_ctl
 	;;
-	5)sh ./bin/install_nfs.sh
+	5)nfs_install_ctl
 	;;
 esac
 }
@@ -97,11 +105,11 @@ esac
 operation_platform(){
 output_option '请选择要安装的平台' 'K8S系统 ELK日志平台 Zabbix监控 Rancher平台(k8s集群管理)' 'platform'
 case "$platform" in
-	1)sh ./bin/install_k8s.sh
+	1)k8s_install_ctl
 	;;
 	2)elk_install_ctl
 	;;
-	3)sh ./bin/install_zabbix.sh
+	3)zabbix_install_ctl
 	;;
 esac
 
@@ -110,7 +118,7 @@ esac
 tools(){
 output_option '请选择进行的操作' '优化系统配置 查看系统详情 升级内核版本 创建用户并将其加入visudo 安装WireGuard-VPN 多功能备份脚本 主机ssh互信' 'tool'
 case "$tool" in
-	1)sh ./bin/system_optimize.sh
+	1)system_optimize_set
 	;;
 	2)sys_info_detail
 	;;
@@ -118,9 +126,9 @@ case "$tool" in
 	;;
 	4)add_sysuser && add_sysuser_sudo
 	;;
-	5)sh ./bin/install_wireguard.sh
+	5)wireguard_order
 	;;
-	6)sh ./bin/backup_script_set.sh
+	6)multi_function_backup_script_set
 	;;
 	7)auto_ssh_keygen
 	;;
@@ -150,21 +158,6 @@ case "$mian" in
 esac
 }
 
-elk_install_ctl(){
-	diy_echo "为了兼容性所有组件最好选择一样的版本" "${yellow}" "${info}"
-	output_option "选择安装的组件" "elasticsearch logstash kibana filebeat" "elk_module"
-
-	elk_module=${output_value[@]}
-	if [[ ${output_value[@]} =~ 'elasticsearch' ]];then
-		sh ./bin/install_elasticsearch.sh
-	elif [[ ${output_value[@]} =~ 'logstash' ]];then
-		sh ./bin/install_logstash.sh
-	elif [[ ${output_value[@]} =~ 'kibana' ]];then
-		sh ./bin/install_kibana.sh
-	elif [[ ${output_value[@]} =~ 'filebeat' ]];then
-		sh ./bin/install_filebeat.sh
-	fi	
-}
 
 clear
 [[ $EUID -ne 0 ]] && echo -e "${error} Need to use root account to run this script!" && exit 1
@@ -175,7 +168,7 @@ echo -e	"+                                                 +"
 echo -e "+                                   Version: 2.1  +"
 echo -e "+                                 by---wang2017.7 +"
 echo -e "+ + + + + + + + + + + + + + + + + + + + + + + + + +"
-colour_keyword
+
 sys_info
 main
 

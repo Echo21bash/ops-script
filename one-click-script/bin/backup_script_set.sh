@@ -1,6 +1,5 @@
 #!/bin/bash
-. ./public.sh
-. ./install_version.sh
+
 multi_function_backup_script_set(){
 	output_option "请选择需要备份的类型" "mysql dir svn" "back_type"
 	back_type=(${output_value[@]})
@@ -302,4 +301,3 @@ ACC
 	sed -i "s#^backup_save_time='90'#backup_save_time=${backup_save_time}#" ./multi_function_backup_script.sh
 
 }
-multi_function_backup_script_set

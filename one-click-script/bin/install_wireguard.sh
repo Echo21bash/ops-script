@@ -1,6 +1,5 @@
 #!/bin/bash
-. ./public.sh
-. ./install_version.sh
+
 wireguard_install(){
 	if [[ ${os_release} < '7' ]];then
 		echo -e "${error} wireguard只支持Centos7"

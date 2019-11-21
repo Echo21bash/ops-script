@@ -1,6 +1,5 @@
 #!/bin/bash
-. ./public.sh
-. ./install_version.sh
+
 add_sysuser(){
 	echo -e "${info} Start adding system users"
 	while true

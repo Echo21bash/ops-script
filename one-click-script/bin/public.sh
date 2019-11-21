@@ -171,14 +171,14 @@ sys_info(){
 	os_bit=`getconf LONG_BIT`
 #内核版本
 	kel=`uname -r | grep -oE [0-9]{1}.[0-9]{1,\}.[0-9]{1,\}-[0-9]{1,\}`
-  ping -c 1 www.baidu.com >/dev/null 2>&1
-  if [ $? = '0' ];then
-    network_status="${green}connected${plain}"
-  else
-    network_status="${red}disconnected${plain}"
-  fi
-  diy_echo "Your machine is:${sys_name}"-"${release_all}"-"${os_bit}-bit.\n${info} The kernel version is:${kel}.\n${info} Network status:${network_status}" "" "${info}"
-  [[ ${sys_name} = "red-hat" ]] && sys_name="Centos"
+	ping -c 1 www.baidu.com >/dev/null 2>&1
+	if [ $? = '0' ];then
+		network_status="${green}connected${plain}"
+	else
+		network_status="${red}disconnected${plain}"
+	fi
+	diy_echo "Your machine is:${sys_name}"-"${release_all}"-"${os_bit}-bit.\n${info} The kernel version is:${kel}.\n${info} Network status:${network_status}" "" "${info}"
+	[[ ${sys_name} = "red-hat" ]] && sys_name="Centos"
 
 }
 
@@ -232,3 +232,5 @@ sys_info_detail(){
 	echo -e "${info} 当前在线用户:"
 	who
 }
+#必须函数调用
+colour_keyword
