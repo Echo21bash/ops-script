@@ -1,0 +1,60 @@
+1.安装mysql并启动开启binlog
+2.1 添加主从同步账户
+	masterA上：
+	mysql> grant replication slave on *.* to 'repl'@'192.168.10.12' identified by '123456';
+	mysql> flush privileges;
+
+	masterB上：
+	mysql> grant replication slave on *.* to 'repl'@'192.168.10.11' identified by '123456';
+	mysql> flush privileges;
+	
+2.2 查看主库的状态
+
+	masterA上：
+		mysql> show master status;
+
+		+------------------+----------+--------------+------------------+-------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+		+------------------+----------+--------------+------------------+-------------------+
+		| mysql-bin.000003 |      120 |              |                  |                   |
+		+------------------+----------+--------------+------------------+-------------------+
+
+		1 row in set (0.00 sec)
+
+	masterB上
+
+		mysql> show master status;
+
+		+------------------+----------+--------------+------------------+-------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+		+------------------+----------+--------------+------------------+-------------------+
+		| mysql-bin.000003 |      437 |              |                  |                   |
+		+------------------+----------+--------------+------------------+-------------------+
+		row in set (0.00 sec)
+2.3 配置同步信息：
+	##################传统主从方式########################
+	masterA上：
+
+	mysql> change master to master_host='192.168.10.12',master_port=3306,master_user='repl',master_password='123456',master_log_file='mysql-bin.000003',master_log_pos=437;
+	mysql> start slave;
+	mysql> show slave status\G;
+	
+	masterB上：
+
+	#本人是测试环境，可以保证没数据写入，否则需要的步骤是：先masterA锁表-->masterA备份数据-->masterA解锁表 -->masterB导入数据-->masterB设置主从-->查看主从
+	复制代码
+	mysql> change master to master_host='192.168.10.11',master_port=3306,master_user='repl',master_password='123456',master_log_file='mysql-bin.000003',master_log_pos=120;
+	mysql> start slave;
+	mysql> show slave status\G;
+	重设同步信息
+	reset slave;
+	##################GTID主从方式########################
+	vim /etc/my.cnf
+	#开启GTID
+	gtid-mode=ON
+	log-slave-updates=ON
+	enforce-gtid-consistency=ON
+
+	
+	mysql>change master to master_host='xxxxxxx',master_port=3306,master_user='xxxxxx',master_password='xxxxx',MASTER_AUTO_POSITION=1;
+	mysql> start slave;

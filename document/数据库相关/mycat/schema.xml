@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+	<schema name="kuaixiu" checkSQLschema="false" sqlMaxLimit="100" dataNode="M1">
+	</schema>
+	<schema name="kuaixiu_bus" checkSQLschema="false" sqlMaxLimit="100" dataNode="M2">
+	</schema>
+	<schema name="kuaixiu_crm" checkSQLschema="false" sqlMaxLimit="100" dataNode="M3">
+	</schema>
+	<schema name="kuaixiu_finance" checkSQLschema="false" sqlMaxLimit="100" dataNode="M4">
+	</schema>
+	<schema name="kuaixiu_stock" checkSQLschema="false" sqlMaxLimit="100" dataNode="M5">
+	</schema>
+	<schema name="kuaixiu_store" checkSQLschema="false" sqlMaxLimit="100" dataNode="M6">
+	</schema>
+  <schema name="kuaixiu_statistics" checkSQLschema="false" sqlMaxLimit="100" dataNode="M7">
+  </schema>
+	
+	<dataNode name="M1" dataHost="localhost1" database="kuaixiu" />
+	<dataNode name="M2" dataHost="localhost1" database="kuaixiu_bus" />
+	<dataNode name="M3" dataHost="localhost1" database="kuaixiu_crm" />
+	<dataNode name="M4" dataHost="localhost1" database="kuaixiu_finance" />
+	<dataNode name="M5" dataHost="localhost1" database="kuaixiu_stock" />
+	<dataNode name="M6" dataHost="localhost1" database="kuaixiu_store" />
+  <dataNode name="M7" dataHost="localhost1" database="kuaixiu_statistics" />
+
+	<dataHost name="localhost1" maxCon="100" minCon="10" balance="2"
+			  writeType="1" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+		<heartbeat>select user()</heartbeat>
+
+		<writeHost host="hostM1" url="172.26.55.186:3306" user="kuaixiu" password="kuaixiu">	
+		</writeHost>
+
+		<writeHost host="hostM2" url="172.26.218.50:3306" user="kuaixiu" password="kuaixiu">
+		</writeHost>
+	</dataHost>
+
+</mycat:schema>

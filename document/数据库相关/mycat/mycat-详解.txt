@@ -1,0 +1,41 @@
+
+----------mycat 9066管理端口 常用命令---------------
+
+1、显示后端物理库连接信息，包括当前连接数，端口等信息
+	Show @@backend;
+2、显示当前前端客户端连接情况
+	Show @@connection;
+3、当前线程池的执行情况，是否有积压(active_count)以及task_queue_size，后者为积压的待处理的SQL，若积压数目一直保值，则说明后端物理连接可能不够或者SQL执行比较缓慢
+	show @@threadpool;
+4、当前后端物理库的心跳检测情况,RS_CODE为1表示心跳正常
+	show @@heartbeat;
+5、显示数据节点的访问情况，包括每个数据节点当前活动连接数(active),空闲连接数（idle）以及最大连接数(maxCon) size，EXECUTE参数表示从该节点获取连接的次数，次数越多，说明访问该节点越多
+	show @@datanode;
+6、显示当前processors的处理情况，包括每个processor的IO吞吐量(NET_IN/NET_OUT)、IO队列的积压情况(R_QUEY/W_QUEUE)，Socket Buffer Pool的使用情况 BU_PERCENT为已使用的百分比、BU_WARNS为Socket Buffer Pool不够时，临时创建的新的BUFFER的次数，若百分比经常超过90%并且BU_WARNS>0，则表明BUFFER不够，需要增大，参见性能调优手册。
+	show @@processor;
+7、查看数据源的状态
+	show @@datasource;
+8、重新加载配置文件schema.xml
+	reload @@config;
+9、查看mycat运行情况
+	show @@server;
+---------------------mycat配置----------------------
+
+balance:负载均衡类型
+
+	0：不开启读写分离机制，所有读操作都发送到当前可用的writeHost上
+	1：全部的readHost与stand by writeHost参与select语句的负载均衡，
+	2：所有读操作都随机在writeHost、readHost上分发
+	3：所有读请求随机分发到writeHost对应的readHost执行，writeHost不负担读压力
+
+writeType:负载均衡类型
+
+	0：所有写操作发送到配置的第一个writeHost，当第一个writeHost宕机时，切换到第二个writeHost，重新启动后以切换后的为准，切换记录在配置文件：dnindex.properties中
+	1：所有写操作都随发送到配置的writeHost
+	2：尚未实现
+
+switchType:切换方式
+
+	-1：不自动切换
+	1：自动切换（默认）
+	2：基于MySql主从同步的状态来决定是否切换

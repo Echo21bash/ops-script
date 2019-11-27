@@ -1,0 +1,66 @@
+创建数据库
+	create database sina default character set utf8mb4 collate utf8mb4_unicode_ci;
+查看用户信息
+	select User, Password, Host FROM  mysql.user;
+新增用户
+	create user 'dba'@'%' identified by '123456';
+更改密码
+	小于5.7
+	use mysql;update user set password=PASSWORD('123456') where user='root'
+	小于等于5.7
+	use mysql;update user set authentication_string = password('123456'), password_expired = 'N', password_last_changed = now() where user = 'root';
+删除空用户
+	DELETE FROM mysql.user where user='';
+
+
+数据库权限
+普通用户
+一、grant 普通数据用户，查询、插入、更新、删除 数据库中所有表数据的权利。
+	grant select on testdb.* to common_user@'%';
+	grant insert on testdb.* to common_user@'%';
+	grant update on testdb.* to common_user@'%';
+	grant delete on testdb.* to common_user@'%';
+	或者，用一条 MySQL 命令来替代：
+	grant select, insert, update, delete on testdb.* to common_user@'%';
+	flush privileges;
+
+developer用户
+二、grant 数据库开发人员，创建表、索引、视图、存储过程、函数。。。等权限。
+	grant 创建、修改、删除 MySQL 数据表结构权限。
+	grant create on testdb.* to developer@'192.168.0.%';
+	grant alter  on testdb.* to developer@'192.168.0.%';
+	grant drop  on testdb.* to developer@'192.168.0.%';
+	 
+	grant 操作 MySQL 外键权限。
+	grant references on testdb.* to developer@'192.168.0.%';
+	 
+	grant 操作 MySQL 临时表权限。
+	grant create temporary tables on testdb.* to developer@'192.168.0.%';
+	 
+	grant 操作 MySQL 索引权限。
+	grant index on testdb.* to developer@'192.168.0.%';
+	 
+	grant 操作 MySQL 视图、查看视图源代码 权限。
+	grant create view on testdb.* to developer@'192.168.0.%';
+	grant show view on testdb.* to developer@'192.168.0.%';
+	 
+	grant 操作 MySQL 存储过程、函数 权限。
+	grant create routine on testdb.* to developer@'192.168.0.%'; -- now, can show procedure status
+	grant alter  routine on testdb.* to developer@'192.168.0.%'; -- now, you can drop a procedure
+	grant execute on testdb.* to developer@'192.168.0.%';
+
+DBA用户
+三、grant 普通 DBA 管理某个 MySQL 数据库的权限。
+	grant all privileges on testdb to dba@'localhost';
+	其中，关键字 “privileges” 可以省略。
+ 
+四、grant 高级 DBA 管理 MySQL 中所有数据库的权限。
+	grant all privileges on *.* to dba@'localhost' with grant option;
+五、mysqldump的权限说明
+	mysqldump 所需要的权限说明：
+	　　1、对于table 来说mysqldump 最少要有select 权限。
+	　　2、对于view 来说mysqldump 要有show view 权限。
+	　　3、对于trrigger 来说mysqldump 要有trigger 权限。
+	　　4、如果要产生一份一致的备份 mysqldump 要有lock tables 权限。
+	grant select, show view, trigger, lock tables on *.* to mysqldump_user@'%';
+	flush privileges;

@@ -1,0 +1,6 @@
+1、安装模块遇到权限问题
+	查看资料发现，可能需要增加--unsafe-perm即
+	npm install --registry=https://registry.npm.taobao.org  --unsafe-perm
+	一劳永逸的方法：
+		npm config set unsafe-perm（针对当前用户的）   
+		npm config -g set unsafe-perm(全局的）

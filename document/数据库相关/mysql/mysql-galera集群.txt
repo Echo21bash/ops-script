@@ -1,0 +1,30 @@
+http://releases.galeracluster.com/
+	MySQL/Galera是MySQL/InnoDB的多主集群,有以下特性: 
+		1）同步复制
+		2）Active-active的多主拓扑结构
+		3）集群任意节点可以读和写
+		4）自动身份控制,失败节点自动脱离集群
+		5）自动节点接入
+		6）真正的基于”行”级别和ID检查的并行复制
+		7）无单点故障,易扩展
+		
+安装前的准备
+需要至少三台mysql服务器，如果只有两台做cluster的话，一旦出现数据不一致的情况，就可能发生脑裂，需要一台仲裁服务器，如果直接三台做cluster的话，就不再需要仲裁。
+1、下载galera插件
+		wget http://releases.galeracluster.com/galera-3/centos/6/x86_64/galera-3-25.3.25-2.el6.x86_64.rpm
+2、下载mysql-wsrep版本
+		wget http://releases.galeracluster.com/mysql-wsrep-5.6/binary/mysql-wsrep-5.6.42-25.24-linux-x86_64.tar.gz
+
+重新启动集群
+1、标识具有最新数据节点状态ID的节点。
+	grastate.dat
+		版本：2.1
+		uuid：5ee99582-bb8d-11e2-b8e3-23de375c1d30
+		seqno：8204503945773 （值最大的为数据最新的，值为-1是不正常关闭导致的）
+		safe_to_bootstrap：1 （值为1这样的节点可用于引导集群）
+		
+2、启动最高级节点作为群集的第一个节点。
+3、像往常一样启动节点的其余部分。
+
+查看 wsrep状态
+	show global status like 'wsrep%';

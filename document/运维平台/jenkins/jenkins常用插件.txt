@@ -1,0 +1,9 @@
+jenkins常用插件
+
+Subversion ## 即可在任务的"源码管理"中配置SVN
+Git Parameter Plug-In  ## 构建时，可以选择git分支，tag等来作为构建参数
+List Subversion tags ## 构建时，可以选择svn分支，tag等来作为构建参数
+Maven Integration  ## maven项目的基础插件，必须安装才能新建maven项目
+Publish Over SSH ## 可以通过ssh，发送文件到远程服务器，并执行shell命令
+Workspace Cleanup ## 构建之前清除工作空间
+Role-based Authorization Strategy ## 授权策略 不同用户配置不同的项目
