@@ -84,7 +84,7 @@ spec:
   - metadata:
       name: zookeeper-datadir
       annotations:
-        volume.beta.kubernetes.io/storage-class: "anything"
+        volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
