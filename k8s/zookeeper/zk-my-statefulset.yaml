@@ -74,11 +74,15 @@ spec:
         - containerPort: 3888
           name: leader-election
         volumeMounts:
-        - name: datadir
+        - name: zookeeper-datadir
           mountPath: /opt/zookeeper/data
+      volumes:
+        - name: zookeeper-datadir
+          persistentVolumeClaim:
+            claimName: zookeeper-datadir
   volumeClaimTemplates:
   - metadata:
-      name: datadir
+      name: zookeeper-datadir
       annotations:
         volume.beta.kubernetes.io/storage-class: "anything"
     spec:
