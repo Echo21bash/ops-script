@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: zk-hs
+  name: zookeeper-hs
   labels:
-    app: zk
+    app: zookeeper
 spec:
   ports:
   - port: 2888
@@ -12,40 +12,40 @@ spec:
     name: leader-election
   clusterIP: None
   selector:
-    app: zk
+    app: zookeeper
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: zk-cs
+  name: zookeeper-cs
   labels:
-    app: zk
+    app: zookeeper
 spec:
   ports:
   - port: 2181
     name: client
   selector:
-    app: zk
+    app: zookeeper
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-  name: zk-pdb
+  name: zookeeper-pdb
 spec:
   selector:
     matchLabels:
-      app: zk
+      app: zookeeper
   maxUnavailable: 1
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: zk
+  name: zookeeper-cluster
 spec:
   selector:
     matchLabels:
-      app: zk
-  serviceName: zk-hs
+      app: zookeeper
+  serviceName: zookeeper-hs
   replicas: 3
   updateStrategy:
     type: RollingUpdate
@@ -53,10 +53,10 @@ spec:
   template:
     metadata:
       labels:
-        app: zk
+        app: zookeeper
     spec:
       containers:
-      - name: kubernetes-zookeeper
+      - name: zookeeper
         imagePullPolicy: Always
         image: "rootww/zookeeper:3.4.14-jdk8-alpine"
         env:
