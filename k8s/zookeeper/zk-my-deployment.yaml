@@ -1,68 +1,233 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: zk-node-1
+  name: zookeeper-1
   labels:
-    app: zk-node-1
+    app: zookeeper-1
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: zk-node-1 
+        app: zookeeper-1 
     spec:
       containers:
       - image: rootww/zookeeper:3.4.14-jdk8-alpine
-        imagePullPolicy: IfNotPresent
-        name: zk-node-1 
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: zookeeper-datadir-1
+          mountPath: /opt/zookeeper/data
+        name: zookeeper-1 
         ports:
         - containerPort: 2181
         env:
         - name: SERVERS
           value: "3"
+      volumes:
+        - name: zookeeper-datadir-1
+          persistentVolumeClaim:
+            claimName: zookeeper-datadir-1
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: zk-node-2
+  name: zookeeper-2
   labels:
-    app: zk-node-2
+    app: zookeeper-2
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: zk-node-2
+        app: zookeeper-2
     spec:
       containers:
       - image: rootww/zookeeper:3.4.14-jdk8-alpine
-        imagePullPolicy: IfNotPresent
-        name: zk-node-2
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: zookeeper-datadir-2
+          mountPath: /opt/zookeeper/data
+        name: zookeeper-2
         ports:
         - containerPort: 2181
         env:
         - name: SERVERS
           value: "3"
+      volumes:
+        - name: zookeeper-datadir-2
+          persistentVolumeClaim:
+            claimName: zookeeper-datadir-2
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: zk-node-3
+  name: zookeeper-3
   labels:
-    app: zk-node-3
+    app: zookeeper-3
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: zk-node-3
+        app: zookeeper-3
     spec:
       containers:
       - image: rootww/zookeeper:3.4.14-jdk8-alpine
-        imagePullPolicy: IfNotPresent
-        name: zk-node-3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "zookeeper-ready 2181"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: zookeeper-datadir-3
+          mountPath: /opt/zookeeper/data
+        name: zookeeper-3
         ports:
         - containerPort: 2181
         env:
         - name: SERVERS
           value: "3"
+      volumes:
+        - name: zookeeper-datadir-3
+          persistentVolumeClaim:
+            claimName: zookeeper-datadir-3
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: zookeeper-datadir-1
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: zookeeper-datadir-2
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: zookeeper-datadir-3
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: zookeeper-1
+  name: zookeeper-1
+spec:
+  ports:
+  - name: client 
+    port: 2181
+    protocol: TCP
+  - name: follower
+    port: 2888
+    protocol: TCP
+  - name: leader
+    port: 3888
+    protocol: TCP
+  selector:
+    app: zookeeper-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: zookeeper-2
+  name: zookeeper-2
+spec:
+  ports:
+  - name: client
+    port: 2181
+    protocol: TCP
+  - name: follower
+    port: 2888
+    protocol: TCP
+  - name: leader
+    port: 3888
+    protocol: TCP
+  selector:
+    app: zookeeper-2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: zookeeper-3
+  name: zookeeper-3
+spec:
+  ports:
+  - name: client
+    port: 2181
+    protocol: TCP
+  - name: follower
+    port: 2888
+    protocol: TCP
+  - name: leader
+    port: 3888
+    protocol: TCP
+  selector:
+    app: zookeeper-3

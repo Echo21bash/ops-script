@@ -3,17 +3,14 @@
 * 两种方式各有优劣，对于像Redis、Mongodb、Zookeeper等有状态的服务，使用StatefulSet是首选方式。
 
 ### StatefulSet方式
- 1. 创建可用的PV存储
- 		kubectl apply -f zk-pv.yaml
- 2. 部署
+ 1. 部署及创建可用的PV存储
  		kubectl apply -f zk-my-statefulset.yaml
+
 		
 ### Deployment方式
- 1. 创建
+ 1. 部署及创建可用的PV存储
  		kubectl apply -f zk-my-deployment.yaml
- 2. 添加svc
- 		kubectl apply -f zk-svc.yaml
- 
+
 ### 关于zookeeper集群部署参数默认值
 ```shell
     CLIENT_PORT=2181

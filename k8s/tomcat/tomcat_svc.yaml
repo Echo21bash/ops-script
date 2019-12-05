@@ -2,8 +2,8 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app: kube-tomcat
-  name: kube-tomcat
+    app: tomcat
+  name: tomcat-service
   namespace: default
 spec:
   type: NodePort
@@ -12,4 +12,4 @@ spec:
     targetPort: 8080
     nodePort: 8080
   selector:
-    app: kube-tomcat
+    app: tomcat
