@@ -3,7 +3,7 @@
 . ./public.sh
 update_kernel(){
 
-	diy_echo "当前内核版本是：${kel}" "${info}"
+	diy_echo "当前内核版本是：${kel}" "" "${info}"
 	kernel_version=`uname -a | awk '{printf $3}'`
 	if [[ ! -d /lib/modules/${kernel_version}/kernel/drivers/md/bcache ]];then
 		if [ ! -f /etc/yum.repos.d/elrepo.repo ]; then
@@ -80,7 +80,6 @@ install_bcache_tools(){
 	\cp ./bcache-status /usr/sbin && chmod +x /usr/sbin/bcache-status
 }
 
-colour_keyword
 sys_info
 update_kernel
 load_bcache_mod

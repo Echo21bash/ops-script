@@ -6,7 +6,6 @@
 #                                                        
 #                            by---wang2017.7
 ###########################################################
-. /etc/profile
 
 ###pubic函数
 colour_keyword(){
@@ -21,10 +20,19 @@ colour_keyword(){
 
 diy_echo(){
 	#$1内容 $2颜色(非必须) $3前缀关键字(非必须)
-	if [[ $3 = '' ]];then
-		echo -e "$2$1${plain}"
-	else
+	if [[ $# = '3' ]];then
 		echo -e "$3 $2$1${plain}"
+	fi
+	
+	if [[ $# = '2' ]];then
+		if [[ $2 =~ 'info' || $2 =~ 'warning' || $2 =~ 'error' ]];then
+			echo -e "$2 $1${plain}"
+		else
+			echo -e "$2$1${plain}"
+		fi
+	fi
+	if [[ $# = '1' ]];then
+		echo -e "$1"
 	fi
 }
 
@@ -88,7 +96,7 @@ output_option(){
 	j=0
 	for item in ${all_option[@]}
 	do
-		if [[ $i > 0 && $i < $last_option_subscript ]];then
+		if [[ $i -gt 0 && $i -lt $last_option_subscript ]];then
 			#选项数组
 			item_option[$j]=${all_option[$i]}
 			((j++))
@@ -172,14 +180,14 @@ sys_info(){
 	os_bit=`getconf LONG_BIT`
 #内核版本
 	kel=`uname -r | grep -oE [0-9]{1}.[0-9]{1,\}.[0-9]{1,\}-[0-9]{1,\}`
-  ping -c 1 www.baidu.com >/dev/null 2>&1
-  if [ $? = '0' ];then
-    network_status="${green}connected${plain}"
-  else
-    network_status="${red}disconnected${plain}"
-  fi
-  diy_echo "Your machine is:${sys_name}"-"${release_all}"-"${os_bit}-bit.\n${info} The kernel version is:${kel}.\n${info} Network status:${network_status}" "" "${info}"
-  [[ ${sys_name} = "red-hat" ]] && sys_name="Centos"
+	ping -c 1 www.baidu.com >/dev/null 2>&1
+	if [ $? = '0' ];then
+		network_status="${green}connected${plain}"
+	else
+		network_status="${red}disconnected${plain}"
+	fi
+	diy_echo "Your machine is:${sys_name}"-"${release_all}"-"${os_bit}-bit.\n${info} The kernel version is:${kel}.\n${info} Network status:${network_status}" "" "${info}"
+	[[ ${sys_name} = "red-hat" ]] && sys_name="Centos"
 
 }
 
@@ -196,40 +204,42 @@ get_net_name(){
 }
 
 sys_info_detail(){
-  sys_info
-  #系统开机时间
-  echo -e "${info} System boot time:"
-  date -d "$(awk '{printf("%d\n",$1~/./?int($1)+1:$1)}' /proc/uptime) second ago" +"%F %T"
-  #系统已经运行时间
-  echo -e "${info} The system is already running:"
-  awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60}{printf("%d天%d时%d分%d秒\n",a,b,c,d)}' /proc/uptime
-  #CPU型号
-  echo -e "${info} CPU型号:"
-  awk -F':[ ]' '/model name/{printf ("%s\n",$2);exit}' /proc/cpuinfo
-  #CPU详情
-  echo -e "${info} CPU详情:"
-  awk -F':[ ]' '/physical id/{a[$2]++}END{for(i in a)printf ("%s号CPU\t核心数:%s\n",i+1,a[i]);printf("CPU总颗数:%s\n",i+1)}' /proc/cpuinfo
-  #ip
-  echo -e "${info} 内网IP:"
-  hostname -I 2>/dev/null
-  [[ $? != "0" ]] && hostname -i
-  echo -e "${info} 网关:"
-  netstat -rn | awk '/^0.0.0.0/ {print $2}'
-  echo -e "${info} 外网IP:"
-  curl -s icanhazip.com
-  #内存使用情况
-  echo -e "${info} 内存使用情况(MB):参考[可用内存=free的内存+cached的内存+buffers的内存]"
-  free -m 
-  (( ${os_release} < "7" )) && free -m | grep -i Mem | awk '{print "总内存是:"$2"M,实际使用内存是:"$2-$4-$5-$6-$7"M,实际可用内存是:"$4+$6+$7"M,内存使用率是:"(1-($4+$6+$7)/$2)*100"%"}' 
-  (( ${os_release} >= "7" )) && free -m | grep -i Mem | awk '{print "总内存是:"$2"M,实际使用内存是:"$2-$4-$5-$6"M,实际可用内存是:"$4+$6"M,内存使用率是:"(1-($4+$6)/$2)*100"%"}'
-  free -m | grep -i Swap| awk '{print "总Swap大小:"$2"M,已使用的大小:"$3"M,可用大小:"$4"M,Swap使用率是:"$3/$2*100"%"}' 
-  #磁盘使用情况
-  echo -e "${info} 磁盘使用情况:"
-  df -h
-  #服务器负载情况
-  echo -e "${info} 服务器平均负载:"
-  uptime | awk '{print $(NF-4)" "$(NF-3)" "$(NF-2)" "$(NF-2)" "$NF}'
-  #当前在线用户
-  echo -e "${info} 当前在线用户:"
-  who
+	sys_info
+	#系统开机时间
+	echo -e "${info} System boot time:"
+	date -d "$(awk '{printf("%d\n",$1~/./?int($1)+1:$1)}' /proc/uptime) second ago" +"%F %T"
+	#系统已经运行时间
+	echo -e "${info} The system is already running:"
+	awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60}{printf("%d天%d时%d分%d秒\n",a,b,c,d)}' /proc/uptime
+	#CPU型号
+	echo -e "${info} CPU型号:"
+	awk -F':[ ]' '/model name/{printf ("%s\n",$2);exit}' /proc/cpuinfo
+	#CPU详情
+	echo -e "${info} CPU详情:"
+	awk -F':[ ]' '/physical id/{a[$2]++}END{for(i in a)printf ("%s号CPU\t核心数:%s\n",i+1,a[i]);printf("CPU总颗数:%s\n",i+1)}' /proc/cpuinfo
+	#ip
+	echo -e "${info} 内网IP:"
+	hostname -I 2>/dev/null
+	[[ $? != "0" ]] && hostname -i
+	echo -e "${info} 网关:"
+	netstat -rn | awk '/^0.0.0.0/ {print $2}'
+	echo -e "${info} 外网IP:"
+	curl -s icanhazip.com
+	#内存使用情况
+	echo -e "${info} 内存使用情况(MB):参考[可用内存=free的内存+cached的内存+buffers的内存]"
+	free -m 
+	(( ${os_release} < "7" )) && free -m | grep -i Mem | awk '{print "总内存是:"$2"M,实际使用内存是:"$2-$4-$5-$6-$7"M,实际可用内存是:"$4+$6+$7"M,内存使用率是:"(1-($4+$6+$7)/$2)*100"%"}' 
+	(( ${os_release} >= "7" )) && free -m | grep -i Mem | awk '{print "总内存是:"$2"M,实际使用内存是:"$2-$4-$5-$6"M,实际可用内存是:"$4+$6"M,内存使用率是:"(1-($4+$6)/$2)*100"%"}'
+	free -m | grep -i Swap| awk '{print "总Swap大小:"$2"M,已使用的大小:"$3"M,可用大小:"$4"M,Swap使用率是:"$3/$2*100"%"}' 
+	#磁盘使用情况
+	echo -e "${info} 磁盘使用情况:"
+	df -h
+	#服务器负载情况
+	echo -e "${info} 服务器平均负载:"
+	uptime | awk '{print $(NF-4)" "$(NF-3)" "$(NF-2)" "$(NF-2)" "$NF}'
+	#当前在线用户
+	echo -e "${info} 当前在线用户:"
+	who
 }
+#必须函数调用
+colour_keyword
