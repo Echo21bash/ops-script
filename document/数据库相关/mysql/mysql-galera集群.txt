@@ -14,7 +14,14 @@ http://releases.galeracluster.com/
 		wget http://releases.galeracluster.com/galera-3/centos/6/x86_64/galera-3-25.3.25-2.el6.x86_64.rpm
 2、下载mysql-wsrep版本
 		wget http://releases.galeracluster.com/mysql-wsrep-5.6/binary/mysql-wsrep-5.6.42-25.24-linux-x86_64.tar.gz
-
+3、配置集群注意点
+	MYSQL ID唯一
+	server-id=1
+	日志格式必须为行模式
+	binlog_format=row
+	数据存储引擎和数据库表为InnoDB，否则不会同步
+	default_storage_engine=InnoDB
+	
 重新启动集群
 1、标识具有最新数据节点状态ID的节点。
 	grastate.dat
