@@ -15,13 +15,29 @@ http://releases.galeracluster.com/
 2、下载mysql-wsrep版本
 		wget http://releases.galeracluster.com/mysql-wsrep-5.6/binary/mysql-wsrep-5.6.42-25.24-linux-x86_64.tar.gz
 3、配置集群注意点
-	MYSQL ID唯一
-	server-id=1
 	日志格式必须为行模式
-	binlog_format=row
+	binlog_format = row
 	数据存储引擎和数据库表为InnoDB，否则不会同步
-	default_storage_engine=InnoDB
-	
+	default_storage_engine = InnoDB
+	集群名称相同
+	wsrep_cluster_name = "mycluster"
+	节点名称唯一
+	wsrep_node_name = "node1"
+	本机地址
+	wsrep_node_address = "192.168.1.1:4567"
+4、启动集群
+	启动第一台主机时wsrep_cluster_address配置如下
+	#wsrep_cluster_address = "gcomm://192.168.1.2:4567,192.168.1.3:4567"
+	wsrep_cluster_address =" gcomm://"
+	第一台启动后可修改为
+	wsrep_cluster_address = "gcomm://192.168.1.2:4567,192.168.1.3:4567"
+	#wsrep_cluster_address = "gcomm://"
+	启动第二台
+	wsrep_cluster_address = "gcomm://192.168.1.1:4567,192.168.1.3:4567"
+	启动第三台
+	wsrep_cluster_address = "gcomm://192.168.1.1:4567,192.168.1.2:4567"
+
+
 重新启动集群
 1、标识具有最新数据节点状态ID的节点。
 	grastate.dat
