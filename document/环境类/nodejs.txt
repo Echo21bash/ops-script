@@ -4,3 +4,5 @@
 	一劳永逸的方法：
 		npm config set unsafe-perm（针对当前用户的）   
 		npm config -g set unsafe-perm(全局的）
+2、生产环境安装依赖建议
+	npm install --production
