@@ -10,8 +10,13 @@
 	virsh list --all
 启动虚拟机
 	virsh start win10
+查看虚拟机基本信息
+	virsh dominfo win10
 关闭虚拟机
 	virsh shutdown win10
+删除虚拟机
+	virsh undefine win10
+	rm -f /var/lib/libvirtd/win10.img
 克隆虚拟机
 	virt-clone --auto-clone -o moban -n hadoop-code-1
 CPU和内存动态扩容
