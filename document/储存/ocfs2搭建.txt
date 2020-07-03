@@ -1,0 +1,67 @@
+OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创建OCFS2文件系统，让集群中的其它节点可以对磁盘进行读写操作。
+
+运行环境
+	（1）yum源
+		curl -Ls -o /etc/yum.repos.d/public-yum.oracle.repo https://public-yum.oracle.com/public-yum-ol7.repo
+		rpm --import http://public-yum.oracle.com/RPM-GPG-KEY-oracle-ol7
+	（2）安装内核kernel-uek及工具
+		yum install kernel-uek ocfs2-tools -y
+		网络慢可以本地安装
+		yum install linux-firmware-20200124-999.4.git1eb2408c.el7.noarch.rpm -y
+		yum install kernel-uek-4.14.35-1902.302.2.el7uek.x86_64.rpm -y
+		yum install ocfs2-tools-1.8.6-13.el7.x86_64.rpm -y
+	（3）修改启动项加载ocfs2 模块
+		grub2-set-default 0
+		echo ocfs2 >/etc/modules-load.d/ocfs2-modules.conf
+	（4）重启服务器
+		reboot
+1、新建集群
+	在每台主机分别执行
+	（1）创建集群
+		o2cb_ctl -C -n ocfs2 -t cluster -a name=ocfs2
+	（2）修改主机名
+		hostnamectl set-hostname node1
+		hostnamectl set-hostname node2
+	（3）添加节点
+		o2cb_ctl -C -n node1 -t node -a number=1 -a ip_address=10.10.10.2 -a ip_port=11111 -a cluster=ocfs2
+		o2cb_ctl -C -n node2 -t node -a number=2 -a ip_address=10.10.10.3 -a ip_port=11111 -a cluster=ocfs2
+		注意-n 后面的参数必须是主机名
+	（4）启动集群
+		systemctl enable o2cb.service
+		systemctl start o2cb.service
+	（5）查看集群状态
+		systemctl status o2cb.service
+	###可使用exsi或者iscsi共享磁盘挂载
+	前提将共享磁盘分别挂载linux主机
+	（6）创建ocfs文件系统（只需在一台主机执行）
+		mkfs -t ocfs2 -C 256K -N 2 /dev/sdb
+		注意-N 是最多允许多少主机同时挂载ocfs文件系统
+	（7）挂载ocfs文件系统
+		mount -t ocfs2 /dev/sdb /opt
+	（8）查看挂载情况
+		mounted.ocfs2 -f
+2、向集群中添加节点
+	在集群中任意一台执行
+	（1）查看当前ocfs2卷内的Max Node Slots
+		echo 'stats -h' | debugfs.ocfs2 /dev/sdb
+	（2）更改Max Node Slots值为3
+		tunefs.ocfs2 -N 3 /dev/sdb
+	（3）执行o2cb_ctl工具去在线新增节点3到cluster中
+		o2cb_ctl -C  -i -n node3 -t node -a number=3 -a ip_address=10.10.10.4 -a ip_port=11111 -a cluster=ocfs2
+	在node3执行
+	（4）设置不同的主机名
+		hostnamectl set-hostname node3
+	（5）将/etc/ocfs2/cluster.conf拷贝node3
+	（6）启动集群
+		systemctl enable o2cb.service
+		systemctl start o2cb.service
+		
+3、ocfs2文件系统扩容（不支持缩容）
+	（1）卸载磁盘
+		unmount /dev/sdb
+	前提将共享磁盘扩容后
+	（2）重新挂载磁盘
+		mount -t ocfs2 /dev/sdb /opt
+	（3）扩容ocfs2文件系统
+		tunefs.ocfs2 -S /dev/sdb
+	

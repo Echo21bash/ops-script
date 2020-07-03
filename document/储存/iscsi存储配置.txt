@@ -1,0 +1,41 @@
+CentOS6
+
+服务端
+	yum install -y iscsi-target-utils iscsi-initiator-utils
+1.配置
+	vi /etc/tgt/targets.conf
+	配置内容可有多个target
+	default-driver iscsi
+	<target iscsi:server.target1>
+		backing-store /dev/scsi/scsi_dev
+	</target>
+2.启动服务
+	chkconfig tgtd on
+	/etc/init.d/tgtd start
+3.查看target device
+	tgtadm --lld iscsi --op show --mode target
+
+客户端
+	yum install -y iscsi-initiator-utils && systemctl start iscsi
+
+1.查看服务端存储
+	iscsiadm -m discovery -t st -p 192.168.16.123
+	192.168.16.123:3260,1 iscsi:server.target1
+2.登录验证
+	登入
+	iscsiadm -m node -T iscsi:server.target1 --login
+	登出
+	iscsiadm -m node -T iscsi:server.target1 -u
+	
+3.客户端挂载
+	挂载
+	iscsiadm -m node -T iscsi:server.target1 -p 192.168.16.123 -l
+	或者
+	iscsiadm -m session -R
+	开机自动挂载
+	iscsiadm -m node -T iscsi:server.target1 -p 192.168.16.123 --op update -n node.startup -v automatic
+4.卸载
+	登出
+	iscsiadm -m node -T iscsi:server.target1 -u
+	iscsiadm -m node -o delete -T iscsi:server.target1
+	
