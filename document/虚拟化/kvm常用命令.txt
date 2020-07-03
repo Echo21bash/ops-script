@@ -5,6 +5,7 @@
 	qemu-kvm： 主要是KVM用户态的管理工具，来帮助我们管理KVM
 	libvirt: 虚拟化管理工具，当libvirtd进程终止后，正在运行的虚拟机不受影响。
 	virt-install: 安装虚拟机的工具，调用libvirt的API来进行管理。
+	启动之后会有一个类似virbr0的网卡
 
 查看所有主机
 	virsh list --all
@@ -12,6 +13,8 @@
 	virsh start win10
 查看虚拟机基本信息
 	virsh dominfo win10
+查看虚拟机VNC
+	virsh vncdisplay win10
 关闭虚拟机
 	virsh shutdown win10
 删除虚拟机
@@ -23,23 +26,27 @@ CPU和内存动态扩容
 	virsh edit win10
 
 
-
 创建一个raw格式，容量为10G的虚拟磁盘：
+	qemu-img create -f raw /opt/CentOS-7.raw 10G
+	
+创建一个qcow2格式，容量为10G的虚拟磁盘：
+	qemu-img create -f qcow2 /opt/CentOS-7.qcow2 10G
 
-	# qemu-img create -f raw /opt/CentOS-7-x86_64.raw 10G
-	Formatting '/opt/CentOS-7-x86_64.raw', fmt=raw size=10737418240
 在本地的tmp目录下上传一个CS7的安装镜像，使用此镜像来安装虚拟机
 
 安装虚拟机：
 
-	virt-install --virt-type kvm --name CentOS-7-x86_64 --ram 2048 \
+	virt-install --virt-type kvm --name CentOS-7 --ram 2048 --vcpus=2 \
 	--cdrom=/tmp/CentOS-7.2-x86_64-DVD-1511.iso --disk path=/opt/CentOS-7-x86_64.raw \
-	--network network=default --graphics vnc,listen=0.0.0.0 --noautoconsole
+	--network bridge=virbr1 --graphics vnc,listen=0.0.0.0 --noautoconsole
 
+	virt-install --virt-type kvm --name CentOS-7 --ram 2048 --vcpus=2 \
+	--cdrom=/tmp/CentOS-7.2-x86_64-DVD-1511.iso --disk path=/opt/CentOS-7-x86_64.qcow2 \
+	--network bridge=virbr1 --graphics vnc,listen=0.0.0.0 --noautoconsole
 提示：也可以使用一次性指定磁盘大小的方式，磁盘文件会根据数据量的大小变化而变化：
 
-	virt-install  --virt-type kvm --name CS7-1c2g20g  --ram 2048  -vcpus=1 -s 20 -c  \
-	/vm/iso/CentOS-7-x86_64-Minimal-1511.iso --hvm  --os-type=linux -f /vm/1c2g20g.img \
+	virt-install  --virt-type kvm --name CS7-1c2g20g  --ram 2048  --vcpus=2 -s 20 \
+	--cdrom=/tmp/CentOS-7.2-x86_64-DVD-1511.iso --hvm  --os-type=linux -f /vm/1c2g20g.img \
 	--graphics vnc,listen=0.0.0.0 --noautoconsole
 	-s指定虚拟磁盘大小为20G。
 
@@ -47,3 +54,5 @@ CPU和内存动态扩容
 输入命令之后，显示已经在开始安装，此时，可以通过vnc远程连接到宿主机上，使用默认的端口，查看到系统安装界面：
 	# netstat -lntup|grep kvm
 	tcp        0      0 0.0.0.0:5900            0.0.0.0:*               LISTEN      19516/qemukvm
+修改虚拟机密码
+	virt-customize -a /data/moban1.qcow2 --root-password password:Zonecd@2019

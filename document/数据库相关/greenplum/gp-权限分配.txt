@@ -1,8 +1,0 @@
-
-查看用户信息
-	select * from pg_user;
-新增用户
-	create user tableau with nosuperuser nocreatedb password 'tableau' ;
-更改密码
-	alter user gpadmin with password 'gpadmin';
-

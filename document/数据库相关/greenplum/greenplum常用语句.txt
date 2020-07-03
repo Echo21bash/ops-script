@@ -1,0 +1,15 @@
+
+查看用户信息
+	select * from pg_user;
+新增用户
+	create user tableau with nosuperuser nocreatedb password 'tableau' ;
+更改密码
+	alter user gpadmin with password 'gpadmin';
+查看表的存储结构
+	select distinct relstorage from pg_class;
+	------------
+	a  -- 行存储AO表    
+	h  -- heap堆表、索引    
+	x  -- 外部表(external table)    
+	v  -- 视图    
+	c  -- 列存储AO表
