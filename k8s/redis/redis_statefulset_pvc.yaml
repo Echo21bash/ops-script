@@ -23,6 +23,13 @@ spec:
         env:
           - name: REDIS_RUN_MODE
             value: "cluster"
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: REDIS_OTHER_OPTS
+            value: --cluster-announce-ip $(POD_IP)
         volumeMounts:
         - mountPath: /opt/redis/data
           name: redis-data
