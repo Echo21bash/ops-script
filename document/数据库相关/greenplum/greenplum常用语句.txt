@@ -13,3 +13,82 @@
 	x  -- 外部表(external table)    
 	v  -- 视图    
 	c  -- 列存储AO表
+	
+查询当前数据库有哪些AO表
+	select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relnamespace=t2.oid and relstorage in ('c', 'a');
+	
+查询当前数据库有哪些HEAP表
+	select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relnamespace=t2.oid and relstorage in ('h');
+	
+GreenPlum备份与恢复
+	1、备份
+		全量备份
+		gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data
+		增量备份
+		gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data --incremental
+		
+		用法：
+		gpbackup [标志]
+
+		标志：
+		  --backup-dir字符串将所有备份文件写入的目录的绝对路径
+		  --compression-level int数据备份期间要使用的压缩级别。有效值在1到9之间。（默认值为1）
+		  --data-only仅备份数据，不备份元数据
+		  --dbname字符串要备份的数据库
+		  --debug打印详细信息并调试日志消息
+		  --exclude-schema stringArray备份除指定架构中的对象以外的所有元数据。 --exclude-schema可以多次指定。
+		  --exclude-schema-file字符串包含要从备份中排除的模式列表的文件
+		  --exclude-table stringArray备份除指定表以外的所有元数据。 --exclude-table可以多次指定。
+		  --exclude-table-file字符串包含要从备份中排除的标准表列表的文件
+		  --from-timestamp字符串用于基于当前增量备份的时间戳
+		  --help gpbackup的帮助
+		  --include-schema stringArray仅备份指定的架构。 --include-schema可以多次指定。
+		  --include-schema-file string包含要包含在备份中的模式列表的文件
+		  --include-table stringArray仅备份指定的表。 --include-table可以多次指定。
+		  --include-table-file字符串包含要包含在备份中的标准表列表的文件
+		  --incremental仅备份自上次备份以来已修改的AO表的数据
+		  --jobs int备份数据时使用的并行连接数（默认为1）
+		  --leaf-partition-data对于分区表，为每个叶分区创建一个数据文件，而不是为整个表创建一个数据文件
+		  --metadata-only仅备份元数据，不备份数据
+		  --no-compression禁用数据文件压缩
+		  --plugin-config字符串用于插件的配置文件
+		  --quiet禁止非警告，非错误的日志消息
+		  --single-data-file将所有数据备份到一个文件，而不是每个表一个
+		  --verbose打印详细日志消息
+		  --version打印版本号并退出
+		  --with-stats备份查询计划统计信息
+		  --without-globals禁用全局元数据的备份
+
+	2、恢复
+		gprestore --backup-dir /tmp --timestamp 20200707144340 --redirect-db test2 --data-only --incremental
+		用法：
+		gprestore [标志]
+
+		标志：
+		  --backup-dir字符串要还原的备份文件所在的目录的绝对路径
+		  --create-db在元数据还原之前创建数据库
+		  --data-only仅还原数据，不还原元数据
+		  --debug打印详细信息并调试日志消息
+		  --exclude-schema stringArray还原除指定架构中的对象以外的所有元数据。 --exclude-schema可以多次指定。
+		  --exclude-schema-file字符串包含将无法还原的模式列表的文件
+		  --exclude-table stringArray恢复除指定关系之外的所有元数据。 --exclude-table可以多次指定。
+		  --exclude-table-file字符串包含将无法恢复的完全限定关系列表的文件
+		  --help gprestore的帮助
+		  --include-schema stringArray仅还原指定的架构。 --include-schema可以多次指定。
+		  --include-schema-file string包含要还原的模式列表的文件
+		  --include-table stringArray仅还原指定的关系。 --include-table可以多次指定。
+		  --include-table-file string包含将恢复的完全限定关系列表的文件
+		  --incremental BETA功能：仅还原所有堆表和自上次备份以来已修改的AO表的数据
+		  --jobs int恢复表数据和后数据时要使用的并行连接数（默认为1）
+		  --metadata-only仅还原元数据，不还原数据
+		  --on-error-continue记录错误并继续还原，而不是在出现第一个错误时退出
+		  --plugin-config字符串用于插件的配置文件
+		  --quiet禁止非警告，非错误的日志消息
+		  --redirect-db字符串还原到指定的数据库，而不是备份的数据库
+		  --redirect-schema字符串恢复到指定的架构，而不是已备份的架构
+		  --timestamp字符串要恢复的时间戳，格式为YYYYMMDDHHMMSS
+		  --truncate-table删除要恢复的表的数据
+		  --verbose打印详细日志消息
+		  --version打印版本号并退出
+		  --with-globals恢复全局元数据
+		  --with-stats恢复查询计划统计信息
