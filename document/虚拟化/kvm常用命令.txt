@@ -17,6 +17,10 @@
 	virsh vncdisplay win10
 关闭虚拟机
 	virsh shutdown win10
+强制关闭虚拟机
+	virsh destroy win10
+重启虚拟机
+	virsh reboot win10
 删除虚拟机
 	virsh undefine win10
 	rm -f /var/lib/libvirtd/win10.img
@@ -31,6 +35,8 @@ CPU和内存动态扩容
 	
 创建一个qcow2格式，容量为10G的虚拟磁盘：
 	qemu-img create -f qcow2 /opt/CentOS-7.qcow2 10G
+扩展磁盘
+	qemu-img resize /opt/CentOS-7.qcow2 +2G
 
 在本地的tmp目录下上传一个CS7的安装镜像，使用此镜像来安装虚拟机
 
