@@ -1,0 +1,61 @@
+GreenPlum性能调优
+前言：数据库系统一般分为两种类型，一种是面向前台应用的，应用比较简单，但是重吞吐和高并发的OLTP类型；一种是重计算的，对大数据集进行统计分析的OLAP类型。Greenplum属于后者，下面简单介绍下这两种数据库系统的特点。
+	OLTP（On-Line Transaction Processing，联机事务处理）系统也称为生产系统，它是事件驱动的、面向应用的，比如电子商务网站的交易系统就是一个典型的OLTP系统。OLTP的基本特点是：
+	数据在系统中产生；
+	基于交易的处理系统（Transaction-Based）；
+	每次交易牵涉的数据量很小；
+	对响应时间要求非常高；
+	用户数量非常庞大，主要是操作人员；
+	数据库的各种操作主要基于索引进行。
+
+	OLAP（On-Line Analytical Processing，联机分析处理）是基于数据仓库的信息分析处理过程，是数据仓库的用户接口部分。OLAP系统是跨部门的、面向主题的，其基本特点是：
+	本身不产生数据，其基础数据来源于生产系统中的操作数据（OperationalData）；
+	基于查询的分析系统；
+	复杂查询经常使用多表联结、全表扫描等，牵涉的数据量往往十分庞大；
+	响应时间与具体查询有很大关系；
+	用户数量相对较小，其用户主要是业务人员与管理人员；
+	由于业务问题不固定，数据库的各种操作不能完全基于索引进行。
+
+	Greenplum 6针对OLTP的使用场景完成了多项优化，极大的改进了多并发情况下简单查询、删除和更新操作的性能。这些改进包括：
+	合并Postgres内核版本至9.4，这些合并在带来一系列新功能的同时，也提升了系统的整体性能。例如，引入fastpath等锁优化，可以减少多并发情况下的锁竞争开销。
+	提供全局死锁检测，从而支持针对同一张HEAP表的并发更新/删除操作。
+	优化全局事务，从而减少开始事务和结束事务时的延迟。
+
+	由于ITP业务属于OLTP场景，所以要对GreenPlum数据库进行针对性优化
+	1、开启全局死锁检测功能，在Greenplum 6中其默认关闭，需要打开它才可以支持并发更新/删除操作；Greenplum 5并不支持
+		gpconfig -c gp_enable_global_deadlock_detector -v on
+	
+	2、禁用GPORCA优化器
+		gpconfig -c optimizer -v off
+		
+	3、	checkpoint主动刷盘的频率，默认值8会降低刷盘频率，但是每次刷盘的数据量较大，导致整个集群瞬时的性能下降。针对OLTP大量更新类语句适当调小此设置会增加刷盘频率，但由于每次刷盘数据量变小，平均性能会有较明显提升；
+		gpconfig -c checkpoint_segments -v 2 --skipvalidation
+		
+	4、内存缓冲区大小
+		gpconfig -c shared_buffers -v 1024MB
+	
+	5、	临时缓冲区
+		gpconfig -c temp_buffers -v 256MB
+	
+	6、	每个服务器进程允许同时打开的最大文件数目
+		gpconfig -c max_files_per_process -v 10240
+	
+	7、	max_connections最大连接数
+		gpconfig -c max_connections -v 1000 -m 500
+		主节点数必须小于数据节点数目
+	
+	8、	最大预备事务数建议和最大连接数一致
+		gpconfig -c max_prepared_transactions -v 1000 -m 500
+	
+	9、	关闭持久化调用，不强制刷新数据到磁盘，在断电或者系统出现问题时有数据丢失的风险。
+		gpconfig -c fsync -v off --skipvalidation
+	
+	10、调整事务提交参数，不强制将WAL写入磁盘，只需写到缓存中就会向客户端返回提交成功
+		gpconfig -c synchronous_commit -v off
+	
+	11、控制记录哪些SQL语句。有效值是none（off），ddl，mod和all（所有语句）
+		gpconfig -c log_statement -v none
+		
+	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
+	更多参数详情
+	http://47.92.231.67:8080/6-0/common/gpdb-features.html
