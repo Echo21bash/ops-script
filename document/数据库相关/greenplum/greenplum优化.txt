@@ -55,6 +55,10 @@ GreenPlum性能调优
 	
 	11、控制记录哪些SQL语句。有效值是none（off），ddl，mod和all（所有语句）
 		gpconfig -c log_statement -v none
+	
+	12、强制走索引
+		gpconfig -c enable_seqscan -v off
+		gpconfig -c enable_indexscan -v on
 		
 	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
 	更多参数详情
