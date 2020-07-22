@@ -32,10 +32,10 @@ GreenPlum性能调优
 		gpconfig -c checkpoint_segments -v 2 --skipvalidation
 		
 	4、内存缓冲区大小
-		gpconfig -c shared_buffers -v 1024MB
+		gpconfig -c shared_buffers -v 2GB
 	
 	5、	临时缓冲区
-		gpconfig -c temp_buffers -v 256MB
+		gpconfig -c temp_buffers -v 512MB
 	
 	6、	每个服务器进程允许同时打开的最大文件数目
 		gpconfig -c max_files_per_process -v 10240
@@ -59,7 +59,9 @@ GreenPlum性能调优
 	12、强制走索引
 		gpconfig -c enable_seqscan -v off
 		gpconfig -c enable_indexscan -v on
-		
+	
+	13、每个segment分配的分配的cpu的个数默认4
+		gpconfig -c gp_resqueue_priority_cpucores_per_segment -v 8
 	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
 	更多参数详情
 	http://47.92.231.67:8080/6-0/common/gpdb-features.html
