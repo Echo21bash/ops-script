@@ -21,11 +21,14 @@
 	virsh destroy win10
 重启虚拟机
 	virsh reboot win10
+恢复虚拟机
+	virsh resume win10
 删除虚拟机
 	virsh undefine win10
 	rm -f /var/lib/libvirtd/win10.img
 克隆虚拟机
 	virt-clone --auto-clone -o moban -n hadoop-code-1
+	virt-clone -f /opt/kvmdata/GPDB-1.qcow2  -o moban -n GPDB-1
 CPU和内存动态扩容
 	virsh edit win10
 
