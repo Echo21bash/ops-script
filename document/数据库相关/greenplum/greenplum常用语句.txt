@@ -5,6 +5,10 @@
 	create user tableau with nosuperuser nocreatedb password 'tableau' ;
 更改密码
 	alter user gpadmin with password 'gpadmin';
+获取锁信息
+	select * from gp_toolkit.gp_locks_on_relation;
+获取当前正在运行的SQL
+	select *from pg_stat_activity;
 查看表的存储结构
 	select distinct relstorage from pg_class;
 	------------
