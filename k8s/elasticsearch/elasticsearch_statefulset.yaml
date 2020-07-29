@@ -1,0 +1,93 @@
+﻿kind: StatefulSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: es-cluster
+spec:
+  selector:
+    matchLabels:
+      app: es-cluster
+  serviceName: es-discovery
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: es-cluster
+    spec:
+      containers:
+      - name: es-cluster
+        env:
+          - name: ELASTICSEARCH_CLUSTER_HOSTS
+            value: es-cluster-1,es-cluster-2,es-cluster-3
+          - name: ELASTICSEARCH_CLUSTER_NAME
+            value: elasticsearch-cluster
+          - name: ELASTICSEARCH_NODE_NAME
+            value: $(MY_POD_NAME)
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+        image: 10.255.50.25:9090/images/elasticsearch:6.8.11
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /bitnami/elasticsearch
+          name: es-data
+      volumes:
+        - name: es-data
+          persistentVolumeClaim:
+            claimName: es-data
+      initContainers:
+      - command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        image: alpine:3.6
+        securityContext:
+          privileged: true
+        imagePullPolicy: IfNotPresent
+        name: es-init
+      restartPolicy: Always
+  volumeClaimTemplates:
+  - metadata:
+      name: es-data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es-cluster
+  name: es-discovery
+spec:
+  clusterIP: None
+  ports:
+  - name: es-discovery
+    port: 9300
+    protocol: TCP
+    targetPort: 9300
+  selector:
+    k8s-app: es-cluster
+  type: ClusterIP
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es-cluster
+  name: es-client
+spec:
+  ports:
+  - name: es-client
+    protocol: TCP
+    port: 9200
+    targetPort: 9200
+  selector:
+    app: es-cluster

@@ -4,10 +4,12 @@
 	上面的命令是： kubectl命令行中，指定执行什么操作（command），指定什么类型资源对象（type），指定此类型的资源对象名称（name）,指定可选参数（flags）,后面的参数就是为了修饰那个唯一的对象
 
 二、常用的kubectl命令
-
+	列出命名空间
+		kubectl get namespace
+		
 	列出可用资源
-		kubectl get pod/node/svc/deployment --all-namcpaces
-
+		kubectl get pod/node/svc/deployment --all-namespace
+		kubectl get StorageClass
 	显示有关资源的详细信息
 		kubectl describe pod nvjob-lnrxj -n default
 

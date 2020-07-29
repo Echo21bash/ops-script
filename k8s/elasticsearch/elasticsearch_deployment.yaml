@@ -1,0 +1,164 @@
+﻿kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: es-1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: es-1
+        apps: es
+    spec:
+      containers:
+      - env:
+        - name: ELASTICSEARCH_CLUSTER_HOSTS
+          value: es-1,es-2,es-3
+        - name: ELASTICSEARCH_CLUSTER_NAME
+          value: elasticsearch-cluster
+        - name: ELASTICSEARCH_NODE_NAME
+          value: es-1
+        image: 10.255.50.25:9090/images/elasticsearch:6
+        imagePullPolicy: Always
+        name: es-1
+      initContainers:
+      - command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        image: alpine:3.6
+        securityContext:
+          privileged: true
+        imagePullPolicy: IfNotPresent
+        name: elasticsearch-init
+      restartPolicy: Always
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: es-2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: es-2
+        apps: es
+    spec:
+      containers:
+      - env:
+        - name: ELASTICSEARCH_CLUSTER_HOSTS
+          value: es-1,es-2,es-3
+        - name: ELASTICSEARCH_CLUSTER_NAME
+          value: elasticsearch-cluster
+        - name: ELASTICSEARCH_NODE_NAME
+          value: es-2
+        image: 10.255.50.25:9090/images/elasticsearch:6
+        imagePullPolicy: Always
+        name: es-2
+      initContainers:
+      - command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        image: alpine:3.6
+        securityContext:
+          privileged: true
+        imagePullPolicy: IfNotPresent
+        name: elasticsearch-init
+      restartPolicy: Always
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: es-3
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: es-3
+        apps: es
+    spec:
+      containers:
+      - env:
+        - name: ELASTICSEARCH_CLUSTER_HOSTS
+          value: es-1,es-2,es-3
+        - name: ELASTICSEARCH_CLUSTER_NAME
+          value: elasticsearch-cluster
+        - name: ELASTICSEARCH_NODE_NAME
+          value: es-3
+        image: 10.255.50.25:9090/images/elasticsearch:6
+        imagePullPolicy: Always
+        name: es-3
+      initContainers:
+      - command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        image: alpine:3.6
+        securityContext:
+          privileged: true
+        imagePullPolicy: IfNotPresent
+        name: elasticsearch-init
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es
+  name: es-1
+spec:
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 9300
+    targetPort: 9300
+  selector:
+    app: es-1
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es
+  name: es-2
+spec:
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 9300
+    targetPort: 9300
+  selector:
+    app: es-2
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es
+  name: es-3
+spec:
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 9300
+    targetPort: 9300
+  selector:
+    app: es-3
+--- 
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: es
+  name: es-client
+spec:
+  ports:
+  - name: port1
+    protocol: TCP
+    port: 9200
+    targetPort: 9200
+  selector:
+    apps: es
