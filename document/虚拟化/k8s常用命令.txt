@@ -49,3 +49,19 @@
         fieldRef:
           fieldPath: spec.nodeName
     引用$(MY_POD_NAME)
+
+四、关联pvc到特定的pv
+	kind: PersistentVolumeClaim
+	apiVersion: v1
+	metadata:
+	  name: nfs-pvc
+	spec:
+	  accessModes:
+		- ReadWriteMany
+	  storageClassName: ""
+	  resources:
+		requests:
+		  storage: 90Mi
+	  selector:
+		matchLabels:
+		  pv: nfs-pv

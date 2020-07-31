@@ -54,8 +54,10 @@ GreenPlum性能调优
 		gpconfig -c synchronous_commit -v off
 	
 	11、控制记录哪些SQL语句。有效值是none（off），ddl，mod和all（所有语句）
-		gpconfig -c log_statement -v none
-	
+		打开主节点sql记录并记录执行时长
+		gpconfig -c log_statement -v none -m all
+		-1表示关闭,0表示打开,100表示记录大于100ms的sql
+		gpconfig -c log_min_duration_statement -v -1 -m 0
 	12、强制走索引
 		gpconfig -c enable_seqscan -v off
 		gpconfig -c enable_indexscan -v on

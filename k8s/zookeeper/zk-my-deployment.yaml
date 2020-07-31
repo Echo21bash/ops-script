@@ -36,7 +36,7 @@ spec:
         ports:
         - containerPort: 2181
         env:
-        - name: SERVERS
+        - name: SERVERS_NUM
           value: "3"
       volumes:
         - name: zookeeper-datadir-1
@@ -81,7 +81,7 @@ spec:
         ports:
         - containerPort: 2181
         env:
-        - name: SERVERS
+        - name: SERVERS_NUM
           value: "3"
       volumes:
         - name: zookeeper-datadir-2
@@ -126,7 +126,7 @@ spec:
         ports:
         - containerPort: 2181
         env:
-        - name: SERVERS
+        - name: SERVERS_NUM
           value: "3"
       volumes:
         - name: zookeeper-datadir-3
@@ -171,7 +171,7 @@ spec:
   resources:
     requests:
       storage: 200Mi
-
+---
 apiVersion: v1
 kind: Service
 metadata:
