@@ -4,8 +4,9 @@ metadata:
   labels:
     app: redis-cluster
   name: redis-cluster
-  namespace: default
+
 spec:
+  clusterIP: None
   ports:
   - port: 6379
     targetPort: 6379
