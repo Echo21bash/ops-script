@@ -1,0 +1,29 @@
+1.安装
+	yum install epel-release -y
+	yum install nmon -y
+2.实时监控
+	输入c可显示CPU的信息，“m”对应内存，“n”对应网络，“d”可以查看磁盘信息，“t”可以查看系统的进程信息
+	nmon
+	
+3.数据采集
+	nmon -c 600 -s 1 -f -m .
+
+	-f ：按标准格式输出文件名称   生成文件：_YYYYMMDD_HHMM.nmon
+
+	-t ： 输出最耗资源的进程
+
+	-s ：每隔n秒采集一次，这里为1秒
+
+	-c ：采集次数，这里为600，即监控=600*1/60=10分钟
+
+	-m : 指定生成文件位置
+	
+4.数据分析
+	通过nmon analyser工具转化为excel文件
+	
+	(1) 打开nmon analyser v51_2.xlsm 文件
+	
+	(2) 调整excel宏的安全级别，启用编辑
+	
+	(3) 然后点击Analyser nmon data 按钮，选择_YYYYMMDD_HHMM.nmon 生成的文件
+	
