@@ -64,6 +64,12 @@ GreenPlum性能调优
 	
 	13、每个segment分配的分配的cpu的个数默认4
 		gpconfig -c gp_resqueue_priority_cpucores_per_segment -v 8
+		
+	14、内存优化默认值*2
+		gpconfig -c gp_vmem_protect_limit  -v 16384
+		gpconfig -c max_statement_mem -v 4000MB
+		gpconfig -c statement_mem -v 256MB
+		
 	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
 	更多参数详情
 	http://47.92.231.67:8080/6-0/common/gpdb-features.html
