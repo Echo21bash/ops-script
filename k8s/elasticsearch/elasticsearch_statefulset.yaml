@@ -1,5 +1,5 @@
 ﻿kind: StatefulSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: es-cluster
 spec:
@@ -16,21 +16,20 @@ spec:
       containers:
       - name: es-cluster
         env:
-          - name: ELASTICSEARCH_CLUSTER_HOSTS
-            value: es-cluster-1,es-cluster-2,es-cluster-3
-          - name: ELASTICSEARCH_CLUSTER_NAME
-            value: elasticsearch-cluster
-          - name: ELASTICSEARCH_NODE_NAME
-            value: $(MY_POD_NAME)
+          - name: CLUSTER_HOSTS
+            value: es-cluster-0.es-discovery,es-cluster-1.es-discovery,es-cluster-2.es-discovery
+          - name: CLUSTER_NAME
           - name: POD_NAME
             valueFrom:
               fieldRef:
                 apiVersion: v1
                 fieldPath: metadata.name
-        image: 10.255.50.25:9090/images/elasticsearch:6.8.11
+          - name: NODE_NAME
+            value: $(POD_NAME)
+        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
         imagePullPolicy: Always
         volumeMounts:
-        - mountPath: /bitnami/elasticsearch
+        - mountPath: /opt/elasticsearch/data
           name: es-data
       volumes:
         - name: es-data
@@ -51,12 +50,12 @@ spec:
   - metadata:
       name: es-data
       annotations:
-        volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+        volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 500Mi
+          storage: 1Gi
 ---
 
 kind: Service
@@ -73,7 +72,7 @@ spec:
     protocol: TCP
     targetPort: 9300
   selector:
-    k8s-app: es-cluster
+    app: es-cluster
   type: ClusterIP
 ---
 
