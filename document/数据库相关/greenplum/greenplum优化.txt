@@ -57,7 +57,7 @@ GreenPlum性能调优
 		打开主节点sql记录并记录执行时长
 		gpconfig -c log_statement -v none -m all
 		-1表示关闭,0表示打开,100表示记录大于100ms的sql
-		gpconfig -c log_min_duration_statement -v -1 -m 0
+		gpconfig -c log_min_duration_statement -v -1 -m 50
 	12、强制走索引
 		gpconfig -c enable_seqscan -v off
 		gpconfig -c enable_indexscan -v on
@@ -65,10 +65,16 @@ GreenPlum性能调优
 	13、每个segment分配的分配的cpu的个数默认4
 		gpconfig -c gp_resqueue_priority_cpucores_per_segment -v 8
 		
-	14、内存优化默认值*2
+	14、内存优化默认值
+		1.使用这个公式计算gp_vmem（Greenplum数据库可用的主机内存）： gp_vmem = ((SWAP + RAM) – (7.5GB + 0.05 * RAM)) / 1.7
+		其中SWAP是主机的交换空间（以GB为单位）而RAM是主机上安装的内存（以GB为单位）。
+		2.计算max_acting_primary_segments。当镜像segment由于集群中其他主机上的 segment或者主机故障而被激活时，这是能在一台主机上运行的主segment的最大数量。例如，对于布置在每台主机有8个主segment的四主机块中的镜像来说，单一segment主机失效将会在其所在块中剩余每台主机上激活2个或者3个镜像segment。这一配置的max_acting_primary_segments值是11 （8个主Segment外加3个故障时激活的镜像）。
+		3.通过将总的Greenplum数据库内存除以活动主segment的最大数量来计算gp_vmem_protect_limit： gp_vmem_protect_limit = gp_vmem / max_acting_primary_segments
+		转换成兆字节就是gp_vmem_protect_limit系统配置参数的设置。
+		设置示例根据情况修改
 		gpconfig -c gp_vmem_protect_limit  -v 16384
 		gpconfig -c max_statement_mem -v 4000MB
-		gpconfig -c statement_mem -v 256MB
+		gpconfig -c statement_mem -v 512MB
 		
 	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
 	更多参数详情

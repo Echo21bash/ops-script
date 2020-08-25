@@ -16,15 +16,16 @@ spec:
       containers:
       - name: es-cluster
         env:
-          - name: CLUSTER_HOSTS
+          - name: ES_CLUSTER_HOSTS
             value: es-cluster-0.es-discovery,es-cluster-1.es-discovery,es-cluster-2.es-discovery
-          - name: CLUSTER_NAME
+          - name: ES_CLUSTER_NAME
+            value: es-cluster
           - name: POD_NAME
             valueFrom:
               fieldRef:
                 apiVersion: v1
                 fieldPath: metadata.name
-          - name: NODE_NAME
+          - name: ES_NODE_NAME
             value: $(POD_NAME)
         image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
         imagePullPolicy: Always

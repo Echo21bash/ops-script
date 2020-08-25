@@ -12,15 +12,22 @@ spec:
     spec:
       containers:
       - env:
-        - name: ELASTICSEARCH_CLUSTER_HOSTS
+        - name: ES_CLUSTER_HOSTS
           value: es-1,es-2,es-3
-        - name: ELASTICSEARCH_CLUSTER_NAME
+        - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
-        - name: ELASTICSEARCH_NODE_NAME
+        - name: ES_NODE_NAME
           value: es-1
-        image: 10.255.50.25:9090/images/elasticsearch:6
+        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
         imagePullPolicy: Always
         name: es-1
+        volumeMounts:
+        - mountPath: /opt/elasticsearch/data
+          name: es-data-1
+      volumes:
+        - name: es-data-1
+          persistentVolumeClaim:
+            claimName: es-data-1
       initContainers:
       - command:
         - sysctl
@@ -32,6 +39,19 @@ spec:
         imagePullPolicy: IfNotPresent
         name: elasticsearch-init
       restartPolicy: Always
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: es-data-1
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
@@ -47,11 +67,11 @@ spec:
     spec:
       containers:
       - env:
-        - name: ELASTICSEARCH_CLUSTER_HOSTS
+        - name: ES_CLUSTER_HOSTS
           value: es-1,es-2,es-3
-        - name: ELASTICSEARCH_CLUSTER_NAME
+        - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
-        - name: ELASTICSEARCH_NODE_NAME
+        - name: ES_NODE_NAME
           value: es-2
         image: 10.255.50.25:9090/images/elasticsearch:6
         imagePullPolicy: Always
@@ -82,11 +102,11 @@ spec:
     spec:
       containers:
       - env:
-        - name: ELASTICSEARCH_CLUSTER_HOSTS
+        - name: ES_CLUSTER_HOSTS
           value: es-1,es-2,es-3
-        - name: ELASTICSEARCH_CLUSTER_NAME
+        - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
-        - name: ELASTICSEARCH_NODE_NAME
+        - name: ES_NODE_NAME
           value: es-3
         image: 10.255.50.25:9090/images/elasticsearch:6
         imagePullPolicy: Always
