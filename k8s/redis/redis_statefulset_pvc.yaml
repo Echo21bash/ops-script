@@ -34,6 +34,15 @@ spec:
         - mountPath: /opt/redis/data
           name: redis-data
       restartPolicy: Always
+      livenessProbe:
+        exec:
+          command:
+          - health-check
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 2
+        successThreshold: 1
+        timeoutSeconds: 2
       volumes:
         - name: redis-data
           persistentVolumeClaim:
