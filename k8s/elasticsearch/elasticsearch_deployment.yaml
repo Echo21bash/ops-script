@@ -52,6 +52,8 @@ spec:
   resources:
     requests:
       storage: 1Gi
+
+
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
@@ -73,7 +75,7 @@ spec:
           value: elasticsearch-cluster
         - name: ES_NODE_NAME
           value: es-2
-        image: 10.255.50.25:9090/images/elasticsearch:6
+        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
         imagePullPolicy: Always
         name: es-2
       initContainers:
@@ -87,7 +89,23 @@ spec:
         imagePullPolicy: IfNotPresent
         name: elasticsearch-init
       restartPolicy: Always
+
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: es-data-2
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
@@ -108,7 +126,7 @@ spec:
           value: elasticsearch-cluster
         - name: ES_NODE_NAME
           value: es-3
-        image: 10.255.50.25:9090/images/elasticsearch:6
+        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
         imagePullPolicy: Always
         name: es-3
       initContainers:
@@ -122,6 +140,20 @@ spec:
         imagePullPolicy: IfNotPresent
         name: elasticsearch-init
       restartPolicy: Always
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: es-data-3
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
 ---
 kind: Service
 apiVersion: v1
