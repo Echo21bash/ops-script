@@ -33,16 +33,16 @@ spec:
         volumeMounts:
         - mountPath: /opt/redis/data
           name: redis-data
+        livenessProbe:
+          exec:
+            command:
+            - health-check
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 2
       restartPolicy: Always
-      livenessProbe:
-        exec:
-          command:
-          - health-check
-        failureThreshold: 3
-        initialDelaySeconds: 10
-        periodSeconds: 2
-        successThreshold: 1
-        timeoutSeconds: 2
       volumes:
         - name: redis-data
           persistentVolumeClaim:
@@ -57,3 +57,20 @@ spec:
       resources:
         requests:
           storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-cluster
+  name: redis-cluster
+
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-cluster
+

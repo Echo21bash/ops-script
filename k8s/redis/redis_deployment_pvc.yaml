@@ -33,3 +33,18 @@ spec:
   resources:
     requests:
       storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kube-redis
+  name: kube-redis
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: kube-redis
