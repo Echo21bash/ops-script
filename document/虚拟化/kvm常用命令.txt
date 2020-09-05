@@ -52,7 +52,8 @@ CPU和内存动态扩容
 	virt-install --virt-type kvm --name CentOS-7 --ram 2048 --vcpus=2 \
 	--cdrom=/tmp/CentOS-7.2-x86_64-DVD-1511.iso --disk path=/opt/CentOS-7-x86_64.qcow2 \
 	--network bridge=virbr1 --graphics vnc,listen=0.0.0.0 --noautoconsole
-提示：也可以使用一次性指定磁盘大小的方式，磁盘文件会根据数据量的大小变化而变化：
+	提示：	也可以使用一次性指定磁盘大小的方式，磁盘文件会根据数据量的大小变化而变化；
+			如遇到iso权限问题需要将镜像移动至/tmp目录即可；
 
 	virt-install  --virt-type kvm --name CS7-1c2g20g  --ram 2048  --vcpus=2 -s 20 \
 	--cdrom=/tmp/CentOS-7.2-x86_64-DVD-1511.iso --hvm  --os-type=linux -f /vm/1c2g20g.img \
