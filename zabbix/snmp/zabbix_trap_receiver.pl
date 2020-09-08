@@ -101,22 +101,29 @@ sub zabbix_receiver
 	print OUTPUT_FILE "VARBINDS:\n";
 	foreach my $x (@varbinds)
 	{
+	      #将@varbinds数组的第二个变量赋值
           $string=$x->[1];
+          #判断变量string是否是Hex-STRING开头
           if($string =~ /Hex-STRING/){
-            $string =~ /Hex-STRING:(([ ]{1,}[0-9a-fA-F]{2}){10,})/;
-            if($1){
-              $hex=$1;
-              $hex=~s/([ ]{1,})//ge;
-              #print "$hex\n";
-              $hex=pack('H*',$hex);
-              $str=$hex;
-              #print "$str\n";
-              #将gb2312编码转换成utf-8编码
-              $gbk=encode("utf-8",decode("gb2312",$str));
-              #print "$gbk\n";
-              $x->[1]=$gbk;
+              #通过正则匹配十六进制字符匹配次数当前是至少10次
+              $string =~ /Hex-STRING:(([ ]{1,}[0-9a-fA-F]{2}){10,})/;
+              #判断是否匹配到16进制字符
+              if($1){
+                  #将匹配到的十六进制字符赋值给hex
+                  $hex=$1;
+                  #将所有十六进制字符之间的空格删除
+                  $hex=~s/([ ]{1,})//ge;
+                  #print "$hex\n";
+                  #将十六进制字符转换成字符串
+                  $str=pack('H*',$hex);
+                  #print "$str\n";
+                  #将gb2312编码转换成utf-8编码
+                  $gbk=encode("utf-8",decode("gb2312",$str));
+                  #print "$gbk\n";
+                  #将转换后的字符串赋值给$x->[1]
+                  $x->[1]=$gbk;
 
-            }
+              }
           }
 
 		printf OUTPUT_FILE "  %-30s type=%-2d value=%s\n", $x->[0], $x->[2], $x->[1];
