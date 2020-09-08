@@ -105,6 +105,10 @@ sub zabbix_receiver
           $string=$x->[1];
           #判断变量string是否是Hex-STRING开头
           if($string =~ /Hex-STRING/){
+
+              #将所有回车删除
+              $string=~s/([\n]{1,})//ge;
+
               #通过正则匹配十六进制字符匹配次数当前是至少10次
               $string =~ /Hex-STRING:(([ ]{1,}[0-9a-fA-F]{2}){10,})/;
               #判断是否匹配到16进制字符
