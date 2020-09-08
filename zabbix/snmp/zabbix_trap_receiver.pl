@@ -104,7 +104,7 @@ sub zabbix_receiver
           $string=$x->[1];
           if($string =~ /Hex-STRING/){
             $string =~ /Hex-STRING:(([ ]{1,}[0-9a-fA-F]{2}){10,})/;
-            if(!$string){
+            if($1){
               $hex=$1;
               $hex=~s/([ ]{1,})//ge;
               #print "$hex\n";
