@@ -14,4 +14,4 @@ ES认证相关
 	
 	然后重启ES
 	配置用户名密码
-	./bin/x-pack/setup-passwords interactive
+	./bin/elasticsearch-setup-passwords interactive
