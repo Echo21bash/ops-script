@@ -33,7 +33,7 @@ GreenPlum性能调优
 		
 	4、内存缓冲区大小
 		官方建议max_connections*16K，不宜过大
-		gpconfig -c shared_buffers -v 
+		gpconfig -c shared_buffers -v 125MB
 	
 	5、	临时缓冲区
 		gpconfig -c temp_buffers -v 512MB
