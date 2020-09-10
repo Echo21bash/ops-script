@@ -32,7 +32,8 @@ GreenPlum性能调优
 		gpconfig -c checkpoint_segments -v 2 --skipvalidation
 		
 	4、内存缓冲区大小
-		gpconfig -c shared_buffers -v 2GB
+		官方建议max_connections*16K，不宜过大
+		gpconfig -c shared_buffers -v 
 	
 	5、	临时缓冲区
 		gpconfig -c temp_buffers -v 512MB
