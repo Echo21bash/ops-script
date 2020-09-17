@@ -64,6 +64,7 @@ GreenPlum性能调优
 		gpconfig -c enable_indexscan -v on
 	
 	13、每个segment分配的分配的cpu的个数默认4
+		根据cpu核数配置主节点可配置为所有
 		gpconfig -c gp_resqueue_priority_cpucores_per_segment -v 8
 		
 	14、内存优化默认值
