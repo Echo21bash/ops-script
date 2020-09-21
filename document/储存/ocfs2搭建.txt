@@ -44,7 +44,7 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 	在集群中任意一台执行
 	（1）查看当前ocfs2卷内的Max Node Slots
 		echo 'stats -h' | debugfs.ocfs2 /dev/sdb
-	（2）更改Max Node Slots值为3
+	（2）更改Max Node Slots值为3，需要将所有挂载该设备的节点umount
 		tunefs.ocfs2 -N 3 /dev/sdb
 	（3）执行o2cb_ctl工具去在线新增节点3到cluster中
 		o2cb_ctl -C  -i -n node3 -t node -a number=3 -a ip_address=10.10.10.4 -a ip_port=11111 -a cluster=ocfs2
