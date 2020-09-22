@@ -34,12 +34,13 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 	###可使用exsi或者iscsi共享磁盘挂载
 	前提将共享磁盘分别挂载linux主机
 	（6）创建ocfs文件系统（只需在一台主机执行）
-		mkfs -t ocfs2 -C 256K -N 2 /dev/sdb
+		mkfs -t ocfs2 -C 256K -N 2 -L ocfs2 /dev/sdb
 		注意-N 是最多允许多少主机同时挂载ocfs文件系统
 	（7）挂载ocfs文件系统
 		mount -t ocfs2 /dev/sdb /opt
 	（8）查看挂载情况
 		mounted.ocfs2 -f
+		o2cb.init status
 2、向集群中添加节点
 	在集群中任意一台执行
 	（1）查看当前ocfs2卷内的Max Node Slots
@@ -57,9 +58,9 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 		systemctl start o2cb.service
 		
 3、ocfs2文件系统扩容（不支持缩容）
+	首先将共享磁盘扩容后并重启服务端
 	（1）卸载磁盘
 		unmount /dev/sdb
-	前提将共享磁盘扩容后
 	（2）重新挂载磁盘
 		mount -t ocfs2 /dev/sdb /opt
 	（3）扩容ocfs2文件系统
