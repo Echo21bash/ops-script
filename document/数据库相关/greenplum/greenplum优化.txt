@@ -38,15 +38,15 @@ GreenPlum性能调优
 	5、	临时缓冲区
 		gpconfig -c temp_buffers -v 512MB
 	
-	6、	每个服务器进程允许同时打开的最大文件数目
-		gpconfig -c max_files_per_process -v 10240
+	6、	每个服务器进程允许同时打开的最大文件数目默认1000
+		gpconfig -c max_files_per_process -v 2000
 	
 	7、	max_connections最大连接数
 		gpconfig -c max_connections -v 1000 -m 500
 		主节点数必须小于数据节点数目
 	
-	8、	最大预备事务数建议和最大连接数一致
-		gpconfig -c max_prepared_transactions -v 1000 -m 500
+	8、	最大预备事务数建议和主节点最大连接数一致
+		gpconfig -c max_prepared_transactions -v 500
 	
 	9、	关闭持久化调用，不强制刷新数据到磁盘，在断电或者系统出现问题时有数据丢失的风险。
 		gpconfig -c fsync -v off --skipvalidation
