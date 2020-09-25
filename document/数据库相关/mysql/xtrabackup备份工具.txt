@@ -1,0 +1,10 @@
+安装yum源
+	yum install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+安装软件
+	yum install -y percona-xtrabackup-24
+全量备份
+	innobackupex --defaults-file=/opt/mysql/my.cnf --user=root --password=123456 /data/backup/
+恢复备份
+	恢复时需要将mysql数据目录清空
+	innobackupex --defaults-file=/opt/mysql/my.cnf --copy-back  /data/backup/2020-09-25_14-40-38
+	
