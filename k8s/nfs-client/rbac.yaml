@@ -1,7 +1,9 @@
-kind: ServiceAccount
 apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -28,7 +30,8 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: nfs-client-provisioner
-    namespace: default
+    # replace with namespace where provisioner is deployed
+    namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: nfs-client-provisioner-runner
@@ -38,6 +41,8 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: leader-locking-nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: kube-system
 rules:
   - apiGroups: [""]
     resources: ["endpoints"]
@@ -47,11 +52,13 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: leader-locking-nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: kube-system
 subjects:
   - kind: ServiceAccount
     name: nfs-client-provisioner
     # replace with namespace where provisioner is deployed
-    namespace: default
+    namespace: kube-system
 roleRef:
   kind: Role
   name: leader-locking-nfs-client-provisioner

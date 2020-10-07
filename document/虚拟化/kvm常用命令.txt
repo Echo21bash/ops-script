@@ -1,5 +1,5 @@
 安装kvm
-	yum install -y qemu-kvm  libvirt virt-install
+	yum install -y qemu-kvm  libvirt virt-install virt-viewer
 	systemctl start libvirtd
 这里做一个说明：
 	qemu-kvm： 主要是KVM用户态的管理工具，来帮助我们管理KVM

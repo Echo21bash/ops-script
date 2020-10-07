@@ -144,7 +144,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 200Mi
+      storage: 500Mi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -157,7 +157,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 200Mi
+      storage: 500Mi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -170,7 +170,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 200Mi
+      storage: 500Mi
 ---
 apiVersion: v1
 kind: Service
