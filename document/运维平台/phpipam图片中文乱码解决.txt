@@ -1,0 +1,4 @@
+1、下载微软雅黑字体
+2、备份phpipam/css/fonts/MesloLGS-Regular.ttf字体
+3、将微软雅黑字体上传至phpipam/css/fonts目录
+4、将上传的字体重名名为MesloLGS-Regular.ttf，刷新浏览器即可
