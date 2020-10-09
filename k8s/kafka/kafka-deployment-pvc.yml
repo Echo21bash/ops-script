@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: kafka-0
+  name: kafka-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-0
+  template:
+    metadata:
+      labels:
+        app: kafka-0
+    spec:
+      containers:
+      - env:
+        - name: KAFKA_JMX_PORT
+          value: "9999"
+        - name: KAFKA_OTHER_OPTS
+          value: --override advertised.listeners=PLAINTEXT://kafka-0:9092
+        - name: ZK_CONNECT
+          value: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        image: 172.16.2.20:9000/tyacc-test/kafka:2.1.1
+        imagePullPolicy: Always
+        name: kafka-0
+        volumeMounts:
+        - mountPath: /opt/kafka/data
+          name: kafka-0
+
+      restartPolicy: Always
+      volumes:
+      - name: kafka-0
+        persistentVolumeClaim:
+          claimName: kafka-data-0
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-data-0
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-0
+  name: kafka-0
+spec:
+  ports:
+  - name: client
+    port: 9092
+    protocol: TCP
+  - name: jmx
+    port: 9999
+    protocol: TCP
+  selector:
+    app: kafka-0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: kafka-1
+  name: kafka-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-1
+  template:
+    metadata:
+      labels:
+        app: kafka-1
+    spec:
+      containers:
+      - env:
+        - name: KAFKA_JMX_PORT
+          value: "9999"
+        - name: KAFKA_OTHER_OPTS
+          value: --override advertised.listeners=PLAINTEXT://kafka-1:9092
+        - name: ZK_CONNECT
+          value: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        image: 172.16.2.20:9000/tyacc-test/kafka:2.1.1
+        imagePullPolicy: Always
+        name: kafka-1
+        volumeMounts:
+        - mountPath: /opt/kafka/data
+          name: kafka-1
+
+      restartPolicy: Always
+      volumes:
+      - name: kafka-1
+        persistentVolumeClaim:
+          claimName: kafka-data-1
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-data-1
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-1
+  name: kafka-1
+spec:
+  ports:
+  - name: client
+    port: 9092
+    protocol: TCP
+  - name: jmx
+    port: 9999
+    protocol: TCP
+  selector:
+    app: kafka-1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: kafka-2
+  name: kafka-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-2
+  template:
+    metadata:
+      labels:
+        app: kafka-2
+    spec:
+      containers:
+      - env:
+        - name: KAFKA_JMX_PORT
+          value: "9999"
+        - name: KAFKA_OTHER_OPTS
+          value: --override advertised.listeners=PLAINTEXT://kafka-2:9092
+        - name: ZK_CONNECT
+          value: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        image: 172.16.2.20:9000/tyacc-test/kafka:2.1.1
+        imagePullPolicy: Always
+        name: kafka-2
+        volumeMounts:
+        - mountPath: /opt/kafka/data
+          name: kafka-2
+
+      restartPolicy: Always
+      volumes:
+      - name: kafka-2
+        persistentVolumeClaim:
+          claimName: kafka-data-2
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-data-2
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-2
+  name: kafka-2
+spec:
+  ports:
+  - name: client
+    port: 9092
+    protocol: TCP
+  - name: jmx
+    port: 9999
+    protocol: TCP
+  selector:
+    app: kafka-2

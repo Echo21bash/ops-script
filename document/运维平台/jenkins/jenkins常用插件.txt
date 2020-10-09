@@ -1,5 +1,8 @@
 jenkins常用插件
-
+Localization: Chinese (Simplified) ## 中文插件
+Active Choices ## 动态参数
+Extended Choice Parameter ## 参数化构建
+Git ##即可在任务的"源码管理"中配置git
 Subversion ## 即可在任务的"源码管理"中配置SVN
 Git Parameter Plug-In  ## 构建时，可以选择git分支，tag等来作为构建参数
 List Subversion tags ## 构建时，可以选择svn分支，tag等来作为构建参数
