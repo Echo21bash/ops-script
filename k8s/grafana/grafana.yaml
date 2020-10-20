@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+  namespace: monitoring
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: admin
+        - name: GF_SECURITY_ADMIN_USER
+          value: admin
+        image: 10.255.50.25:9090/images/grafana:6.6.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: grafana
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-volumes
+          subPath: grafana
+      restartPolicy: Always
+      volumes:
+      - name: grafana-volumes
+        persistentVolumeClaim:
+          claimName: grafana-volumes
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: grafana-volumes
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

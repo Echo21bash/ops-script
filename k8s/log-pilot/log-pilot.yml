@@ -35,6 +35,9 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+          # 日志收集前缀
+          - name: PILOT_LOG_PREFIX
+            value: tyacc
           - name: "LOGGING_OUTPUT"
             value: "elasticsearch"
           # 请确保集群到ES网络可达
