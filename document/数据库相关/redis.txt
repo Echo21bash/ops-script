@@ -11,6 +11,7 @@ redis5
 		redis-cli --cluster info 192.168.1.1:6379
 	查看集群节点
 		cluster nodes
+		cluster slots
 	添加节点
 		redis-cli --cluster add-node 192.168.1.7:6379 192.168.1.1:6379
 		redis-cli --cluster add-node 192.168.1.8:6379 192.168.1.1:6379
