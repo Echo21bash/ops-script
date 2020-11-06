@@ -1,0 +1,4 @@
+cp weixincfg.json /etc/
+chmod +x ./weixin
+cp ./weixin /usr/local/bin
+weixin 【接收人】【主题】【内容】
