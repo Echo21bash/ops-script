@@ -21,7 +21,10 @@
 		kubectl delete pod <pod_name> -n <namespace>
 
 	强制重启pod
-		kubectl get pod {podname} -n {namespace} -o yaml | kubectl replace --force -f -
+		kubectl get pod -n {namespace} {podname} -o yaml | kubectl replace --force -f -
+	
+	强制重新部署
+		kubectl get deployments -n  {namespace} {deploymentsname} -o yaml | kubectl replace --force -f -
 
 	通过yaml文件创建：
 		kubectl create -f xxx.yaml （不建议使用，无法更新，必须先delete）
