@@ -1,33 +1,30 @@
 ﻿kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
-  name: es-1
+  name: es
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: es-1
-        apps: es
+        app: es
     spec:
       containers:
       - env:
-        - name: ES_CLUSTER_HOSTS
-          value: es-1,es-2,es-3
-        - name: ES_CLUSTER_NAME
-          value: elasticsearch-cluster
+        - name: ES_JAVA_OPTS
+          value: '-Xms3G -Xmx3G'
         - name: ES_NODE_NAME
-          value: es-1
-        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
+          value: es
+        image: 172.16.12.80:9000/library/elasticsearch:6.8.11
         imagePullPolicy: Always
-        name: es-1
+        name: es
         volumeMounts:
         - mountPath: /opt/elasticsearch/data
-          name: es-data-1
+          name: es-data
       volumes:
-        - name: es-data-1
+        - name: es-data
           persistentVolumeClaim:
-            claimName: es-data-1
+            claimName: es-data
       initContainers:
       - command:
         - sysctl
@@ -43,7 +40,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: es-data-1
+  name: es-data
   annotations:
     volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
 spec:
@@ -51,154 +48,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
-
-
----
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: es-2
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: es-2
-        apps: es
-    spec:
-      containers:
-      - env:
-        - name: ES_CLUSTER_HOSTS
-          value: es-1,es-2,es-3
-        - name: ES_CLUSTER_NAME
-          value: elasticsearch-cluster
-        - name: ES_NODE_NAME
-          value: es-2
-        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
-        imagePullPolicy: Always
-        name: es-2
-      initContainers:
-      - command:
-        - sysctl
-        - -w
-        - vm.max_map_count=262144
-        image: alpine:3.6
-        securityContext:
-          privileged: true
-        imagePullPolicy: IfNotPresent
-        name: elasticsearch-init
-      restartPolicy: Always
-
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: es-data-2
-  annotations:
-    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: es-3
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: es-3
-        apps: es
-    spec:
-      containers:
-      - env:
-        - name: ES_CLUSTER_HOSTS
-          value: es-1,es-2,es-3
-        - name: ES_CLUSTER_NAME
-          value: elasticsearch-cluster
-        - name: ES_NODE_NAME
-          value: es-3
-        image: 10.255.50.25:9090/tyacc_dev/elasticsearch:6.8.11
-        imagePullPolicy: Always
-        name: es-3
-      initContainers:
-      - command:
-        - sysctl
-        - -w
-        - vm.max_map_count=262144
-        image: alpine:3.6
-        securityContext:
-          privileged: true
-        imagePullPolicy: IfNotPresent
-        name: elasticsearch-init
-      restartPolicy: Always
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: es-data-3
-  annotations:
-    volume.beta.kubernetes.io/storage-class: k8s-nfs-storage
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: es
-  name: es-1
-spec:
-  ports:
-  - name: port1
-    protocol: TCP
-    port: 9300
-    targetPort: 9300
-  selector:
-    app: es-1
----
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: es
-  name: es-2
-spec:
-  ports:
-  - name: port1
-    protocol: TCP
-    port: 9300
-    targetPort: 9300
-  selector:
-    app: es-2
----
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: es
-  name: es-3
-spec:
-  ports:
-  - name: port1
-    protocol: TCP
-    port: 9300
-    targetPort: 9300
-  selector:
-    app: es-3
+      storage: 4Gi
 --- 
 kind: Service
 apiVersion: v1
@@ -213,4 +63,4 @@ spec:
     port: 9200
     targetPort: 9200
   selector:
-    apps: es
+    app: es
