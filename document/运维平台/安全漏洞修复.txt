@@ -5,4 +5,4 @@ mountd:192.168.1.10
 2）vi /etc/hosts.deny
 mountd:all                                      
 【提示】无需重启rpc.bind和nfs
-这样只允许192.168.1.10 通过showmount -e看到NFS路径
+这样只允许192.168.1.10 通过showmount -e 查看服务端信息
