@@ -1,0 +1,325 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis-1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-1
+    spec:
+      containers:
+      - name: redis-1
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-1-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-1-data
+          persistentVolumeClaim:
+            claimName: redis-1-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-1-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-1
+  name: redis-1
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-1
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis-2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-2
+    spec:
+      containers:
+      - name: redis-2
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-2-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-2-data
+          persistentVolumeClaim:
+            claimName: redis-2-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-2-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-2
+  name: redis-2
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-2
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis-3
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-3
+    spec:
+      containers:
+      - name: redis-3
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-3-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-3-data
+          persistentVolumeClaim:
+            claimName: redis-3-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-3-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-3
+  name: redis-3
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-3
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis-4
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-4
+    spec:
+      containers:
+      - name: redis-4
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-4-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-4-data
+          persistentVolumeClaim:
+            claimName: redis-4-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-4-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-4
+  name: redis-4
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-4
+apiVersion: extensions/v1beta1
+---
+kind: Deployment
+metadata:
+  name: redis-5
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-5
+    spec:
+      containers:
+      - name: redis-5
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-5-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-5-data
+          persistentVolumeClaim:
+            claimName: redis-5-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-5-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-5
+  name: redis-5
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-5
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis-6
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-6
+    spec:
+      containers:
+      - name: redis-6
+        image: rootww/redis
+        env:
+          - name: REDIS_RUN_MODE
+            value: "cluster"
+        volumeMounts:
+        - mountPath: /opt/redis/data
+          name: redis-6-data
+      restartPolicy: Always
+      volumes:
+        - name: redis-6-data
+          persistentVolumeClaim:
+            claimName: redis-6-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-6-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-6
+  name: redis-6
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis-port
+  selector:
+    app: redis-6
