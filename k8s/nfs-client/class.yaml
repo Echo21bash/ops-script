@@ -5,3 +5,6 @@ metadata:
 provisioner: fuseim.pri/ifs # or choose another name, must match deployment's env PROVISIONER_NAME'
 parameters:
   archiveOnDelete: "false"
+mountOptions:
+  - nfsvers=4.0
+  - nolock,tcp
