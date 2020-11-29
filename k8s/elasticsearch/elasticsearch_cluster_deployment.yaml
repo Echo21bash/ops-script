@@ -16,12 +16,14 @@ spec:
           value: es-1,es-2,es-3
         - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
+        - name: ES_JAVA_OPTS
+          value: -Xms2G -Xmx2G
         - name: ES_NODE_NAME
           value: es-1
         - name: ES_OTHER_OPTS
           value: '-E cluster.routing.allocation.disk.threshold_enabled=false'
         image: 172.16.12.80:9000/library/elasticsearch:6.8.11
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: es-1
         volumeMounts:
         - mountPath: /opt/elasticsearch/data
@@ -75,12 +77,14 @@ spec:
           value: es-1,es-2,es-3
         - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
+        - name: ES_JAVA_OPTS
+          value: -Xms2G -Xmx2G
         - name: ES_NODE_NAME
           value: es-2
         - name: ES_OTHER_OPTS
           value: '-E cluster.routing.allocation.disk.threshold_enabled=false'
         image: 172.16.12.80:9000/library/elasticsearch:6.8.11
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: es-2
         volumeMounts:
         - mountPath: /opt/elasticsearch/data
@@ -135,12 +139,14 @@ spec:
           value: es-1,es-2,es-3
         - name: ES_CLUSTER_NAME
           value: elasticsearch-cluster
+        - name: ES_JAVA_OPTS
+          value: -Xms2G -Xmx2G
         - name: ES_NODE_NAME
           value: es-3
         - name: ES_OTHER_OPTS
           value: '-E cluster.routing.allocation.disk.threshold_enabled=false'
         image: 172.16.12.80:9000/library/elasticsearch:6.8.11
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: es-3
         volumeMounts:
         - mountPath: /opt/elasticsearch/data

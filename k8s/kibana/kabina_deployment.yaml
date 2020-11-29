@@ -1,0 +1,40 @@
+﻿kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - env:
+        - name: ES_URL
+          value: 'http://es-client:9200'
+        #- name: ES_USERNAME
+        #  value: 'elastic'
+        #- name: ES_PASSWORD
+        #  value: '123456'
+        image: 172.16.12.80:9000/library/kibana:6.8.11
+        imagePullPolicy: IfNotPresent
+        name: kibana
+      restartPolicy: Always
+--- 
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kibana
+  name: kibana
+spec:
+  ports:
+  - name: port1
+    nodePort: 35601
+    port: 5601
+    protocol: TCP
+    targetPort: 5601
+  selector:
+    app: kibana
+  type: NodePort
