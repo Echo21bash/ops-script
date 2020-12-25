@@ -26,7 +26,7 @@ for db in ${dblist[@]} ; do
         #query out only the normal user tables, excluding partitions of parent tables
         for schema in ${schema_name[@]}
         do
-                psql -d $db -c "copy (select '\"'||tables.schemaname||'\".' || '\"'||tables.t        ablename||'\"' from (select nspname as schemaname, relname as tablename from pg_catalog.pg_cl        ass, pg_catalog.pg_namespace, pg_catalog.pg_roles where pg_class.relnamespace = pg_namespace.        oid and pg_namespace.nspowner = pg_roles.oid and pg_class.relkind='r' and (pg_namespace.nspna        me = '${schema}' or pg_roles.rolsuper = 'false' ) ) as tables(schemaname, tablename) left joi        n pg_catalog.pg_partitions on pg_partitions.partitionschemaname=tables.schemaname and pg_part        itions.partitiontablename=tables.tablename where pg_partitions.partitiontablename is null) to         stdout;" >>$tables_file
+                psql -d $db -c "copy (select '\"'||tables.schemaname||'\".' || '\"'||tables.tablename||'\"' from (select nspname as schemaname, relname as tablename from pg_catalog.pg_class, pg_catalog.pg_namespace, pg_catalog.pg_roles where pg_class.relnamespace = pg_namespace.oid and pg_namespace.nspowner = pg_roles.oid and pg_class.relkind='r' and (pg_namespace.nspname = '${schema}' or pg_roles.rolsuper = 'false' ) ) as tables(schemaname, tablename) left join pg_catalog.pg_partitions on pg_partitions.partitionschemaname=tables.schemaname and pg_partitions.partitiontablename=tables.tablename where pg_partitions.partitiontablename is null) to stdout;" >>$tables_file
         done
         while read line; do
                 #some table name may contain the $ sign, so escape it

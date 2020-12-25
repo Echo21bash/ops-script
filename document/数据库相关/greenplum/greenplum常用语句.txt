@@ -25,7 +25,13 @@
 	
 查询当前数据库有哪些HEAP表
 	select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relnamespace=t2.oid and relstorage in ('h');
-	
+查看表膨胀信息
+	SELECT schemaname||'.'||relname as table_name, 
+	pg_size_pretty(pg_relation_size('"'||schemaname||'"'||'.'||relname)) as table_size,
+	 n_dead_tup, n_live_tup, round(n_dead_tup * 100 / (n_live_tup + n_dead_tup),2) 
+	 AS dead_tup_ratio 
+	 FROM pg_stat_all_tables 
+	 WHERE n_dead_tup >= 1000 ORDER BY dead_tup_ratio DESC LIMIT 10;
 GreenPlum备份与恢复
 	1、备份
 		全量备份
