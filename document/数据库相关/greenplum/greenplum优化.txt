@@ -81,3 +81,42 @@ GreenPlum性能调优
 	注意：gp_enable_global_deadlock_detector optimizer这两个参数对OLTP场景最为重要，fsync synchronous这两个参数视数据丢失容忍性谨慎设置
 	更多参数详情
 	http://47.92.231.67:8080/6-0/common/gpdb-features.html
+	
+	除了配置参数的优化还有vacuum analyze优化
+	VACUUM
+		Greenplum是基于MVCC版本控制的，所有的delete并没有删除数据，而是将这一行数据标记为删除，
+		而且update其实就是delete加insert。所以，随着操作越来越多，表的大小也会越来越大。对于OLAP
+		应用来说，大部分表都是一次导入后不再修改，所以不会出现这个问题。
+		但是对于数据字典来说，就会随着时间表越来越大，其中的数据垃圾越来越多。
+	语法：
+
+	vacuum table;
+
+	vacuum full table;
+
+	1）简单的vacuum table只是简单的回收空间且令其可以再次使用。可以缓解表的增长。
+
+	这个命令执行的时候，其他操作仍可以对标的读写并发操作，没有请求排他锁。
+
+	2）vacuum full执行更广泛的处理，包括跨块移动行，把表压缩到最少的磁盘块数目存储。
+
+	这个命令执行的时候，需要加排他锁。
+
+	3）PostgreSQL中，此功能是自动执行。但是Greenplum中大部分的表是不需要vacuum的，
+
+	所以vacuum的autovacuum是关闭的。并且无法修改，需要手动通过脚本定时执行
+
+	4）执行vacuum后，最好对表上的索引进行重建
+	
+	ANALYZE
+	
+	限制
+		ANALYZE 会给目标表加 SHARE UPDATE EXCLUSIVE 锁，也就是与 UPDATE，DELETE，还有 DDL 语句冲突。
+	时机
+		根据上文所述，ANALYZE 会加锁并且也会消耗系统资源，因此运行命令需要选择合适的时机尽可能少的运行。根据 Greenplum 官网建议，以下3种情况发生后建议运行 ANALYZE
+		批量加载数据后，比如 COPY
+		创建索引之后
+		INSERT, UPDATE, and DELETE 大量数据之后
+	自动化
+		除了手动运行，ANALYZE 也可以自动化。实际上默认情况下，我们对空表写入数据后， Greenplum 也会自动帮我们收集统计信息，不过之后在写入数据，就需要手动操作了。
+		有2个参数可以用来调整自动化收集的时机，gp_autostats_mode 和 gp_autostats_on_change_threshold。gp_autostats_mode 默认是 on_no_stats，也就是如果表还没有统计信息，这时候写入数据会导致自动收集，这之后，无论表数据变化多大，都只能手动收集了。如果将 gp_autostats_mode 修改为 on_change ，就是在数据变化量达到 gp_autostats_on_change_threshold 参数配置的量之后，系统就会自动收集统计信息。
