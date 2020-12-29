@@ -32,6 +32,8 @@
 	 AS dead_tup_ratio 
 	 FROM pg_stat_all_tables 
 	 WHERE n_dead_tup >= 1000 ORDER BY dead_tup_ratio DESC LIMIT 10;
+查看表状态
+	select * from pg_stat_all_tables
 GreenPlum备份与恢复
 	1、备份
 		全量备份
