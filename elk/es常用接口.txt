@@ -1,0 +1,6 @@
+示例
+	index 参数相关
+	
+	curl -k -u elastic:tyacc@123 -XPUT -H 'Content-type':'application/json' 'http://172.16.2.137:9200/_all/_settings?preserve_existing=true' -d '{
+	  "index.max_docvalue_fields_search" : "200"
+	}'
