@@ -5,14 +5,7 @@ logfile=/home/gpadmin/itp_tool/greenplum_row_to_col.log
 ###开始时间与结束时间差必须大于定时任务执行间隔
 ###数据时间间隔可选【1 days】【1 hour】
 time_interval='1 hour'
-###数据时间间隔可选【1 days】【1 hour】
-###以天为时间间隔的开始时间
-#start_time=`date -d "-${time_interval}" +"%Y-%m-%d"`
-###以小时为时间间隔的开始时间
 start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M"`
-###以天为时间间隔的结束时间
-#end_time=`date +"%Y-%m-%d"`
-###以小时为时间间隔的结束时间
 end_time=`date +"%Y-%m-%d %H:%M"`
 
 
