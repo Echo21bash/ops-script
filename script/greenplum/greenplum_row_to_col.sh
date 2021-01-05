@@ -3,10 +3,10 @@ source /usr/local/greenplum-db/greenplum_path.sh
 ###日志目录
 logfile=/home/gpadmin/itp_tool/greenplum_row_to_col.log
 ###开始时间与结束时间差必须大于定时任务执行间隔
-###数据时间间隔可选【1 days】【1 hour】
+###数据时间间隔可选【1 days】【1 hour】【1 min】
 time_interval='1 hour'
-start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M"`
-end_time=`date +"%Y-%m-%d %H:%M"`
+start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M:00"`
+end_time=`date +"%Y-%m-%d %H:%M:00"`
 
 
 #数据库名
