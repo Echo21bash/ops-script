@@ -1,8 +1,9 @@
 #!/bin/bash
+###此脚本用于将行式业务报表同步至列式数据仓库
+###开始时间与结束时间差必须大于定时任务执行间隔
 source /usr/local/greenplum-db/greenplum_path.sh
 ###日志目录
 logfile=/home/gpadmin/itp_tool/greenplum_row_to_col.log
-###开始时间与结束时间差必须大于定时任务执行间隔
 ###数据时间间隔可选【1 days】【1 hour】【1 min】
 time_interval='1 hour'
 start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M:00"`
@@ -12,7 +13,7 @@ end_time=`date +"%Y-%m-%d %H:%M:00"`
 #数据库名
 database_name='tyacc_tytest'
 #查询条件
-index_name=('createdAt' 'updatedAt')
+index_name=('createdAt')
 #源模式
 source_schema='AFC_ITP_BUSINESS'
 #目标模式
@@ -83,25 +84,14 @@ echo "${start_run_time}" >>$logfile
 i=0
 for now_table in ${business_table[@]}
 do
-	if [[ ${now_table} = 'app_pay_bills' ]];then
-		echo "deleting ${now_table} data" >>$logfile
-		index='updatedAt'
-		delete_old_data >>$logfile
-		delete_updata_old_data >>$logfile
-		echo "updating ${now_table} data" >>$logfile
-		inset_new_data >>$logfile
-		inset_updata_new_data >>$logfile
-		((i++))
-	else
-		index='createdAt'
-		echo "deleting ${now_table} data" >>$logfile
-		delete_old_data >>$logfile
-		delete_updata_old_data >>$logfile
-		echo "updating ${now_table} data" >>$logfile
-		inset_new_data >>$logfile
-		inset_updata_new_data >>$logfile
-		((i++))
-	fi
+	index='createdAt'
+	echo "deleting ${now_table} data" >>$logfile
+	delete_old_data >>$logfile
+	delete_updata_old_data >>$logfile
+	echo "updating ${now_table} data" >>$logfile
+	inset_new_data >>$logfile
+	inset_updata_new_data >>$logfile
+	((i++))
 done
 end_run_time=`date`
 echo "${end_run_time}" >>$logfile
