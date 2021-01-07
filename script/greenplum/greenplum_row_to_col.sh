@@ -1,5 +1,5 @@
 #!/bin/bash
-###此脚本用于将行式业务报表同步至列式数据仓库
+###此脚本用于将行式业务表数据同步至列式数据仓库
 ###开始时间与结束时间差必须大于定时任务执行间隔
 source /usr/local/greenplum-db/greenplum_path.sh
 ###日志目录
