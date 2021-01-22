@@ -34,7 +34,7 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 	###可使用exsi或者iscsi共享磁盘挂载
 	前提将共享磁盘分别挂载linux主机
 	（6）创建ocfs文件系统（只需在一台主机执行）
-		mkfs -t ocfs2 -C 256K -N 2 -L ocfs2 /dev/sdb
+		mkfs -t ocfs2 -b 4k -C 256K -N 2 -L ocfs2 /dev/sdb
 		注意-N 是最多允许多少主机同时挂载ocfs文件系统
 	（7）挂载ocfs文件系统
 		mount -t ocfs2 /dev/sdb /opt
