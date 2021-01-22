@@ -35,7 +35,15 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 	前提将共享磁盘分别挂载linux主机
 	（6）创建ocfs文件系统（只需在一台主机执行）
 		mkfs -t ocfs2 -b 4k -C 256K -N 2 -L ocfs2 /dev/sdb
-		注意-N 是最多允许多少主机同时挂载ocfs文件系统
+		-C 集群大小参考值
+		File System Size	Suggested Minimum Cluster Size 
+		1 GB - 10 GB 		8K 
+		10GB - 100 GB		16K 
+		100 GB - 1 TB 		32K 
+		1 TB - 10 TB 		64K 
+		10 TB - 16 TB 		128K 
+ 
+		-N 是最多允许多少主机同时挂载ocfs文件系统
 	（7）挂载ocfs文件系统
 		mount -t ocfs2 /dev/sdb /opt
 	（8）查看挂载情况
