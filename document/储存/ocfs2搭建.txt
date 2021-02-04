@@ -18,13 +18,13 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 1、新建集群
 	在每台主机分别执行
 	（1）创建集群
-		o2cb_ctl -C -n ocfs2 -t cluster -a name=ocfs2
+		o2cb add-cluster ocfs2
 	（2）修改主机名
 		hostnamectl set-hostname node1
 		hostnamectl set-hostname node2
 	（3）添加节点
-		o2cb_ctl -C -n node1 -t node -a number=1 -a ip_address=10.10.10.2 -a ip_port=11111 -a cluster=ocfs2
-		o2cb_ctl -C -n node2 -t node -a number=2 -a ip_address=10.10.10.3 -a ip_port=11111 -a cluster=ocfs2
+		o2cb add-node --ip 10.11.11.11 --port 7777 --number 1 racfs node1
+		o2cb add-node --ip 10.11.11.12 --port 7777 --number 2 racfs node2
 		注意-n 后面的参数必须是主机名
 	（4）启动集群
 		systemctl enable o2cb.service
@@ -56,7 +56,7 @@ OCFS2是基于共享磁盘的集群文件系统，它在一块共享磁盘上创
 	（2）更改Max Node Slots值为3，需要将所有挂载该设备的节点umount
 		tunefs.ocfs2 -N 3 /dev/sdb
 	（3）执行o2cb_ctl工具去在线新增节点3到cluster中
-		o2cb_ctl -C  -i -n node3 -t node -a number=3 -a ip_address=10.10.10.4 -a ip_port=11111 -a cluster=ocfs2
+		o2cb add-node --ip 10.11.11.13 --port 7777 --number 3 racfs node3
 	在node3执行
 	（4）设置不同的主机名
 		hostnamectl set-hostname node3
