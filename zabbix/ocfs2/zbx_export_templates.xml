@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-02-04T10:23:48Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App OCFS2</template>
+            <name>Template App OCFS2</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>OCFS2</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>ocfs2.cluster_status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>ocfs2[cluster_status]</key>
+                    <applications>
+                        <application>
+                            <name>OCFS2</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#3,3)}&lt;&gt;0</expression>
+                            <name>ocfs2.cluster_status</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>ocfs2.heartbeat_status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>ocfs2[heartbeat_status]</key>
+                    <applications>
+                        <application>
+                            <name>OCFS2</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#3,3)}&lt;&gt;0</expression>
+                            <name>ocfs2.heartbeat_status</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+        </template>
+    </templates>
+</zabbix_export>
