@@ -1,4 +1,16 @@
 示例
+	集群相关
+	集群健康状态
+	curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cluster/health?pretty
+	集群状态信息
+	curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cluster/stats?pretty
+	查看节点信息
+	curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cat/nodes?pretty
+	查看索引信息
+	curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cat/indices
+	删除索引
+	curl -k -u elastic:tyacc -XDELETE http://172.16.2.136:9200/${indexname}
+	
 	index 参数相关
 	
 	curl -k -u elastic:tyacc@123 -XPUT -H 'Content-type':'application/json' 'http://172.16.2.137:9200/_all/_settings?preserve_existing=true' -d '{
