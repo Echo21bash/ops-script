@@ -11,7 +11,7 @@ dblist=('tyacc_tytest' 'lcdb')
 #申明关联数组
 declare -A schema_name
 schema_name=([tyacc_tytest]='AFC_ITP_BUSINESS AFC_ITP_SDK' [lcdb]='afc_business')
-start_time=`date`
+start_time=`date +'%Y-%m-%d %H:%M:%S'`
 
 run_vacuum(){
 if [[ -z $exec ]];then
@@ -22,7 +22,7 @@ for db in ${dblist[@]} ; do
     if [[ $db == template0 ]] ||  [[ $db == template1 ]] || [[ $db == postgres ]] || [[ $db == gpdb ]] ; then
         continue
     fi
-        echo processing db "$db"
+        echo " 正在处理$db"
         #use a temp file to store the table list, which could be vary large
         >$tables_file
         #query out only the normal user tables, excluding partitions of parent tables
@@ -34,21 +34,21 @@ for db in ${dblist[@]} ; do
         while read line; do
                 #some table name may contain the $ sign, so escape it
                 line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
-                echo processing table "$line"
                 #vacuum full this table, which will lock the table
-                psql -d $db -e -a -c "$exec $line;"
-                #reindex the table to reclaim index space
-                psql -d $db -e -a -c "REINDEX TABLE $line;"
+				psql -d $db -e -a -c "$exec $line;" && psql -d $db -e -a -c "set lock_timeout = '3s';REINDEX TABLE $line;" &
         done <$tables_file
         #reindex system tables firstly
         psql -d $db -e -a -c "REINDEX SYSTEM $db;"
         #更新统计数据
-        psql -d $db -e -a -c "ANALYZE;"
+        psql -d $db -e -a -c "ANALYZE VERBOSE;"
 
 done
 }
 
 echo ${start_time} >>${log_file}
 run_vacuum >>${log_file}
-end_time=`date`
+end_time=`date +'%Y-%m-%d %H:%M:%S'`
 echo ${end_time} >>${log_file}
+start_seconds=$(date --date="$starttime" +%s);
+end_seconds=$(date --date="$endtime" +%s);
+echo "本次运行时间："$((end_seconds-start_seconds))"s" >>${log_file}
