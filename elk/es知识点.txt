@@ -10,7 +10,7 @@
 	查看索引信息
 	curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cat/indices
 	删除索引
-	curl -k -u elastic:tyacc -XDELETE http://172.16.2.136:9200/${indexname}
+	curl -k -u elastic:tyacc@123 -XDELETE http://172.16.2.136:9200/${indexname}
 	
 	index 参数相关
 	
