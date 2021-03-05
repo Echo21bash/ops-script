@@ -1,3 +1,4 @@
+常见api
 示例
 	集群相关
 	集群健康状态
@@ -16,3 +17,16 @@
 	curl -k -u elastic:tyacc@123 -XPUT -H 'Content-type':'application/json' 'http://172.16.2.137:9200/_all/_settings?preserve_existing=true' -d '{
 	  "index.max_docvalue_fields_search" : "200"
 	}'
+	
+ES集群如何安全重启节点
+
+	1、暂停集群的shard自动均衡
+	curl -XPUT -H 'Content-type':'application/json' http://10.1.1.1:9200/_cluster/settings -d '{ "transient" : { "cluster.routing.allocation.enable" : "none" } }'
+	
+	2、停止节点
+	systemctl stop elasticsearch
+	
+	3、确认该节点重新加入到了集群中
+	
+	4、启动集群的shard自动均衡
+	curl -XPUT -H 'Content-type':'application/json' http://10.1.1.1:9200/_cluster/settings -d '{ "transient" : { "cluster.routing.allocation.enable" : "all" } }'
