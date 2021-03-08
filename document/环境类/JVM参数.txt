@@ -3,18 +3,25 @@ JAVA_OPTS="-Xms1024m
 -Xmn384m
 -Xss256k
 -XX:SurvivorRatio=10
+
 -XX:MetaspaceSize=128m
 -XX:MaxMetaspaceSize=128m
 -XX:+UseConcMarkSweepGC
 -XX:+CMSScavengeBeforeRemark
 -XX:+CMSParallelRemarkEnabled
 -XX:+AggressiveOpts"
+
+-Xms1024m
+-Xmx1024m
+-Xmn384m
+-Xss256k
+-XX:SurvivorRatio=10
+G1中并不会因为增大该值直接导致Eden变小，Eden是根据GC的时间来预测的
+
 -XX:+DisableExplicitGC
 
 -XX:PermSize=128M
 -XX:MaxPermSize=256M
-
--XX:SurvivorRatio=3
 -XX:MaxTenuringThreshold=0
 #晋升到老年代需要的存活次数,设置为0时，survivor区失去作用，一次minor gc，eden中存活的对象就会进入老年代，默认是15，使用CMS时默认是4
 
