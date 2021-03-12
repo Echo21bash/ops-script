@@ -31,7 +31,7 @@
 	 n_dead_tup, n_live_tup, round(n_dead_tup * 100 / (n_live_tup + n_dead_tup),2) 
 	 AS dead_tup_ratio 
 	 FROM pg_stat_all_tables 
-	 WHERE n_dead_tup >= 1000 ORDER BY dead_tup_ratio DESC LIMIT 10;
+	 WHERE n_dead_tup >= 100000 ORDER BY dead_tup_ratio DESC LIMIT 20;
 查看表状态
 	select * from pg_stat_all_tables
 GreenPlum备份与恢复
