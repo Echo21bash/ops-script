@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-03-15T11:03:15Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Kubernetes</template>
+            <name>Template App Kubernetes</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>kubernetes</name>
+                </application>
+            </applications>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>pod_discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pod.discovery</key>
+                    <delay>10m</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#APP_NAME}</macro>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#POD_NAME}</macro>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#POD_NAME} CPU</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pod.status[cpu,{#POD_NAME}]</key>
+                            <units>m</units>
+                            <applications>
+                                <application>
+                                    <name>kubernetes</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#POD_NAME} MEM</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pod.status[mem,{#POD_NAME}]</key>
+                            <units>MB</units>
+                            <applications>
+                                <application>
+                                    <name>kubernetes</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
