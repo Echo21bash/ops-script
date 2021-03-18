@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-03-18T07:29:30Z</date>
+    <groups>
+        <group>
+            <name>Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template Module Public IP</template>
+            <name>Template Module Public IP</name>
+            <groups>
+                <group>
+                    <name>Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Public Inetnet</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>internet_ip</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>net.status[internet_ip]</key>
+                    <delay>5m</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Public Inetnet</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>internet_ip_change</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>net.status[internet_ip_change]</key>
+                    <delay>5m</delay>
+                    <applications>
+                        <application>
+                            <name>Public Inetnet</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2)}=1</expression>
+                            <name>internet_ip_change</name>
+                            <priority>AVERAGE</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>internet_status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>net.status[internet_status]</key>
+                    <delay>5m</delay>
+                    <applications>
+                        <application>
+                            <name>Public Inetnet</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2,1)}=0</expression>
+                            <name>intnet_status</name>
+                            <priority>DISASTER</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+        </template>
+    </templates>
+</zabbix_export>
