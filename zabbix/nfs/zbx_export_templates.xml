@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-03-24T03:48:45Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App NFS</template>
+            <name>Template App NFS</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>NFS Server</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>nfs.pro_num</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfs[pro_num]</key>
+                    <delay>5m</delay>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}=0</expression>
+                            <name>NFS service is down on {HOST.NAME}</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>nfs.share_dir</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfs[share_dir]</key>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <name>NFS shared directory has changed  on {HOST.NAME}</name>
+                            <priority>AVERAGE</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>nfs.status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfs[status]</key>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2)}=0</expression>
+                            <name>NFS service is unavailable on {HOST.NAME}</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+        </template>
+    </templates>
+</zabbix_export>
