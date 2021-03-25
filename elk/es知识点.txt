@@ -11,7 +11,14 @@
 		curl -u elastic:tyacc@123 http://172.16.2.136:9200/_cat/indices
 		删除索引
 		curl -k -u elastic:tyacc@123 -XDELETE http://172.16.2.136:9200/${indexname}
-	
+		关闭索引
+		curl -k -u elastic:tyacc@123 -XPOST http://172.16.2.136:9200/${indexname}/_close
+		打开索引
+		curl -k -u elastic:tyacc@123 -XPOST http://172.16.2.136:9200/${indexname}/_open
+		冻结索引 6.6.0以上版本
+		curl -k -u elastic:tyacc@123 -XPOST http://172.16.2.136:9200/${indexname}/_freeze
+		解冻索引 6.6.0以上版本
+		curl -k -u elastic:tyacc@123 -XPOST http://172.16.2.136:9200/${indexname}/_unfreeze
 	index 参数相关
 	
 	查询索引因为数据太多导致查询错误
