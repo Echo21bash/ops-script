@@ -28,9 +28,9 @@ public(){
 
 get_index(){
 	if [[ -z ${es_user} ]];then
-		${exec} -XGET http://${es_ip}/_cat/indices | awk '{print $3}' >${index_file}
+		${exec} -XGET http://${es_ip}/_cat/indices | grep 'open' | awk '{print $3}' >${index_file}
 	else
-		${exec} -XGET http://${es_ip}/_cat/indices | awk '{print $3}' >${index_file}
+		${exec} -XGET http://${es_ip}/_cat/indices | grep 'open' | awk '{print $3}' >${index_file}
 	fi
 
 }
@@ -94,7 +94,7 @@ delete_index(){
 
 other_opt(){
 
-  curl -k -u ${es_user}:${es_passwd} -XPUT -H 'Content-type':'application/json' "http://${es_ip}/_all/_settings?preserve_existing=true" -d '{ "index.max_docvalue_fields_search" : "500" }'
+  ${exec} -XPUT -H 'Content-type':'application/json' "http://${es_ip}/_all/_settings?preserve_existing=true" -d '{ "index.max_docvalue_fields_search" : "500" }'
 
 }
 
