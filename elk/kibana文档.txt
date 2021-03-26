@@ -1,0 +1,3 @@
+常见问题
+	Q：kibana无法匹配到冻结态的索引
+	A：在 kibana 高级设置找到search:includeFrozen然后打开选项

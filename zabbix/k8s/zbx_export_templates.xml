@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2021-03-15T11:03:15Z</date>
+    <date>2021-03-26T08:20:12Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -21,6 +21,38 @@
                     <name>kubernetes</name>
                 </application>
             </applications>
+            <items>
+                <item>
+                    <name>All pod status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pod.status[all]</key>
+                    <applications>
+                        <application>
+                            <name>kubernetes</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Number of pods that are not running</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pod.status[no_running]</key>
+                    <applications>
+                        <application>
+                            <name>kubernetes</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Number of pods running</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pod.status[running]</key>
+                    <applications>
+                        <application>
+                            <name>kubernetes</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
             <discovery_rules>
                 <discovery_rule>
                     <name>pod_discovery</name>
@@ -39,12 +71,12 @@
                             </condition>
                         </conditions>
                     </filter>
+                    <lifetime>7d</lifetime>
                     <item_prototypes>
                         <item_prototype>
                             <name>{#POD_NAME} CPU</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>pod.status[cpu,{#POD_NAME}]</key>
-                            <units>m</units>
                             <applications>
                                 <application>
                                     <name>kubernetes</name>
@@ -56,6 +88,18 @@
                             <type>ZABBIX_ACTIVE</type>
                             <key>pod.status[mem,{#POD_NAME}]</key>
                             <units>MB</units>
+                            <applications>
+                                <application>
+                                    <name>kubernetes</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#POD_NAME} STAT</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pod.status[stat,{#POD_NAME}]</key>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
                             <applications>
                                 <application>
                                     <name>kubernetes</name>
