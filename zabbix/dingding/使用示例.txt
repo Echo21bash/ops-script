@@ -1,7 +1,7 @@
 钉钉群聊机器人
 
 	shell脚本版
-		dingding.sh '1383458xxxx,1375488xxxx' ceshi  test
+		dingding.sh -a -m 告警测试 --token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 	go二进制版
 
 		cp config.yaml /root/.dingtalk/config.yaml
