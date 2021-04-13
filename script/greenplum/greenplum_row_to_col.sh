@@ -25,58 +25,58 @@ dat_warehouse_table=('app_pay_bills' 'devices' 'inout_records' 'mobile_pay_bills
 
 
 delete_old_data(){
-	psql -d ${database_name} << EOF
-\timing
-DELETE 
-FROM
-	"${target_schema}"."${dat_warehouse_table[$i]}" 
-WHERE
-	"${target_schema}"."${dat_warehouse_table[$i]}"."${index}" > '${start_time}' 
-	AND "${target_schema}"."${dat_warehouse_table[$i]}"."${index}" <= '${end_time}';
-EOF
+	psql -d ${database_name} <<-EOF
+	\timing
+	DELETE 
+	FROM
+		"${target_schema}"."${dat_warehouse_table[$i]}" 
+	WHERE
+		"${target_schema}"."${dat_warehouse_table[$i]}"."${index}" > '${start_time}' 
+		AND "${target_schema}"."${dat_warehouse_table[$i]}"."${index}" <= '${end_time}';
+	EOF
 
 }
 
 delete_updata_old_data(){
 #对于存在有超过开始结束时间差的数据单独处理
 #将有更新的数据通过行式表id查询出来匹配到列式表数据删除
-	psql -d ${database_name} << EOF
-\timing
-DELETE
-FROM
-	"${target_schema}"."${dat_warehouse_table[$i]}" 
-WHERE
-	"id" IN (SELECT "id" FROM "${source_schema}"."${business_table[$i]}" WHERE "createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}');
-EOF
+	psql -d ${database_name} <<-EOF
+	\timing
+	DELETE
+	FROM
+		"${target_schema}"."${dat_warehouse_table[$i]}" 
+	WHERE
+		"id" IN (SELECT "id" FROM "${source_schema}"."${business_table[$i]}" WHERE "createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}');
+	EOF
 }
 
 inset_new_data(){
-	psql -d ${database_name} << EOF
-\timing
-INSERT INTO "${target_schema}"."${dat_warehouse_table[$i]}" 
-SELECT
-	"${source_schema}"."${business_table[$i]}".* 
-FROM
-	"${source_schema}"."${business_table[$i]}" 
-WHERE
-	"${source_schema}"."${business_table[$i]}"."${index}" > '${start_time}' 
-	AND "${source_schema}"."${business_table[$i]}"."${index}" <= '${end_time}';
-EOF
+	psql -d ${database_name} <<-EOF
+	\timing
+	INSERT INTO "${target_schema}"."${dat_warehouse_table[$i]}" 
+	SELECT
+		"${source_schema}"."${business_table[$i]}".* 
+	FROM
+		"${source_schema}"."${business_table[$i]}" 
+	WHERE
+		"${source_schema}"."${business_table[$i]}"."${index}" > '${start_time}' 
+		AND "${source_schema}"."${business_table[$i]}"."${index}" <= '${end_time}';
+	EOF
 }
 
 inset_updata_new_data(){
 #对于存在有超过开始结束时间差的数据单独处理
 #将有更新的数据通过行式表id查询出来插入到列式表
-	psql -d ${database_name} << EOF
-\timing
-INSERT INTO "${target_schema}"."${dat_warehouse_table[$i]}" 
-SELECT
-	"${source_schema}"."${business_table[$i]}".* 
-FROM
-	"${source_schema}"."${business_table[$i]}" 
-WHERE
-    "createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}';
-EOF
+	psql -d ${database_name} <<-EOF
+	\timing
+	INSERT INTO "${target_schema}"."${dat_warehouse_table[$i]}" 
+	SELECT
+		"${source_schema}"."${business_table[$i]}".* 
+	FROM
+		"${source_schema}"."${business_table[$i]}" 
+	WHERE
+		"createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}';
+	EOF
 }
 
 start_run_time=`date`
