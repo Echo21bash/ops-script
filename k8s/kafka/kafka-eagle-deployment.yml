@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-eagle
+  name: kafka-eagle
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kafka-eagle
+    spec:
+      containers:
+      - env:
+        - name: ZK_CLUSTER_LIST
+          value: "127.0.0.1:2181"
+        image: 172.16.12.80:9000/tyacc-test/kafka-eagle:2.0.3
+        imagePullPolicy: Always
+        name: kafka-eagle
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-eagle
+  name: kafka-eagle
+spec:
+  type: NodePort
+  ports:
+  - port: 8048
+    targetPort: 8048
+    nodePort: 38048
+  selector:
+    app: kafka-eagle
