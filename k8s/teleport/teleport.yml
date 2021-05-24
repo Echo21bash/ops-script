@@ -1,0 +1,64 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: teleport
+  name: teleport
+  namespace: ops
+
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: teleport
+    spec:
+      containers:
+      - image: tp4a/teleport:3.5.6
+        imagePullPolicy: IfNotPresent
+        name: teleport
+        volumeMounts:
+        - mountPath: /usr/local/teleport/data
+          name: teleport-data
+      restartPolicy: Always
+      volumes:
+      - name: teleport-data
+        persistentVolumeClaim:
+          claimName: teleport-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: teleport-data
+  namespace: ops
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teleport
+  namespace: ops
+spec:
+  ports:
+  - name: web
+    port: 7190
+    protocol: TCP
+    targetPort: 7190
+  - name: ssh
+    port: 52189
+    protocol: TCP
+    targetPort: 52189
+  - name: rdp
+    port: 52089
+    protocol: TCP
+    targetPort: 52089
+  selector:
+    app: teleport
+  type: NodePort
