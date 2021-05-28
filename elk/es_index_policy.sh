@@ -28,9 +28,9 @@ public(){
 
 get_index(){
 	if [[ -z ${es_user} ]];then
-		${exec} -XGET http://${es_ip}/_cat/indices | grep 'open' | awk '{print $3}' >${index_file}
+		${exec} -XGET http://${es_ip}/_cat/indices | awk '{print $3}' >${index_file}
 	else
-		${exec} -XGET http://${es_ip}/_cat/indices | grep 'open' | awk '{print $3}' >${index_file}
+		${exec} -XGET http://${es_ip}/_cat/indices | awk '{print $3}' >${index_file}
 	fi
 
 }
