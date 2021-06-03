@@ -14,9 +14,12 @@ kafka命令大全
 	## topic列表查询
 	bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
 
-	## topic列表查询（支持0.9版本+）
+	## topic列表查询（支持0.9版本）
 	bin/kafka-topics.sh --list --bootstrap-server localhost:9092
-
+	
+	## topic信息
+	bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic topicName --from-beginning
+	
 	## 新消费者列表查询（支持0.9版本+）
 	bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
 
@@ -33,12 +36,12 @@ kafka命令大全
 	bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
 
 发送和消费
-	## 生产者
+	## 生产消息
 	bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
 
-	## 消费者
-	bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
-
+	## 消费消息
+    bin/kafka-console-consumer.sh  --bootstrap-server localhost:9092 --from-beginning --topic test
+    
 	## 新生产者（支持0.9版本+）
 	bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
 

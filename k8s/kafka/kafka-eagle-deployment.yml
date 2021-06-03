@@ -18,7 +18,27 @@ spec:
         image: 172.16.12.80:9000/tyacc-test/kafka-eagle:2.0.3
         imagePullPolicy: Always
         name: kafka-eagle
+        volumeMounts:
+        - mountPath: /opt/kafka/data
+          name: kafka-eagle-data
       restartPolicy: Always
+      volumes:
+      - name: kafka-eagle-data
+        persistentVolumeClaim:
+          claimName: kafka-eagle-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-eagle-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "k8s-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
 ---
 apiVersion: v1
 kind: Service
@@ -34,3 +54,5 @@ spec:
     nodePort: 38048
   selector:
     app: kafka-eagle
+
+/opt/kafka-eagle/db
