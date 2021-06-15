@@ -47,3 +47,25 @@ ES集群如何安全重启节点
 	
 	5、启动集群的shard自动均衡
 	curl -XPUT -H 'Content-type':'application/json' http://10.1.1.1:9200/_cluster/settings -d '{ "persistent" : { "cluster.routing.allocation.enable" : "all" } }'
+	
+索引模板创建用来索引生命周期管理
+	小于7.8
+	PUT /_template/logstash
+	{
+	  "index_patterns": ["cdisp-*", "tyacc-*"],
+	  "settings":{
+	    "number_of_shards":3,
+	    "number_of_replicas":1
+	  }
+	}
+	7.8+（旧接口即将放弃，但仍可用）
+	PUT /_index_template/logstash
+	{
+	  "index_patterns": ["cdisp-*", "tyacc-*"],
+	  "template": {
+	    "settings": {
+	      "number_of_shards":3,
+	      "number_of_replicas":1
+	    }
+	  }
+	}

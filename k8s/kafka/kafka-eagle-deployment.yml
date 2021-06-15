@@ -54,5 +54,3 @@ spec:
     nodePort: 38048
   selector:
     app: kafka-eagle
-
-/opt/kafka-eagle/db
