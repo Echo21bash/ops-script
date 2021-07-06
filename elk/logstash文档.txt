@@ -1,0 +1,10 @@
+常见问题
+	Q：按天创建索引晚8个小时
+	A：logstash使用的是标准时间UTC时间，我们在生成索引的时候常会使用xx-%{+YYYY.MM.dd}这样的格式去建立索引，这个时间其实是读取的@timestamp时间，所以就会产生一个问题：今天的08:00之前的数据会在昨天的索引里面。可以使用ruby设置一个变量获取本机时间，依据这个时间来进行索引创建
+	filter
+	{
+		ruby
+		{
+			code => "event.set('index_time',event.timestamp.time.localtime.strftime('%Y-%m-%d'))"
+		}
+	}

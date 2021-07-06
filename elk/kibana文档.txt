@@ -1,3 +1,6 @@
 常见问题
 	Q：kibana无法匹配到冻结态的索引
-	A：在 kibana 高级设置找到search:includeFrozen然后打开选项
+	A：在kibana高级设置找到search:includeFrozen然后打开选项
+	
+	Q: kibana时区问题
+	A：kibana会把@timestamp当做UTC时间，kibana会将这个时间依据浏览器所在时区进行时间转换
