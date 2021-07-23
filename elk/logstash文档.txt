@@ -8,3 +8,6 @@
 			code => "event.set('index_time',event.timestamp.time.localtime.strftime('%Y-%m-%d'))"
 		}
 	}
+	
+	Q: 对于网上修改logstash源代码将utc时间改为本地时间、或者将@timestamp时间替换为本地时间会有什么问题
+	A: Elasticsearch、Logstash、filebeat 内部，对时间类型字段，是统一采用 UTC 时间，对日志统一采用 UTC 时间存储，是国际安全/运维界的一个通识。对于页面查看，ELK 的解决方案是在 Kibana 上，读取浏览器的当前时区，然后在页面上转换时间内容的显示。所以，建议大家接受这种设定。否则，即便你用.getLocalTime修改，也还要在 Kibana上反过去修改，以及 Elasticsearch 原有的["now-1h" TO "now"]这种方便的搜索语句无法正常使用的尴尬

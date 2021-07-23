@@ -57,7 +57,6 @@ ES集群如何安全重启节点
 	    "number_of_shards":3,
 	    "number_of_replicas":1,
 	    "index.max_docvalue_fields_search":500,
-	    "index.mapping.depth.limit":3
 	  }
 	}
 	7.8+（旧接口即将放弃，但仍可用）
@@ -69,7 +68,6 @@ ES集群如何安全重启节点
 	      "number_of_shards":3,
 	      "number_of_replicas":1
 	      "index.max_docvalue_fields_search":500,
-	      "index.mapping.depth.limit":3
 	    }
 	  }
 	}

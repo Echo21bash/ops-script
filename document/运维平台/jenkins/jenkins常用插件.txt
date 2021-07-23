@@ -10,3 +10,6 @@ Maven Integration  ## maven项目的基础插件，必须安装才能新建maven项目
 Publish Over SSH ## 可以通过ssh，发送文件到远程服务器，并执行shell命令
 Workspace Cleanup ## 构建之前清除工作空间
 Role-based Authorization Strategy ## 授权策略 不同用户配置不同的项目
+
+###流水线
+Build With Parameters ##用于流水线构建时添加参数

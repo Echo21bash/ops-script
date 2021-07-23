@@ -66,8 +66,16 @@ kafka命令大全
 	bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
 
 	# kafka版本 >= 2.2
-	bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+	bin/kafka-topics.sh --bootstrap-server localhost:9092 --alter --topic topic1 --partitions 2
 
+重置offset
+	所有topic
+	bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --all-topics --to-latest --execute
+	##指定主题
+	bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --topic test --to-latest --execute
+	##指定偏移量
+	kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --topic test --to-offset 1000 --execute
+	
 迁移分区
 	创建规则json
 
