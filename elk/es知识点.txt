@@ -48,7 +48,8 @@ ES集群如何安全重启节点
 	5、启动集群的shard自动均衡
 	curl -XPUT -H 'Content-type':'application/json' http://10.1.1.1:9200/_cluster/settings -d '{ "persistent" : { "cluster.routing.allocation.enable" : "all" } }'
 	
-索引模板创建用来索引生命周期管理
+索引模板及生命周期
+	1、创建索引模板
 	小于7.8
 	PUT /_template/logstash
 	{
@@ -56,7 +57,7 @@ ES集群如何安全重启节点
 	  "settings":{
 	    "number_of_shards":3,
 	    "number_of_replicas":1,
-	    "index.max_docvalue_fields_search":500,
+	    "index.max_docvalue_fields_search":500
 	  }
 	}
 	7.8+（旧接口即将放弃，但仍可用）
@@ -67,7 +68,23 @@ ES集群如何安全重启节点
 	    "settings": {
 	      "number_of_shards":3,
 	      "number_of_replicas":1
-	      "index.max_docvalue_fields_search":500,
+	      "index.max_docvalue_fields_search":500
 	    }
 	  }
 	}
+	
+	2、在kibana创建生命周期策略
+	3、在kibana将生命周期和索引模板关联
+		关联索引模板后生命周期策略就会对索引模板匹配的索引生效，关联时可配置索引别名进行热滚动
+	4、创建一个别名为tyacc-test索引名称为tyacc-test-000001的索引
+	PUT tyacc-test-000001
+	{
+	  "aliases": {
+		"tyacc-test":{
+		  "is_write_index": true 
+		}
+	  }
+	}
+	5、此时就可以向别名为tyacc-test的索引写入数据
+	
+	说明：对于索引已经按天分割的一般不需要配置索引滚动更新

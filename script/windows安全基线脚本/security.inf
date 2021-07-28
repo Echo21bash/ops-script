@@ -1,0 +1,36 @@
+[Unicode]
+Unicode=yes
+[Event Audit]
+AuditLogonEvents = 3
+AuditPolicyChange = 3
+AuditObjectAccess = 3
+AuditDSAccess = 3
+AuditPrivilegeUse = 3
+AuditSystemEvents = 3
+AuditAccountManage = 3
+AuditProcessTracking = 2
+[Registry Values]
+MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\RestrictAnonymous=4,1
+MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\RestrictAnonymousSAM=4,1
+MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\DontDisplayLastUserName=4,1
+MACHINE\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters\EnableForcedLogOff=4,1
+MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\ClearPageFileAtShutdown=4,1
+MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServer=4,0
+MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
+[System Access]
+MinimumPasswordAge = 0
+MaximumPasswordAge = 60
+MinimumPasswordLength = 12
+PasswordComplexity = 1
+PasswordHistorySize = 10
+LockoutBadCount = 5
+LockoutDuration = 30
+EnableGuestAccount = 0
+NewAdministratorName = "Administrator"
+[Privilege Rights]
+SeRemoteShutdownPrivilege = *S-1-5-32-544
+SeTakeOwnershipPrivilege = *S-1-5-32-544
+SeNetworkLogonRight = *S-1-5-32-544,*S-1-5-32-545,*S-1-5-32-551,*S-1-5-32-547
+[Version]
+signature="$CHICAGO$"
+Revision=1
