@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-04-08T08:14:39Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Zookeeper</template>
+            <name>Template App Zookeeper</name>
+            <description>Zookeper Monitoring&#13;
+Need this userparameter in zabbix_agentd.conf:</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Zookeeper</name>
+                </application>
+            </applications>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>discovery zookeeper</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>zookeeper.discovery</key>
+                    <delay>1h</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#BASE_DIR}</macro>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#PORT}</macro>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#BASE_DIR} mntr</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[mntr,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} ruok</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[ruok,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#2,3)}=0</expression>
+                                    <name>{#BASE_DIR} is not available</name>
+                                    <priority>HIGH</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_avg_latency</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_avg_latency,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_followers</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_followers,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_max_latency</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_max_latency,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_min_latency</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_min_latency,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_num_alive_connections</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_num_alive_connections,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_outstanding_requests</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_outstanding_requests,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#2,3)}&gt;1</expression>
+                                    <name>{#BASE_DIR} pending requests</name>
+                                    <priority>WARNING</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_packets_received</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_packets_received,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_packets_sent</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_packets_sent,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_pending_syncs</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_pending_syncs,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_server_state</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_server_state,{#PORT}]</key>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#BASE_DIR} zk_synced_followers</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>zookeeper.status[zk_synced_followers,{#PORT}]</key>
+                            <applications>
+                                <application>
+                                    <name>Zookeeper</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
