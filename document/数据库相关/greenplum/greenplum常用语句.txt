@@ -32,6 +32,14 @@
 	 AS dead_tup_ratio 
 	 FROM pg_stat_all_tables 
 	 WHERE n_dead_tup >= 100000 ORDER BY dead_tup_ratio DESC LIMIT 20;
+长事务查询
+	SELECT
+	client_addr, usename, datname,
+	clock_timestamp() - xact_start AS xact_age,
+	clock_timestamp() - query_start AS query_age,
+	state, query
+	FROM pg_stat_activity 
+	ORDER BY coalesce(xact_start, query_start);
 查看表状态
 	select * from pg_stat_all_tables
 GreenPlum备份与恢复
