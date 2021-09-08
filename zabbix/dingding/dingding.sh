@@ -4,60 +4,28 @@ usage()
 {
 cat <<EOF
 Usage:${program} [OPTION]...
--a,--all    @所有人
--m,--msg    @某个人，钉钉手机号
--t,--mobile 通知指定人多人用','分割
---token     钉钉机器人Token
+-a,--all    通知所有人（可选）
+-m,--msg    消息内容（必须）
+-t,--mobile 通知指定人多人用','分割（可选）
+--token     钉钉机器人Token（必须）
 EOF
 }
 
 send_msg(){
-
+	
+	msg="`echo ${msg} | sed 's/"/\\"/g'`"
 
 	if [[ ${isAtAll} = 'true' && x${touser} = 'x' ]];then
 		curl https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '''
-		{
-			"msgtype": "text",
-			"text": {
-				"content":  "'"$msg"'"
-			},
-			"at": {
-				"isAtAll": true
-			}
-		}'''
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"isAtAll":true}}'
 	fi
+
 	
-	if [[ ${isAtAll} = 'true' && x${touser} ! = 'x' ]];then
+	if [[ x${isAtAll} = 'x' && x${touser} != 'x' ]];then
 		curl https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '''
-		{
-			"msgtype": "text",
-			"text": {
-				"content":  "'"$msg"'"
-			},
-			"at": {
-				"isAtAll": true,
-				"atMobiles": ['$touser']
-			}
-		}'''
-	fi
-	
-	if [[ x${isAtAll} = 'x' && x${touser} ! = 'x' ]];then
-		curl https://oapi.dingtalk.com/robot/send?access_token=$token \
-		-H 'Content-Type: application/json' \
-		-d '''
-		{
-			"msgtype": "text",
-			"text": {
-				"content":  "'"$msg"'"
-			},
-			"at": {
-				"atMobiles": ['$touser']
-			}
-		}'''
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"atMobiles":['$touser']}}'
 	fi
 }
 
@@ -71,7 +39,7 @@ ARGS=$(getopt -a -o am:t: -l msg:,token:,mobile:,all -n "${program}" -- "$@")
 [[ $? -ne 0 ]] && usage && exit 1
 [[ $# -eq 0 ]] && usage && exit 1
 
-echo ${ARGS} | grep -E '\-\-token' | grep -E '\-t|\-\-mobile' | grep -E '\-m|\-\-msg'
+echo ${ARGS} | grep -E '\-\-token' | grep -E '\-t|\-\-mobile|\-a|\-\-all' | grep -E '\-m|\-\-msg'
 [[ $? -ne 0 ]] && echo 缺少参数 && usage && exit 1
 
 
