@@ -38,13 +38,23 @@
 	WHERE n_dead_tup >= 100000 ORDER BY dead_tup_ratio DESC LIMIT 20;
 长事务查询
 	SELECT
-	pid,client_addr, usename, datname,
+	pid,client_addr, usename, datname,waiting,
 	clock_timestamp() - xact_start AS xact_age,
 	clock_timestamp() - query_start AS query_age,
 	state, query
 	FROM pg_stat_activity
-	WHERE now()-xact_start>interval '5 sec'
-	AND query !~ '^COPY' AND state<>'idle'
+	WHERE (now()-xact_start>interval '10 sec' OR now()-query_start>interval '10 sec')
+	AND query !~ '^COPY' AND state LIKE '%transaction%'
+	ORDER BY coalesce(xact_start, query_start);
+长连接查询
+	SELECT
+	pid,client_addr, usename, datname,waiting,
+	clock_timestamp() - xact_start AS xact_age,
+	clock_timestamp() - query_start AS query_age,
+	state, query
+	FROM pg_stat_activity
+	WHERE (now()-xact_start>interval '1 day' OR now()-query_start>interval '1 day')
+	AND query !~ '^COPY' AND NOT STATE LIKE '%transaction%' 
 	ORDER BY coalesce(xact_start, query_start);
 结束sql
 	select pg_terminate_backend(pid);
