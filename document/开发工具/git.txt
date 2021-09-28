@@ -1,20 +1,60 @@
 // 查看当前代理设置
-git config --global http.proxy
-git config --global https.proxy
+	git config --global http.proxy
+	git config --global https.proxy
 
 // 设置当前代理为 http://127.0.0.1:1080 或 socket5://127.0.0.1:1080
-git config --global http.proxy 'http://127.0.0.1:1080'
-git config --global https.proxy 'http://127.0.0.1:1080'
+	git config --global http.proxy 'http://127.0.0.1:1080'
+	git config --global https.proxy 'http://127.0.0.1:1080'
 
-git config --global http.proxy 'socks5://127.0.0.1:1080'
-git config --global https.proxy 'socks5://127.0.0.1:1080'
+	git config --global http.proxy 'socks5://127.0.0.1:1080'
+	git config --global https.proxy 'socks5://127.0.0.1:1080'
 
 // 删除 proxy
-git config --global --unset http.proxy
-git config --global --unset https.proxy
+	git config --global --unset http.proxy
+	git config --global --unset https.proxy
 
 // gitlib拉取代码的几种方法
-git clone https://gitlab.com/username/myrepo.git
-git clone https://${username}:${password}@gitlab.com/username/myrepo.git
-git clone https://gitlab-ci-token:${Personal Access Tokens}@gitlab.com/username/myrepo.git
+	git clone https://gitlab.com/username/myrepo.git
+	git clone https://${username}:${password}@gitlab.com/username/myrepo.git
+	git clone https://gitlab-ci-token:${Personal Access Tokens}@gitlab.com/username/myrepo.git
+
+# Gitlab维护
+# 载入配置服务（初始化和修改/etc/gitlab/gitlab.rb 后需要重新载入）
+	sudo gitlab-ctl reconfigure
+
+# 启动服务
+	sudo gitlab-ctl start
+	
+# 停止服务
+	sudo gitlab-ctl stop
+	
+# 重启服务
+	sudo gitlab-ctl restart
+	
+# 检查服务的日志信息
+
+# 检查redis的日志
+	sudo gitlab-ctl tail redis
+	
+# 检查postgresql的日志
+	sudo gitlab-ctl tail postgresql
+	
+# 检查gitlab-workhorse的日志
+	sudo gitlab-ctl tail gitlab-workhorse
+	
+# 检查logrotate的日志
+	sudo gitlab-ctl tail logrotate
+	
+# 检查nginx的日志
+	sudo gitlab-ctl tail nginx
+	
+# 检查sidekiq的日志
+	sudo gitlab-ctl tail sidekiq
+	
+# 检查unicorn的日志
+	sudo gitlab-ctl tail unicorn
+	
+# 检查服务状态
+	sudo gitlab-ctl status
+
 	
