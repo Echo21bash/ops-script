@@ -1,0 +1,160 @@
+#### 一、常用的kubectl命令
+
+命令格式
+
+```shell
+kubectl [command]  [TYPE]  [NAME] [flags]
+上面的命令是： kubectl命令行中，指定执行什么操作（command），指定什么类型资源对象（type），指定此类型的资源对象名称（name）,指定可选参数（flags）,后面的参数就是为了修饰那个唯一的对象
+```
+
+列出命名空间
+
+```shell
+[root@k8s-master1 ~]# kubectl get namespace
+NAME              STATUS   AGE
+default           Active   4d11h
+kube-node-lease   Active   4d11h
+kube-public       Active   4d11h
+kube-system       Active   4d11h
+```
+
+列出可用资源
+
+```	shell
+[root@k8s-master1 ~]# kubectl get deployments --all-namespaces
+NAMESPACE     NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+kube-system   calico-kube-controllers   1/1     1            1           4d11h
+kube-system   coredns                   2/2     2            2           3d17h
+kube-system   metrics-server            1/1     1            1           3d17h
+[root@k8s-master1 ~]# kubectl get StorageClass
+No resources found.
+```
+
+显示有关资源的详细信息
+
+```shell
+kubectl describe pod nvjob-lnrxj -n default
+```
+
+从 Pod 中的容器打印日志
+
+```shell
+kubectl logs <pod_name> -n <namespace>
+```
+
+在 Pod 中的容器执行命令
+
+```shell
+kubectl exec <pod_name> -n <namespace> date
+kubectl delete pod <pod_name> -n <namespace>
+```
+
+强制重启pod
+
+```shell
+kubectl get pod -n {namespace} {podname} -o yaml | kubectl replace --force -f -
+```
+
+强制重新部署
+
+```shell
+kubectl get deployments -n  {namespace} {deploymentsname} -o yaml | kubectl replace --force -f -
+```
+
+通过yaml文件创建
+
+```shell
+kubectl create -f xxx.yaml （不建议使用，无法更新，必须先delete）
+kubectl apply -f xxx.yaml（创建+更新，可以重复使用）
+```
+
+通过yaml文件删除
+
+```shell
+kubectl delete -f xxx.yaml
+```
+
+#### 二、k8s yaml相关
+通过变量获取容器相关信息
+
+```	yaml
+env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: POD_NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    引用$(MY_POD_NAME)
+```
+
+关联pvc到特定的pv
+
+```yaml
+	kind: PersistentVolumeClaim
+	apiVersion: v1
+	metadata:
+	  name: nfs-pvc
+	spec:
+	  accessModes:
+		- ReadWriteMany
+	  storageClassName: ""
+	  resources:
+		requests:
+		  storage: 90Mi
+	  selector:
+		matchLabels:
+		  pv: nfs-pv
+```
+
+#### 三、节点维护
+
+设置节点不可调度
+
+```shell
+[root@k8s-master1 ~]# kubectl cordon k8s-worker1
+node/k8s-worker1 cordoned
+[root@k8s-master1 ~]# kubectl get node
+NAME          STATUS                     ROLES    AGE     VERSION
+k8s-master1   Ready                      master   4d11h   v1.15.6
+k8s-master2   Ready                      master   4d11h   v1.15.6
+k8s-worker1   Ready,SchedulingDisabled   node     4d11h   v1.15.6
+k8s-worker2   Ready 
+```
+
+驱逐节点上的pod
+
+```shell
+[root@k8s-master1 ~]# kubectl drain k8s-worker1 --delete-local-data --ignore-daemonsets --force
+node/k8s-worker1 already cordoned
+WARNING: ignoring DaemonSet-managed Pods: kube-system/calico-node-5lwz9
+evicting pod "metrics-server-5889d65c57-2fhlx"
+evicting pod "coredns-869d79f7f7-mxssg"
+pod/coredns-869d79f7f7-mxssg evicted
+pod/metrics-server-5889d65c57-2fhlx evicted
+node/k8s-worker1 evicted
+```
+
+维护结束
+
+```shell
+[root@k8s-master1 ~]# kubectl uncordon k8s-worker1
+node/k8s-worker1 uncordoned
+[root@k8s-master1 ~]# kubectl get node
+NAME          STATUS   ROLES    AGE     VERSION
+k8s-master1   Ready    master   4d11h   v1.15.6
+k8s-master2   Ready    master   4d11h   v1.15.6
+k8s-worker1   Ready    node     4d11h   v1.15.6
+k8s-worker2   Ready    node     4d11h   v1.15.6
+```
+

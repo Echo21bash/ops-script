@@ -1,5 +1,5 @@
 安装kvm
-	yum install -y qemu-kvm  libvirt virt-install virt-viewer
+	yum install -y qemu-kvm  libvirt virt-install virt-viewer libguestfs-tools
 	systemctl start libvirtd
 这里做一个说明：
 	qemu-kvm： 主要是KVM用户态的管理工具，来帮助我们管理KVM
@@ -65,5 +65,5 @@ CPU和内存动态扩容
 输入命令之后，显示已经在开始安装，此时，可以通过vnc远程连接到宿主机上，使用默认的端口，查看到系统安装界面：
 	# netstat -lntup|grep kvm
 	tcp        0      0 0.0.0.0:5900            0.0.0.0:*               LISTEN      19516/qemukvm
-修改虚拟机密码
+修改虚拟机密码(需要停止虚拟机）
 	virt-customize -a /data/moban1.qcow2 --root-password password:Zonecd@2019
