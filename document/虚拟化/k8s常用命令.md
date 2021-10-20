@@ -95,27 +95,9 @@ env:
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    引用$(MY_POD_NAME)
 ```
 
-关联pvc到特定的pv
-
-```yaml
-	kind: PersistentVolumeClaim
-	apiVersion: v1
-	metadata:
-	  name: nfs-pvc
-	spec:
-	  accessModes:
-		- ReadWriteMany
-	  storageClassName: ""
-	  resources:
-		requests:
-		  storage: 90Mi
-	  selector:
-		matchLabels:
-		  pv: nfs-pv
-```
+> 关于引用使用$()引用时适合用于cmd启动参数，同时可在pod启动后使用${}引用环境变量
 
 #### 三、节点维护
 

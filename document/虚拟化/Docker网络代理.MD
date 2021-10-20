@@ -24,8 +24,8 @@ Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
 ```shell
 ##socks5代理
 [Service]
-Environment="HTTP_PROXY=socks5:://proxy.example.com:8080"
-Environment="HTTPS_PROXY=socks5:://proxy.example.com:8080"
+Environment="HTTP_PROXY=socks5://proxy.example.com:8080"
+Environment="HTTPS_PROXY=socks5://proxy.example.com:8080"
 Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
 ```
 
