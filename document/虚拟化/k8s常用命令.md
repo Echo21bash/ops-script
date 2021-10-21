@@ -99,6 +99,94 @@ env:
 
 > 关于引用使用$()引用时适合用于cmd启动参数，同时可在pod启动后使用${}引用环境变量
 
+**calico单个pod固定IP多pod固定ip池**
+
+calicoctl安装
+
+```shell
+# cd /usr/local/bin/
+# curl -O -L  https://github.com/projectcalico/calicoctl/releases/download/v3.10.1/calicoctl
+# chmod +x calicoctl
+# mkdir /etc/calico
+# vim /etc/calico/calicoctl.cfg
+apiVersion: projectcalico.org/v3
+kind: CalicoAPIConfig
+metadata:
+spec:
+  datastoreType: "kubernetes"
+  kubeconfig: "/root/.kube/config"
+```
+
+主要利用`calico`组件的两个`kubernetes`注解:
+
+1)`cni.projectcalico.org/ipAddrs`
+
+2)`cni.projectcalico.org/ipv4pools`
+
+*单个pod固定IP*
+
+```yaml
+kind: Deployment
+metadata:
+  labels:
+    app: test-app
+  name: test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      annotations:
+        cni.projectcalico.org/ipAddrs: '["10.244.24.71"]'
+
+```
+
+*多个pod固定IP池*
+
+需要创建额外IP池（除了默认IP池）。利用注解`cni.projectcalico.org/ipv4pools`。
+
+```shell
+[root@k8s-master3 ~]# cat test-ippool.yaml 
+apiVersion: projectcalico.org/v3
+kind: IPPool
+metadata:
+  name: test-ippool
+spec:
+  blockSize: 31
+  cidr: 10.245.100.0/31
+  ipipMode: Never
+  natOutgoing: true
+[root@k8s-master3 ~]# calicoctl create -f test-ippool.yaml 
+Successfully created 1 'IPPool' resource(s)
+[root@k8s-master3 ~]# cat nginx.yaml 
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: nginx
+      annotations:
+        cni.projectcalico.org/ipv4pools: '["test-ippool"]'
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+[root@k8s-master3 ~]# kubectl create -f nginx.yaml 
+```
+
+> 此方法仅限于calico网络插件
+
 #### 三、节点维护
 
 设置节点不可调度
