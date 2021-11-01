@@ -1,7 +1,0 @@
-cp weixincfg.json /etc/
-chmod +x ./weixin
-cp ./weixin /usr/local/bin
-weixin 【接收人】【主题】【内容】
-
-zabbix 添加报警媒介
-选择脚本参数分别是{ALERT.SENDTO} {ALERT.SUBJECT} {ALERT.MESSAGE}
