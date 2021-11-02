@@ -5,27 +5,45 @@ usage()
 	cat <<-EOF
 	Usage:${program} [OPTION]...
 	-a,--all    通知所有人（可选）
-	-m,--msg    消息内容（必须）
+	-m,--msg    消息内容（必选）
 	-t,--mobile 通知指定人多人用','分割（可选）
-	--token     钉钉机器人Token（必须）
+	--token     钉钉机器人Token（必选）
 	EOF
 }
 
 send_msg(){
 	
-	msg="`echo ${msg} | sed 's/"/\\"/g'`"
-
-	if [[ ${isAtAll} = 'true' && x${touser} = 'x' ]];then
-		curl https://oapi.dingtalk.com/robot/send?access_token=$token \
+	msg="`echo ${msg} | sed 's/"/\\\\"/g'`"
+	if [[ x${isAtAll} = "x" && x${touser} = "x" ]];then
+		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"isAtAll":true}}'
+		-d '{"msgtype":"text","text":{"content":"'$msg'"}}' | \
+		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
+		exit ${send_status}	
 	fi
-
 	
-	if [[ x${isAtAll} = 'x' && x${touser} != 'x' ]];then
-		curl https://oapi.dingtalk.com/robot/send?access_token=$token \
+	if [[ ${isAtAll} = "true" && x${touser} = "x" ]];then
+		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"atMobiles":['$touser']}}'
+		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"isAtAll":true}}' | \
+		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
+		exit ${send_status}
+	fi
+	
+	if [[ ${isAtAll} = "true" && x${touser} != "x" ]];then
+		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
+		-H 'Content-Type: application/json' \
+		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"atMobiles":['$touser'],"isAtAll":true}}' | \
+		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
+		exit ${send_status}
+	fi
+	
+	if [[ x${isAtAll} = "x" && x${touser} != "x" ]];then
+		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
+		-H 'Content-Type: application/json' \
+		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"atMobiles":['$touser']}}' | \
+		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
+		exit ${send_status}
 	fi
 }
 
@@ -58,6 +76,7 @@ do
 			;;
 		-t|--mobile)
 			touser="$2"
+			touser=`echo $touser | grep -oE "([0-9]{11})" | xargs echo | sed 's/ /,/' | sed 's#\([0-9]\{11\}\)#"\1"#g'`
 			shift 2
 			;;
 		--token)

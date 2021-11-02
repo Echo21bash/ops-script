@@ -81,7 +81,7 @@ do
 			;;
 		--user)
 			user="$2"
-			user=`echo ${user} | grep -oE "([a-z]{1,})" | xargs echo | sed 's/ /|/' | sed 's#\([a-z]\{1,\}\)#\1#g'`
+			user=`echo ${user} | grep -oE "([0-9a-z\.]{1,})" | xargs echo | sed 's/ /|/' | sed 's#\([0-9a-z\.]\{1,\}\)#\1#g'`
 			shift 2
 			;;
 		--partyid)
