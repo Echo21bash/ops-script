@@ -1,0 +1,27 @@
+标题：故障{TRIGGER.STATUS},服务器:{HOSTNAME}发生: {TRIGGER.NAME}故障!
+------------------------------------------------------------------------
+告警主机: {HOSTNAME}
+告警IP: {HOST.IP}
+告警时间: {EVENT.DATE} {EVENT.TIME}
+告警等级: {TRIGGER.SEVERITY}
+告警信息: {TRIGGER.NAME}
+告警项目: {TRIGGER.KEY}
+问题详情: {ITEM.NAME}:{ITEM.VALUE}
+持续时间: {EVENT.AGE}
+当前状态: {TRIGGER.STATUS}
+事件ID: {EVENT.ID}
+
+
+
+标题：恢复{TRIGGER.STATUS},服务器:{HOSTNAME}: {TRIGGER.NAME}已恢复!
+------------------------------------------------------------------------
+告警主机: {HOSTNAME}
+告警IP: {HOST.IP}
+恢复时间: {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}
+告警等级: {TRIGGER.SEVERITY}
+告警信息: {TRIGGER.NAME}
+告警项目: {TRIGGER.KEY}
+问题详情: {ITEM.NAME}:{ITEM.VALUE}
+持续时间: {EVENT.AGE}
+当前状态: {TRIGGER.STATUS}
+事件ID: {EVENT.ID}

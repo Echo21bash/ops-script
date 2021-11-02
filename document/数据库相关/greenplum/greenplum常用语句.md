@@ -158,23 +158,15 @@ select pg_terminate_backend(pid);
 批量结束
 
 ```sql
-SELECT
-  pg_terminate_backend(pid)
-FROM
-  (
-    SELECT
-      pid
-    FROM
-      pg_stat_activity
-    WHERE
-      (
-        now() - xact_start > interval '3600 sec'
-        OR now() - query_start > interval '3600 sec'
-      )
-      AND query !~ '^COPY'
-      AND state LIKE '%transaction%'
-    ORDER BY
-      coalesce(xact_start, query_start)
+SELECT pg_terminate_backend(pid)
+FROM 
+    (SELECT pid
+    FROM pg_stat_activity
+    WHERE ( now() - xact_start > interval '60000 sec'
+            OR now() - query_start > interval '60000 sec' )
+            AND query !~ '^COPY'
+            AND state LIKE '%transaction%'
+    ORDER BY  coalesce(xact_start, query_start)) a;
 ```
 
 查看表状态
