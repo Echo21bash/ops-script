@@ -17,7 +17,7 @@ send_msg(){
 	if [[ x${isAtAll} = "x" && x${touser} = "x" ]];then
 		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'$msg'"}}' | \
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"}}' | \
 		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
 		exit ${send_status}	
 	fi
@@ -25,7 +25,7 @@ send_msg(){
 	if [[ ${isAtAll} = "true" && x${touser} = "x" ]];then
 		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"isAtAll":true}}' | \
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"isAtAll":true}}' | \
 		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
 		exit ${send_status}
 	fi
@@ -33,7 +33,7 @@ send_msg(){
 	if [[ ${isAtAll} = "true" && x${touser} != "x" ]];then
 		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"atMobiles":['$touser'],"isAtAll":true}}' | \
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"atMobiles":['$touser'],"isAtAll":true}}' | \
 		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
 		exit ${send_status}
 	fi
@@ -41,7 +41,7 @@ send_msg(){
 	if [[ x${isAtAll} = "x" && x${touser} != "x" ]];then
 		send_status=`curl -s https://oapi.dingtalk.com/robot/send?access_token=$token \
 		-H 'Content-Type: application/json' \
-		-d '{"msgtype":"text","text":{"content":"'$msg'"},"at":{"atMobiles":['$touser']}}' | \
+		-d '{"msgtype":"text","text":{"content":"'"$msg"'"},"at":{"atMobiles":['$touser']}}' | \
 		grep -oE '"errcode":[0-9]{1,}' | grep -oE '[0-9]{1,}'`
 		exit ${send_status}
 	fi

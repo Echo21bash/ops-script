@@ -49,7 +49,7 @@ program=$(basename $0)
 #-o或--options选项后面接可接受的短选项，如ex:s::，表示可接受的短选项为-e -x -s，其中-e选项不接参数，-x选项后必须接参数，-s选项的参数为可选的
 #-l或--long选项后面接可接受的长选项，用逗号分开，冒号的意义同短选项。
 #-n选项后接选项解析错误时提示的脚本名字["std.sh: unknown option -- d"]
-ARGS=$(getopt -o -a -l corpid:,agentid:,corpsecret:,msg:,user,partyid -n "${program}" -- "$@")
+ARGS=$(getopt -o -a -l corpid:,agentid:,corpsecret:,msg:,user:,partyid: -n "${program}" -- "$@")
 #如果参数不正确，打印提示信息
 [[ $? -ne 0 ]] && usage && exit 1
 [[ $# -eq 0 ]] && usage && exit 1
