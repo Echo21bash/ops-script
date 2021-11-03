@@ -13,7 +13,11 @@ usage()
 
 send_msg(){
 	
+	###双引号保留
 	msg="`echo ${msg} | sed 's/"/\\\\"/g'`"
+	###换行符替换
+	msg="`echo ${msg} | tr '\r' '\n'`"
+	
 	if [[ x${isAtAll} = "x" && x${touser} = "x" ]];then
 		curl https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=$token \
 		-H 'Content-Type: application/json' \
