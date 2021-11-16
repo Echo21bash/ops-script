@@ -2,8 +2,10 @@
 ###此脚本用于将行式业务表数据同步至列式数据仓库
 ###开始时间与结束时间差必须大于定时任务执行间隔
 source /usr/local/greenplum-db/greenplum_path.sh
+###工作目录
+work_dir=`cd $(dirname $0);pwd`
 ###日志目录
-logfile=/home/gpadmin/itp_tool/greenplum_row_to_col.log
+logfile="${work_dir}/greenplum_row_to_col.log"
 ###数据时间间隔可选【1 days】【1 hour】【1 min】
 time_interval='1 hour'
 start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M:00"`

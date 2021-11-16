@@ -1,3 +1,15 @@
+登陆数据库
+
+```shell
+sqlplus / as sysdba
+```
+
+查看启动模式
+
+```sql
+select open_mode from v$database;
+```
+
 表空间使用
 
 ```sql

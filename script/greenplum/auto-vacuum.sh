@@ -1,20 +1,23 @@
 #!/bin/bash
 #auto exec vacuum full
 #do not echo command, just get a list of db
+#刷新环境变量
 source /usr/local/greenplum-db/greenplum_path.sh
+#工作目录
+work_dir=`cd $(dirname $0);pwd`
+#星期几
 week=`date +%w`
-work_dir='/home/gpadmin/itp_tool'
+#日志
 log_file="${work_dir}/vacuum.log"
-dblist=`psql -d postgres -c "copy (select datname from pg_stat_database) to stdout"`
-dblist=($dblist)
+#数据库名
 dblist=('lcdb' 'tyacc_production')
 #申明关联数组
 declare -A schema_name
+#模式名称
 schema_name=([tyacc_production]='AFC_ITP_BUSINESS AFC_ITP_SDK AFC_ITP_BIZ_COL AFC_ITP_FACE' [lcdb]='afc_txn')
 
-
 get_all_tables(){
-
+	###获取所有表
 	tables_file="${work_dir}/${db}_table_list.txt"
 	system_tables_file="${work_dir}/${db}_system_table_list.txt"
 	>${tables_file}
@@ -23,7 +26,7 @@ get_all_tables(){
 	if [[ $db == template0 ]] || [[ $db == template1 ]] || [[ $db == postgres ]] || [[ $db == gpdb ]] ; then
 		continue
 	fi
-		
+	
 	#query out only the normal user tables, excluding partitions of parent tables
 	schema_list=(${schema_name[$db]})
 	for schema in ${schema_list[@]}
@@ -34,47 +37,72 @@ get_all_tables(){
 
 }
 
-run_business_table_vacuum(){
-    ###业务表膨胀处理
-    echo "======================开始业务表膨胀处理======================"
+run_analyze(){
+    ###更新统计信息
+    echo "======================开始更新业务表统计信息======================"
 	while read line; do
 		#some table name may contain the $ sign, so escape it
 		line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
 		#vacuum full this table, which will lock the table
-		sleep 3
-		psql -d $db -L ${log_file} -e -a -c "$exec $line;" && \
-		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '3s';REINDEX TABLE $line;" && \
-		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
+		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';ANALYZE $line;" &
 	done <${tables_file}
 	
 	while true; do
 		sleep 10
 		proc=`psql -e -a -c "select * from pg_stat_activity;" | grep -oiE 'VACUUM|REINDEX|ANALYZE'`
 		if [[ -z $proc ]];then
-			echo "======================结束业务表膨胀处理======================"
+			echo "======================结束更新业务表统计信息======================"
 			return
 		fi
 	done
-}
-
-run_system_table_vacuum(){
-	###系统表膨胀处理
-	echo "======================开始系统表膨胀处理======================"
+	
+    ###更新统计信息
+    echo "======================开始更新系统表统计信息======================"
 	while read line; do
 		#some table name may contain the $ sign, so escape it
 		line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
 		#vacuum full this table, which will lock the table
-		sleep 3
-		psql -d $db -L ${log_file} -e -a -c "$exec $line;" && \
-		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '3s';REINDEX TABLE $line;" && \
-		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
+		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';ANALYZE $line;" &
 	done <${system_tables_file}
 	
 	while true; do
 		sleep 10
 		proc=`psql -e -a -c "select * from pg_stat_activity;" | grep -oiE 'VACUUM|REINDEX|ANALYZE'`
 		if [[ -z $proc ]];then
-			echo "======================结束系统表膨胀处理======================"
+			echo "======================结束更新系统表统计信息======================"
+			return
+		fi
+	done
+}
+
+get_vacuum_table(){
+	###膨胀表详情
+	vacuum_tables_detail="${work_dir}/${db}_vacuum_tables_detail.txt"
+	vacuum_tables="${work_dir}/${db}_vacuum_tables.txt"
+	###将过期数据大于10000条的表筛选出来
+	psql -d $db -c "copy (SELECT schemaname || '.' || relname as table_name, pg_size_pretty( pg_relation_size('\"' || schemaname || '\"' || '.' || relname) ) as table_size, n_dead_tup, n_live_tup, round(n_dead_tup * 100 / (n_live_tup + n_dead_tup), 2) AS dead_tup_ratio FROM pg_stat_all_tables WHERE n_dead_tup >= 10000 ORDER BY dead_tup_ratio DESC) to stdout;" >${vacuum_tables_detail}
+	###提取表名并加双引号
+	awk '{print$1}' ${vacuum_tables_detail} |  awk -F '.' '{print "\"" $1 "\"" "." "\""$2"\""}' >${vacuum_tables}
+}
+
+run_table_vacuum(){
+    ###表膨胀处理
+    echo "======================开始表膨胀处理======================"
+	while read line; do
+		#some table name may contain the $ sign, so escape it
+		line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
+		#vacuum full this table, which will lock the table
+		sleep 1
+		psql -d $db -L ${log_file} -e -a -c "$exec $line;" && \
+		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';REINDEX TABLE $line;" && \
+		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
+	done <${vacuum_tables}
+	
+	while true; do
+		sleep 10
+		proc=`psql -e -a -c "select * from pg_stat_activity;" | grep -oiE 'VACUUM|REINDEX|ANALYZE'`
+		if [[ -z $proc ]];then
+			echo "======================结束表膨胀处理======================"
 			return
 		fi
 	done
@@ -87,11 +115,12 @@ run_ctrl(){
 		echo "======================开始数据库${db}表膨胀处理======================"
 		get_all_tables >>${log_file}
 		start_time=`date +'%Y-%m-%d %H:%M:%S'`
-		start_seconds=$(date --date="$start_time" +%s);
-		run_business_table_vacuum >>${log_file}
-		run_system_table_vacuum >>${log_file}
+		start_seconds=$(date --date="$start_time" +%s)
+		run_analyze >>${log_file}
+		get_vacuum_table >>${log_file}
+		run_table_vacuum >>${log_file}
 		end_time=`date +'%Y-%m-%d %H:%M:%S'`
-		end_seconds=$(date --date="$end_time" +%s);
+		end_seconds=$(date --date="$end_time" +%s)
 		echo "======================结束数据库${db}表膨胀处理======================"
 		echo "本次VACUUM ${db} 运行时间："$((end_seconds-start_seconds))"s" >>${log_file}
 	done
@@ -117,4 +146,3 @@ main(){
 }
 
 main
-
