@@ -1,8 +1,11 @@
 #!/bin/bash
-	program_name=(`jps | grep -iv jps | awk '{print$2}'`)
-	pid_number=(`jps | grep -iv jps | awk '{print$1}'`)
-	jmx_port=`ps -aux | grep -Eo 'jmxremote.port=[0-9]{1,}' | grep -v grep 2>/dev/null | grep -E '[0-9]{1,}'`
-	program_number=${#program_name[@]}
+. /etc/profile
+#PATH=/opt/java/bin:$PATH
+
+program_name=(`jps | grep -iv jps | awk '{print$2}'`)
+pid_number=(`jps | grep -iv jps | awk '{print$1}'`)
+jmx_port=`ps -aux | grep -Eo 'jmxremote.port=[0-9]{1,}' | grep -v grep 2>/dev/null | grep -E '[0-9]{1,}'`
+program_number=${#program_name[@]}
 	
 discovery_java_program(){
 
