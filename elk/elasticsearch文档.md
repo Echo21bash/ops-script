@@ -31,9 +31,9 @@
   ```shell
   PUT _cluster/settings
   {
-  	"persistent": {
-  		"cluster.routing.allocation.enable": "none"
-  	}
+      "persistent": {
+          "cluster.routing.allocation.enable": "none"
+      }
   }
   ```
 
@@ -113,6 +113,7 @@
       "number_of_shards":3,
       "number_of_replicas":1,
       "index.max_docvalue_fields_search":500,
+      "refresh_interval" : "30s",
       "index.lifecycle.name": "test"
     }
   }
@@ -127,7 +128,8 @@
       "settings": {
         "number_of_shards":3,
         "number_of_replicas":1
-        "index.max_docvalue_fields_search":500
+        "index.max_docvalue_fields_search":500,
+        "refresh_interval" : "30s",
         "index.lifecycle.name": "test"
       }
     }
@@ -177,9 +179,9 @@
   ```shell
   PUT _cluster/settings
   {
-  	"persistent": {
-  		"cluster.routing.allocation.enable": "none"
-  	}
+      "persistent": {
+          "cluster.routing.allocation.enable": "none"
+      }
   }
   ```
 
@@ -206,8 +208,8 @@
   ```shell
   PUT _cluster/settings
   {
-  	"persistent": {
-  		"cluster.routing.allocation.enable": "all"
-  	}
+      "persistent": {
+          "cluster.routing.allocation.enable": "all"
+      }
   }
   ```
