@@ -1,4 +1,0 @@
-
-常用的ESapi接口
-查看集群健康状态
-	curl $(hostname):9200/_cluster/health?pretty
