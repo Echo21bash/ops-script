@@ -5,31 +5,36 @@
 - 集群健康状态
   
   ```shell
-  curl -u elastic:123456 http://127.0.0.1:9200/_cluster/health?pretty
+  GET _cluster/health?pretty
   ```
 
 - 集群状态信息
   
   ```shell
-  curl -u elastic:123456 http://127.0.0.1:9200/_cluster/stats?pretty
+  GET _cluster/stats
   ```
 
 - 查看节点信息
   
   ```shell
-  curl -u elastic:123456 http://127.0.0.1:9200/_cat/nodes?prett
+  GET _cat/nodes?pretty
   ```
 
 - 获取集群参数
   
   ```shell
-  curl -u elastic:123456 -XGET http://127.0.0.1:9200/_cluster/settings
+  GET _cluster/settings
   ```
 
 - 集群参数配置
   
   ```shell
-  curl -XPUT -H 'Content-type':'application/json' http://127.0.0.1:9200/_cluster/settings -d '{"persistent" : { "cluster.routing.allocation.enable" : "none" } }'
+  PUT _cluster/settings
+  {
+  	"persistent": {
+  		"cluster.routing.allocation.enable": "none"
+  	}
+  }
   ```
 
 ### 索引相关
@@ -37,37 +42,37 @@
 - 查看索引信息
   
   ```shell
-  curl -u elastic:123456 http://127.0.0.1:9200/_cat/indices
+  GET _cat/indices
   ```
 
 - 删除索引
   
   ```shell
-  curl -k -u elastic:123456 -XDELETE http://127.0.0.1:9200/${indexname}
+  DELETE ${indexname}
   ```
 
 - 关闭索引
   
   ```shell
-  curl -k -u elastic:123456 -XPOST http://127.0.0.1:9200/${indexname}/_close
+  POST ${indexname}/_close
   ```
 
 - 打开索引
   
   ```shell
-  curl -k -u elastic:123456 -XPOST http://127.0.0.1:9200/${indexname}/_open
+  POST ${indexname}/_open
   ```
 
 - 冻结索引(6.6.0以上版本)
   
   ```shell
-  curl -k -u elastic:123456 -XPOST http://127.0.0.1:9200/${indexname}/_freeze
+  POST ${indexname}/_freeze
   ```
 
 - 冻结索引(6.6.0以上版本)
   
   ```shell
-  curl -k -u elastic:123456 -XPOST http://127.0.0.1:9200/${indexname}/_unfreeze
+  POST ${indexname}/_unfreeze
   ```
 
 ## 索引生命周期
@@ -134,19 +139,19 @@
   ```shell
   PUT test-index
   {
-      "settings": {
-          "number_of_shards": 1,
-          "number_of_replicas": 1,
-          "index.lifecycle.name": "test"
-      }
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1,
+      "index.lifecycle.name": "test"
+    }
   }
   PUT test-*/_settings
   {
-      "index": {
-          "lifecycle": {
-              "name": "test"
-          }
+    "index": {
+      "lifecycle": {
+          "name": "test"
       }
+    }
   }
   ```
 
@@ -170,13 +175,18 @@
 - 暂停集群的shard自动均衡
   
   ```shell
-  curl -XPUT -H 'Content-type':'application/json' http://127.0.0.1:9200/_cluster/settings -d '{ "persistent" : { "cluster.routing.allocation.enable" : "none" } }'
+  PUT _cluster/settings
+  {
+  	"persistent": {
+  		"cluster.routing.allocation.enable": "none"
+  	}
+  }
   ```
 
 - 执行同步刷新
   
   ```shell
-  curl -XPOST http://127.0.0.1:9200/_flush/synced
+  POST _flush/synced
   ```
 
 - 停止节点
@@ -194,5 +204,10 @@
 - 启动集群的shard自动均衡
   
   ```shell
-  curl -XPUT -H 'Content-type':'application/json' http://10.1.1.1:9200/_cluster/settings -d '{ "persistent" : { "cluster.routing.allocation.enable" : "all" } }'
+  PUT _cluster/settings
+  {
+  	"persistent": {
+  		"cluster.routing.allocation.enable": "all"
+  	}
+  }
   ```
