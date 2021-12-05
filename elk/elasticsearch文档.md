@@ -37,6 +37,25 @@
   }
   ```
 
+- 查看集群阻塞任务
+  
+  ```shell
+  GET _cat/pending_tasks
+  ```
+
+- 移除一个节点
+  
+  ```shell
+  PUT _cluster/settings
+  {
+    "transient" : {
+      "cluster.routing.allocation.exclude._name" : "node-2"
+    }
+  }
+  ```
+
+
+
 ### 索引相关
 
 - 查看索引信息
@@ -73,6 +92,22 @@
   
   ```shell
   POST ${indexname}/_unfreeze
+  ```
+
+- 迁移分片
+  
+  ```shell
+  POST /_cluster/reroute
+  {
+    "commands": [
+      {
+        "move": {
+          "index": "test", "shard": 0,
+          "from_node": "node1", "to_node": "node2"
+        }
+      }
+    ]
+  }
   ```
 
 ## 索引生命周期
@@ -210,6 +245,18 @@
   {
       "persistent": {
           "cluster.routing.allocation.enable": "all"
+      }
+  }
+  ```
+
+- 分片恢复速度控制
+  
+  ```shell
+  PUT _cluster/settings
+  {
+      "persistent": {
+          "cluster.routing.allocation.node_concurrent_recoveries": 16,
+          "indices.recovery.max_bytes_per_sec": "160mb"
       }
   }
   ```
