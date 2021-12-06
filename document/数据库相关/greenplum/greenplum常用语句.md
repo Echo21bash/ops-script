@@ -18,7 +18,6 @@ create user tableau with nosuperuser nocreatedb password 'tableau';
 alter user gpadmin with password 'gpadmin';
 ```
 
-
 获取锁信息
 
 ```sql
@@ -43,12 +42,12 @@ select count(*) from pg_stat_activity where state = 'active';
 select distinct relstorage from pg_class;
 ```
 
-​	a  -- 行存储AO表    
-​	h  -- heap堆表、索引    
-​	x  -- 外部表(external table)    
-​	v  -- 视图    
-​	c  -- 列存储AO表
-​	
+​    a  -- 行存储AO表    
+​    h  -- heap堆表、索引    
+​    x  -- 外部表(external table)    
+​    v  -- 视图    
+​    c  -- 列存储AO表
+​    
 查询当前数据库有哪些AO表
 
 ```sql
@@ -67,11 +66,47 @@ select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relname
 select pg_size_pretty(pg_relation_size('open.dwd_wallet_info'));
 ```
 
+查询当前库所有表大小
+
+```sql
+SELECT
+	table_schema || '.' || TABLE_NAME AS table_full_name,
+	pg_size_pretty ( pg_total_relation_size ( '"' || table_schema || '"."' || TABLE_NAME || '"' ) ) AS SIZE 
+FROM
+	information_schema.tables 
+ORDER BY
+	pg_total_relation_size ( '"' || table_schema || '"."' || TABLE_NAME || '"' ) DESC;
+```
+
+所有表大小和索引大小
+
+```sql
+SELECT TABLE_NAME
+	,
+	pg_size_pretty ( table_size ) AS table_size,
+	pg_size_pretty ( indexes_size ) AS indexes_size,
+	pg_size_pretty ( total_size ) AS total_size 
+FROM
+	(
+	SELECT TABLE_NAME
+		,
+		pg_table_size ( TABLE_NAME ) AS table_size,
+		pg_indexes_size ( TABLE_NAME ) AS indexes_size,
+		pg_total_relation_size ( TABLE_NAME ) AS total_size 
+	FROM
+		( SELECT ( '"' || table_schema || '"."' || TABLE_NAME || '"' ) AS TABLE_NAME FROM information_schema.tables ) AS all_tables 
+	ORDER BY
+	total_size DESC 
+	) AS pretty_sizes
+```
 
 查整个库的大小
 
 ```sql
+--单个大小
 select pg_size_pretty(pg_database_size('gp_pay'));
+--所有库大小
+select datname,pg_size_pretty(pg_database_size(datname)) from pg_database;
 ```
 
 查看表膨胀信息
@@ -94,7 +129,6 @@ ORDER BY
 LIMIT
   20;
 ```
-
 
 长事务查询
 
@@ -121,7 +155,6 @@ WHERE
 ORDER BY
   coalesce(xact_start, query_start);
 ```
-
 
 长连接查询
 
@@ -181,24 +214,23 @@ select * from pg_stat_all_tables;
 select * from gp_segment_configuration;
 ```
 
-
-
 ### Greenplum维护
 
 GreenPlum备份与恢复
 
 * 备份
-
+  
   ```shell
   全量备份
   gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data
   增量备份
   gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data --incremental
   ```
-  
-* 用法
-  	gpbackup [标志]
 
+* 用法
+  
+      gpbackup [标志]
+  
   ```shell
   标志：
     --backup-dir字符串将所有备份文件写入的目录的绝对路径
@@ -229,16 +261,16 @@ GreenPlum备份与恢复
     --with-stats备份查询计划统计信息
     --without-globals禁用全局元数据的备份
   ```
-  
-* 恢复
 
+* 恢复
+  
   ```shell
   gprestore --backup-dir /tmp --timestamp 20200707144340 --redirect-db test2 --data-only --incremental
   ```
 
 * 用法：
   gprestore [标志]
-
+  
   ```shell
   标志：
     --backup-dir字符串要还原的备份文件所在的目录的绝对路径
@@ -369,5 +401,3 @@ GreenPlum备份与恢复
   gpinitstandby -D => debug 模式
   gpinitstandby -r => 移除备用机
   ```
-  
-  
