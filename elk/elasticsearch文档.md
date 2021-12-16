@@ -149,7 +149,8 @@
       "number_of_replicas":1,
       "index.max_docvalue_fields_search":500,
       "refresh_interval" : "30s",
-      "index.lifecycle.name": "test"
+      "index.lifecycle.name": "test", ##绑定生命周期策略
+      "index.lifecycle.rollover_alias": "test" ##配置索引滚动别名
     }
   }
   ```
@@ -162,16 +163,17 @@
     "template": {
       "settings": {
         "number_of_shards":3,
-        "number_of_replicas":1
+        "number_of_replicas":1,
         "index.max_docvalue_fields_search":500,
         "refresh_interval" : "30s",
-        "index.lifecycle.name": "test"
+        "index.lifecycle.name": "test", ##绑定生命周期策略
+        "index.lifecycle.rollover_alias": "test" ##配置索引滚动别名
       }
     }
   }
   ```
-
-- 将生命周期和索引模板关联
+  
+- 将生命周期和索引关联(可选)
   
   ```shell
   PUT test-index
