@@ -16,6 +16,18 @@ declare -A schema_name
 #模式名称
 schema_name=([tyacc_production]='AFC_ITP_BUSINESS AFC_ITP_SDK AFC_ITP_BIZ_COL AFC_ITP_FACE' [lcdb]='afc_txn')
 
+kill_transaction(){
+	###杀掉超过一天的事务
+	psql <<-EOF
+	\timing
+	SELECT pg_terminate_backend(pid)
+	FROM 
+      (SELECT pid
+	FROM pg_stat_activity
+	WHERE (now() - xact_start > interval '3590 min' OR now() - query_start > interval '3590 min') AND query !~ '^COPY' AND state LIKE '%transaction%'
+	ORDER BY  coalesce(xact_start, query_start)) a;
+	EOF
+}
 get_all_tables(){
 	###获取所有表
 	tables_file="${work_dir}/${db}_table_list.txt"
@@ -110,7 +122,7 @@ run_table_vacuum(){
 
 run_ctrl(){
 
-	
+	kill_transaction >>${log_file}
 	for db in ${dblist[@]} ; do
 		echo "======================开始数据库${db}表膨胀处理======================"
 		get_all_tables >>${log_file}
