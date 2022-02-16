@@ -44,12 +44,38 @@
   git config --global --unset https.proxy
   ```
 
+## 基本使用
+
 - 拉取代码
   
   ```shell
   git clone https://gitlab.com/username/myrepo.git
   git clone https://${username}:${password}@gitlab.com/username/myrepo.git
   git clone https://gitlab-ci-token:${Personal Access Tokens}@gitlab.com/username/myrepo.git
+  ```
+
+* 查看远端分支
+
+  ```shell
+  git branch -a
+  ```
+
+* 新建分支并切换到指定分支
+
+  ```shell
+  git checkout -b dev origin/release/caigou_v1.0
+  ```
+
+* 切换本地分支
+
+  ```shell
+  git checkout master
+  ```
+
+* 将本地分支推送到远程
+
+  ```shell
+  git push -u origin dev:release/caigou_v1.0
   ```
 
 # Gitlab维护
