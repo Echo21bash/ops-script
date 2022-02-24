@@ -10,12 +10,12 @@ logfile="${work_dir}/greenplum_row_to_col.log"
 time_interval='1 hour'
 start_time=`date -d "-${time_interval}" +"%Y-%m-%d %H:%M:00"`
 end_time=`date +"%Y-%m-%d %H:%M:00"`
-
-
+###对该周期内的数据进行核查不一致的话重新跑
+data_cycle='1 days'
 #数据库名
 database_name='tyacc_tytest'
 #查询条件
-index_name=('createdAt')
+index_name='createdAt'
 #源模式
 source_schema='AFC_ITP_BUSINESS'
 #目标模式
@@ -33,8 +33,8 @@ delete_old_data(){
 	FROM
 		"${target_schema}"."${dat_warehouse_table[$i]}" 
 	WHERE
-		"${target_schema}"."${dat_warehouse_table[$i]}"."${index}" > '${start_time}' 
-		AND "${target_schema}"."${dat_warehouse_table[$i]}"."${index}" <= '${end_time}';
+		"${target_schema}"."${dat_warehouse_table[$i]}"."${index_name}" > '${start_time}' 
+		AND "${target_schema}"."${dat_warehouse_table[$i]}"."${index_name}" <= '${end_time}';
 	EOF
 
 }
@@ -48,7 +48,7 @@ delete_updata_old_data(){
 	FROM
 		"${target_schema}"."${dat_warehouse_table[$i]}" 
 	WHERE
-		"id" IN (SELECT "id" FROM "${source_schema}"."${business_table[$i]}" WHERE "createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}');
+		"id" IN (SELECT "id" FROM "${source_schema}"."${business_table[$i]}" WHERE "${index_name}" < '${start_time}' AND "updatedAt" >= '${start_time}');
 	EOF
 }
 
@@ -61,8 +61,8 @@ inset_new_data(){
 	FROM
 		"${source_schema}"."${business_table[$i]}" 
 	WHERE
-		"${source_schema}"."${business_table[$i]}"."${index}" > '${start_time}' 
-		AND "${source_schema}"."${business_table[$i]}"."${index}" <= '${end_time}';
+		"${source_schema}"."${business_table[$i]}"."${index_name}" > '${start_time}' 
+		AND "${source_schema}"."${business_table[$i]}"."${index_name}" <= '${end_time}';
 	EOF
 }
 
@@ -77,23 +77,29 @@ inset_updata_new_data(){
 	FROM
 		"${source_schema}"."${business_table[$i]}" 
 	WHERE
-		"createdAt" < '${start_time}' AND "updatedAt" >= '${end_time}';
+		"${index_name}" < '${start_time}' AND "updatedAt" >= '${start_time}';
 	EOF
 }
 
-start_run_time=`date`
-echo "${start_run_time}" >>$logfile
-i=0
-for now_table in ${business_table[@]}
-do
-	index='createdAt'
-	echo "deleting ${now_table} data" >>$logfile
-	delete_old_data >>$logfile
-	delete_updata_old_data >>$logfile
-	echo "updating ${now_table} data" >>$logfile
-	inset_new_data >>$logfile
-	inset_updata_new_data >>$logfile
-	((i++))
-done
-end_run_time=`date`
-echo "${end_run_time}" >>$logfile
+run_ctl(){
+
+	start_run_time=`date +"%Y-%m-%d %H:%M:%S"`
+	echo "==========行转列脚本开始执行,开始时间${start_run_time}==========" >>$logfile
+	echo "==========处理数据周期${start_time}-${end_time}==========" >>$logfile
+	i=0
+	for now_table in ${business_table[@]}
+	do
+		echo "正在删除表${now_table}旧数据..." >>$logfile
+		delete_old_data >>$logfile
+		delete_updata_old_data >>$logfile
+		echo "正在插入表${now_table}新数据..." >>$logfile
+		inset_new_data >>$logfile
+		inset_updata_new_data >>$logfile
+		((i++))
+	done
+	end_run_time=`date +"%Y-%m-%d %H:%M:%S"`
+	echo "==========行转列脚本结束执行,结束时间${end_run_time}==========" >>$logfile
+
+}
+
+run_ctl
