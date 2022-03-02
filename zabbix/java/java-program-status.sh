@@ -23,15 +23,15 @@ case ${item} in
 		jvm_status
 	;;
 	S0U|S1U|EU|OU|MU)
-		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{print $i*1000}' /tmp/jvm-${pid_number}-gc.txt
+		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{printf "%d\n",$i*1000}' /tmp/jvm-${pid_number}-gc.txt
 	;;
 	YGC|FGC|GCT|FGCT)
-		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{print $i}' /tmp/jvm-${pid_number}-gc.txt
+		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{printf "%d\n",$i}' /tmp/jvm-${pid_number}-gc.txt
 	;;
 	Threads)
 		grep 'Threads' /proc/${pid_number}/status | grep -oE '[0-9]{1,}'
 	;;
 	*)
-		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{print $i*1000}' /tmp/jvm-${pid_number}-gccapacity.txt
+		awk 'NR==1{for(i=1;i<=NF;i++) if ($i ~ /'${item}'/){break}}NR==2{printf "%d\n",$i*1000}' /tmp/jvm-${pid_number}-gccapacity.txt
 	;;
 esac
