@@ -1,3 +1,7 @@
+# 运维相关
+
+## 通用
+
 登陆数据库
 
 ```shell
@@ -9,6 +13,8 @@ sqlplus / as sysdba
 ```sql
 select open_mode from v$database;
 ```
+
+## 表空间相关
 
 表空间使用
 
@@ -40,5 +46,29 @@ alter tablespace 表空间名 add datafile '+DATADG' size 31G;
 alter tablespace 表空间名 add datafile '/xx/xx.dbf' size 31G;
 -- 裸设备
 alter tablespace 表空间名 add datafile '/dev/rlv_name' size 31G;
+```
+
+## 查看日志
+
+### 查看alert日志
+
+1. 执行sql命令，查看trace文件位置：background_dump_dest就是后台日志
+
+```sql
+show parameter dump;
+```
+
+![](1648618079.png)
+
+2. 退出sqlplus命令行，在linux命令行执行cd命令,切换到trace目录下
+
+```shell
+cd /u01/app/oracle/diag/rdbms/isim/isim2/trace
+```
+
+3. 带有alert关键字的文件，即是alert日志的名字
+
+```shell
+ls alert_*
 ```
 
