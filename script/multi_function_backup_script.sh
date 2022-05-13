@@ -7,7 +7,7 @@ backup_home_dir=/data/backup
 #备份日志
 log_dir=/data/backup/bak.log
 #工程名
-project_name='my-web'
+project_name='zabbix'
 #备份保留时长(天)
 backup_save_time='90'
 
@@ -24,16 +24,16 @@ enable_backup_dir=0
 #需要备份的目录
 backup_dir=(/data/ftp /data/file)
 
-enable_backup_db=0
+enable_backup_db=1
 #数据库用户密码ip端口必须一一对应
-mysql_user=()
-mysql_passwd=()
-mysql_ip=()
-mysql_port=()
+mysql_ip=('127.0.0.1')
+mysql_port=('3306')
+mysql_user=('dba')
+mysql_passwd=('BZgQbp2dj^#$')
 #每个mysql主机需要备份库的个数
-mysql_db_num=()
+mysql_db_num=('1')
 #需要备份的数据库按顺序添加
-db_name=()
+db_name=('zabbix')
 
 enable_backup_svn=0
 #需要备份的目录
@@ -58,7 +58,7 @@ if [ $? = "0" ];then
 	tar zcf ${today_back_name}.sql.tar.gz -C ${backup_home_dir} ${today_back_name}.sql && rm -rf ${today_back_name}.sql
 	echo -e "打包${today_back_name}文件成功">>${log_dir}
 	rm -rf ${old_back_name}.sql.tar.gz && echo "删除本地${old_back_name}.sql.tar.gz完成">>${log_dir}
-	[ ${enable_ftp} = 0 ] && ftp_control ${today_back_name}.sql.tar.gz ${old_back_name}.sql.tar.gz
+	[ ${enable_ftp} = 1 ] && ftp_control ${today_back_name}.sql.tar.gz ${old_back_name}.sql.tar.gz
 fi
 
 }
