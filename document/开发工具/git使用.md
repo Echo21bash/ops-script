@@ -78,6 +78,14 @@
   git push -u origin dev:release/caigou_v1.0
   ```
 
+* 拉取github错误处理
+
+  ```shell
+  #替换为https
+  git config --global url."https://github.com/".insteadOf git@github.com:
+  git config --global url."https://".insteadOf git://
+  ```
+
 # Gitlab维护
 
 ## 服务启停
