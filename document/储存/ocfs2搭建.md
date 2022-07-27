@@ -33,6 +33,25 @@ echo ocfs2 >/etc/modules-load.d/ocfs2-modules.conf
 reboot
 ```
 
+### Openeuler2203
+
+* 自行编译内核
+* 安装必要依赖
+
+```shell
+yum install -y lsb
+```
+
+* ocfs-tools安装
+
+```shell
+#可以使用el9平台
+wget https://public-yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/ocfs2-tools-1.8.6-15.el9.x86_64.rpm
+yum install -y ocfs2-tools-1.8.6-15.el9.x86_64.rpm
+```
+
+
+
 # 新建集群
 
 ### 创建OCFS集群
@@ -42,7 +61,7 @@ reboot
 * 创建集群
 
 ```shell
-o2cb add-cluster ocfs2-cluster
+o2cb add-cluster ocfs2cluster
 ```
 
 * 修改主机名
@@ -56,9 +75,25 @@ hostnamectl set-hostname node2
 
 ```shell
 #注意-n 后面的参数必须是主机名
-o2cb add-node --ip 10.11.11.11 --port 7777 --number 1 ocfs2-cluster node1
-o2cb add-node --ip 10.11.11.12 --port 7777 --number 2 ocfs2-cluster node2
+o2cb add-node --ip 10.11.11.11 --port 7777 --number 1 ocfs2cluster node1
+o2cb add-node --ip 10.11.11.12 --port 7777 --number 2 ocfs2cluster node2
 ```
+
+* 配置集群参数
+
+```shell
+#Load O2CB driver on boot (y/n) [y]:
+#Cluster stack backing O2CB [o2cb]:
+#Cluster to start on boot (Enter "none" to clear) [ocfs2]: 此处填写集群名称
+#Specify heartbeat dead threshold (>=7) [31]:
+#Specify network idle timeout in ms (>=5000) [30000]:
+#Specify network keepalive delay in ms (>=1000) [2000]:
+#Specify network reconnect delay in ms (>=2000) [2000]:
+
+o2cb.init configure
+```
+
+
 
 * 启动集群
 
@@ -70,6 +105,7 @@ systemctl start o2cb.service
 * 查看集群状态
 
 ```shell
+#全部显示ok为正常
 systemctl status o2cb.service
 ```
 
@@ -133,7 +169,7 @@ tunefs.ocfs2 -N 3 /dev/sdb
 * 执行o2cb_ctl工具去在线新增节点3到cluster中
 
 ```shell
-o2cb add-node --ip 10.11.11.13 --port 7777 --number 3 ocfs2-cluster node3
+o2cb add-node --ip 10.11.11.13 --port 7777 --number 3 ocfs2cluster node3
 ```
 
 > 在node3执行
