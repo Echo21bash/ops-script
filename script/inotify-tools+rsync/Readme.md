@@ -9,7 +9,11 @@ sersync.sh脚本为根据监听到的事件分别调用rsync进行与远程服�
 ## 依赖安装
 
 ```shell
+##Centos7
 yum install epel-relase -y
+yum install inotify-tools -y
+yum install rsync -y
+##Openeuler
 yum install inotify-tools -y
 yum install rsync -y
 ```

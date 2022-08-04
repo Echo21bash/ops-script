@@ -8,7 +8,6 @@ declare -A exclude_file_rule=([clickhouse]='tmp_insert|tmp_merge|delete_tmp' [k8
 sersync_dir=/usr/local/sersync/sersync.sh
 
 inotify_fun(){
-	i=1
 	cd $sync_dir
 	if [[ -n ${exclude_file} ]];then
 		inotifywait --exclude "${exclude_file}" -mrq --format  "%Xe %w%f" -e create,delete,attrib,close_write,move ./ | while read event file
@@ -25,17 +24,22 @@ inotify_fun(){
 
 rsync_fun(){
 	while true
-	do 
+	do
 		sleep 20
-		\mv /tmp/inotify-file.log /tmp/inotify-tmp.log
-		sort -u /tmp/inotify-tmp.log | while read sync_dir module_name event file
-		do
-			$sersync_dir $sync_dir $module_name $event $file &
-		done
+		if [[ -s /tmp/inotify-file.log ]];then
+			\mv /tmp/inotify-file.log /tmp/inotify-tmp.log
+			##对重复文件的事件去重并保留最新的事件类型
+			awk '{a[$4]=$0}END{for(i in a){print a[i]}}' /tmp/inotify-tmp.log | while read sync_dir module_name event file
+			do	
+				sleep 0.001
+				$sersync_dir $sync_dir $module_name $event $file &
+			done
+		fi
 	done
 }
 
 run_ctl(){
+	>/tmp/inotify-file.log
 	for i in ${!rsync_module_name[@]}
 	do
 		#rsyncd模块名

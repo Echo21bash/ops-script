@@ -36,6 +36,11 @@ reboot
 ### Openeuler2203
 
 * 自行编译内核
+
+```shell
+自行编译ocfs2内核模块
+```
+
 * 安装必要依赖
 
 ```shell
@@ -48,6 +53,19 @@ yum install -y lsb
 #可以使用el9平台
 wget https://public-yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/ocfs2-tools-1.8.6-15.el9.x86_64.rpm
 yum install -y ocfs2-tools-1.8.6-15.el9.x86_64.rpm
+```
+
+* 修改启动项加载ocfs2 模块
+
+```shell
+grub2-set-default 0
+echo ocfs2 >/etc/modules-load.d/ocfs2-modules.conf
+```
+
+* 重启服务器
+
+```shell
+reboot
 ```
 
 
@@ -82,6 +100,7 @@ o2cb add-node --ip 10.11.11.12 --port 7777 --number 2 ocfs2cluster node2
 * 配置集群参数
 
 ```shell
+o2cb.init configure
 #Load O2CB driver on boot (y/n) [y]:
 #Cluster stack backing O2CB [o2cb]:
 #Cluster to start on boot (Enter "none" to clear) [ocfs2]: 此处填写集群名称
@@ -89,11 +108,7 @@ o2cb add-node --ip 10.11.11.12 --port 7777 --number 2 ocfs2cluster node2
 #Specify network idle timeout in ms (>=5000) [30000]:
 #Specify network keepalive delay in ms (>=1000) [2000]:
 #Specify network reconnect delay in ms (>=2000) [2000]:
-
-o2cb.init configure
 ```
-
-
 
 * 启动集群
 
@@ -166,10 +181,12 @@ echo 'stats -h' | debugfs.ocfs2 /dev/sdb
 tunefs.ocfs2 -N 3 /dev/sdb
 ```
 
+> 该步骤需要每个节点执行
+
 * 执行o2cb_ctl工具去在线新增节点3到cluster中
 
 ```shell
-o2cb add-node --ip 10.11.11.13 --port 7777 --number 3 ocfs2cluster node3
+o2cb_ctl -C -i -n node3 -t node -a number=3 -a ip_address=10.11.11.13 -a ip_port=7777 -a cluster=ocfs2cluster
 ```
 
 > 在node3执行
@@ -185,7 +202,7 @@ systemctl start o2cb.service
 
 ## ocfs2文件系统扩容
 
-> 不支持缩容
+> 不支持缩容，登陆ocfs2其中一台节点在线扩容
 
 * 存储设备扩容
 
@@ -193,10 +210,19 @@ systemctl start o2cb.service
 #首先将共享磁盘扩容后并刷新服务端
 ```
 
+* 扫描磁盘容量
+
+```shell
+#sdb为设备名
+echo 1 > /sys/block/sdb/device/rescan
+#查看容量变化
+lsblk
+```
+
 * 卸载磁盘
 
 ```shell
-#卸载所有节点
+#卸载除当前操作机器的其他机器磁盘
 unmount /dev/sdb
 ```
 
@@ -209,6 +235,7 @@ tunefs.ocfs2 -S /dev/sdb
 * 重新挂载磁盘
 
 ```shell
+#其他机器重新挂载即可
 mount -t ocfs2 /dev/sdb /opt
 ```
 
