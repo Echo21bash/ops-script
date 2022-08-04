@@ -23,6 +23,22 @@ npm config -g set registry https://registry.npmmirror.com
 npm config -g set disturl https://npmmirror.com/mirrors/node
 ```
 
+### 其他报错
+
+> cnpm错误：“Error：Cannot find module ‘fs/promises”
+
+```shell
+解决方案：
+1、升级Node.js版本：
+清理npm缓存：npm cache clean -f
+安装版本管理工具：npm install -g n
+升级到最新的版本：n latest（最新版本）n stable（最新稳定版本）
+2、降低cnpm的版本：
+删除已安装的cnpm版本：npm uninstall -g cnpm
+安装低版本cnpm：npm install cnpm@7.1.0 -g --registry=https://registry.npm.taobao.org
+通过以上两种方式即可解决！
+```
+
 ## pm2工具
 
 ### PM2 的主要特性
