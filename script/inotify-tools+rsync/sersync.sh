@@ -23,8 +23,10 @@ rysnc_fun(){
 	do
 		case $event in
 		CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|MOVED_TOXISDIR|CREATEXISDIR)
-			cd ${sync_dir} && \
-			timeout ${rsync_timeout} rsync -au -R --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name} 2>>${rsync_tmp_dir}/${rsync_err_file}
+			cd ${sync_dir}
+			cmd="timeout ${rsync_timeout} rsync -au -R --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}"
+			timeout ${rsync_timeout} rsync -au -R --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name} 3>&1 1>&2 2>&3 | \
+			xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=\"${cmd}\" error=\"{}\"" >>${rsync_tmp_dir}/${rsync_err_file}
 		;;
 		DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
 			full_file_dir=`echo ${file} | sed 's/.\///'`
@@ -52,8 +54,10 @@ rysnc_fun(){
 				fi
 				((i++))
 			done
-			cd ${sync_dir} && \
-			timeout ${rsync_timeout} rsync -au -R --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name} 2>>${rsync_tmp_dir}/${rsync_err_file}
+			cd ${sync_dir}
+			cmd="timeout ${rsync_timeout} rsync -au -R --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name} --include=${include[*]}"
+			timeout ${rsync_timeout} rsync -au -R --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name} 3>&1 1>&2 2>&3 | \
+			xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=\"${cmd}\" error=\"{}\"" >>${rsync_tmp_dir}/${rsync_err_file}
 			rm -rf ${rsync_tmp_dir}/${include_file}
 		;;
 		esac

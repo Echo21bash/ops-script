@@ -35,8 +35,17 @@
           "cluster.routing.allocation.enable": "none"
       }
   }
+  #每个节点分片数量
+  PUT /_cluster/settings
+  {
+    "persistent": {
+      "cluster": {
+        "max_shards_per_node":10000
+      }
+    }
+  }
   ```
-
+  
 - 查看集群阻塞任务
   
   ```shell
