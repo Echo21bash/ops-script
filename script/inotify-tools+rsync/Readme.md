@@ -84,7 +84,7 @@ After=syslog.target network.target
 Type=forking
 User=root
 WorkingDirectory=/usr/local/sersync
-ExecStart=/usr/local/sersync/inotify.sh
+ExecStart=/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf -r
 TimeoutStopSec=5
 Restart=on-failure
 LimitNOFILE=204800
@@ -100,7 +100,7 @@ EOF
 ### rsync服务端
 
 ```shell
-# 配置示例，两个模块分别是file和code
+# 配置示例，两个模块分别是backup1和backup2，hosts allow字段根据实际修改
 cat /etc/rsyncd.conf
 uid = root
 gid = root
@@ -109,8 +109,9 @@ port = 873
 secrets file = /etc/rsync.pass
 ignore errors = yes
 reverse lookup = no
+log file = /var/log/rsyncd.log
 
-[file]
+[backup1]
 path = /data/file
 comment = file
 read only = no
@@ -118,8 +119,8 @@ list = no
 auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 
-[code]
-path = /data/code
+[backup2]
+path = /data/db
 comment = file
 read only = no
 list = no
@@ -145,24 +146,28 @@ systemctl enable rsyncd
 
 ### 监听配置
 
-```shell
-#inotify.sh配置说明
-# 定义一个关联数组，下标中括号为rsync模块名称，值为需要监听的目录
-declare -A rsync_module_name=([file]='/file' [code]='/code')
-# 定义一个关联数组，下标中括号为rsync模块名称，值为需要排除的文件或目录可以，没有可以不配置
-declare -A exclude_file_rule=([file]='tmp|.log')
-# rsync脚本路径
-sersync_dir=/usr/local/sersync/sersync.sh
-# 文件锁临时目录
-lockfile_dir=/tmp/inotify-lock
+>修改配置文件etc/sersync.conf
 
-#sersync.sh配置说明
-# 配置密码验证文件
+```shell
+#工作目录
+work_dir=/usr/local/sersync
+logs_dir=${work_dir}/logs
+#监听目录
+listen_dir=('/data/file' '/data/db')
+#rsyncd模块与监听目录备份关系，格式[模式名=监听目录]，要求模式名称唯一
+rsyncd_mod=('backup1=/data/file' 'backup2=/data/db')
+#模块所在主机地址可以多个地址逗号分隔
+rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
+#监听忽略匹配
+exclude_file_rule=('/data/file=logs|tmp' '/data/db=.gif')
+#同步的用户
+rsync_user=rsync
+#rsync密码文件
 rsync_passwd_file=/etc/rsync.pas
-# 目标ip
-des_ip=(192.168.74.20)
-# 验证用户名
-user=rsync
+#同步超时时间
+rsync_timeout=180
+#传输限速
+rsync_bwlimit=100M
 ```
 
 ## 数据同步验证
@@ -176,3 +181,17 @@ systemctl start sersync
 ## 其他说明
 
 > 对于目录深度深、文件数量众多的场景，inotify监听启动时间较长；
+
+## 变更记录
+
+> 2022-08-12
+>
+> * 解决带空格文件同步错误的问题
+> * 解决flock锁文件名过长的问题
+> * 增加必要日志
+>
+> 2023-03-23
+>
+> * 解决带特殊字符文件同步错误的问题
+> * 分离配置文件
+> * 脚本优化
