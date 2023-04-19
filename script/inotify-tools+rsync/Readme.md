@@ -106,7 +106,7 @@ uid = root
 gid = root
 max connections = 200
 port = 873
-secrets file = /etc/rsync.pass
+secrets file = /etc/rsync.secret
 ignore errors = yes
 reverse lookup = no
 log file = /var/log/rsyncd.log
@@ -128,13 +128,13 @@ auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 
 ###创建密码验证
-echo 'rsync:Ki13W@yYZvbJ' >/etc/rsync.pass
+echo 'rsync:Ki13W@yYZvbJ' >/etc/rsync.secret
 echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
 
 ###设置权限
 chmod  600 /etc/rsyncd.conf
-chmod  600 /etc/rsync.pass
-chmod  600 /etc/rsync.pas
+chmod  600 /etc/rsync.secret
+chmod  600 /etc/rsync.passwd
 
 ###创建目录
 mkdir -p /data/file /data/db
@@ -201,6 +201,20 @@ systemctl start sersync
 
 ```shell
 #修改配置文件并且将需要同步的目录挂载到容器
+#支持的环境变量及其说明
+#运行模式sersync为监听同步将文件同步到远程服务器，rsyncd为rsync模式daemon。
+RUN_MODE=${RUN_MODE:-sersync}
+#rsync认证用户
+RSYNCD_USER=${RSYNC_USER:-rsync}
+#rsync认证密码
+RSYNCD_PASSWD=${RSYNC_PASSWD:-Ki13W@yYZvbJ}
+#rsyncd存储目录
+RSYNCD_PATH=${RSYNCD_PATH:-/data}
+#rsyncd最大连接数
+RSYNCD_MAX_CONN=${RSYNC_MAX_CONN:-300}
+#rsyncd白名单
+RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
+
 docker run --name sersync --privileged -itd -v /data/file:/data/file \
 -v /data/db:/data/db \
 -v /etc/rsync.passwd:/etc/rsync.passwd \
