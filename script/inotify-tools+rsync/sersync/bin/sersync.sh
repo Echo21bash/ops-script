@@ -21,16 +21,18 @@ rysnc_fun(){
 	case ${event} in
 	CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|MOVED_TOXISDIR|CREATEXISDIR)
 		cd ${sync_dir}
-		cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}"
-		timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+		cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
+		timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		;;
 	DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
+		cd ${sync_dir}
 		full_file_dir=`echo "${file}" | sed 's/.\///'`
 		file_dir=`echo "${file}" | sed 's/.\///'`
 		include_file=$(echo -n "${file}" | md5sum | awk '{print $1}')
 		if [[ ${file} = "./" || ${file} = "." ]];then
-			cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}"
-			timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+
+			cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
+			timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		else
 			#获取--include参数
 			i=0
@@ -53,9 +55,8 @@ rysnc_fun(){
 				fi
 				((i++))
 			done
-			cd ${sync_dir}
-			cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name} --include=${include[*]}"			
-			timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+			cmd="timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} --include=${include[*]}"			
+			timeout ${rsync_timeout} rsync -au -R --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 			rm -rf ${rsync_tmp_dir}/${include_file}
 		fi
 
@@ -130,6 +131,13 @@ do
 			;;
 	esac
 done
+
+if [[ -d ${sync_dir} ]];then
+	remote_sync_dir=$(echo ${sync_dir} | sed 's!/!_!g' )
+else
+	echo "[ERROR] No such file or directory ${sync_dir}"
+	exit 1
+fi
 
 if [[ -z ${rsync_timeout} ]];then
 	rsync_timeout=60

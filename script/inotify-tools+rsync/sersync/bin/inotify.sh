@@ -4,8 +4,47 @@ usage()
 	cat <<-EOF
 	Usage:${program} [OPTION]...
 	-f   指定配置文件
-	-r   在监控前,全量同步一次
 	EOF
+}
+
+full_rsync_first(){
+	
+	cd ${sync_dir}
+	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
+	do
+		rsyncd_ip=${ipaddr}
+		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
+		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
+		flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
+
+	done
+
+}
+
+
+full_rsync_fun(){
+
+	cd ${sync_dir}
+	while true
+	do
+		sleep ${full_rsync_interval}d
+		while true
+		do
+			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
+				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
+				do
+					rsyncd_ip=${ipaddr}
+					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
+					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
+					flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
+				done
+				break
+			else
+				sleep 1h
+			fi
+		done
+	done
+
 }
 
 inotify_fun(){
@@ -15,16 +54,6 @@ inotify_fun(){
 		exit
 	else
 		cd ${sync_dir}
-	fi
-	if [[ ${full_rsync} = "y" ]];then
-		echo "[INFO] Syncing ${sync_dir} in full"
-		for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
-		do
-			rsyncd_ip=${ipaddr}
-			${work_dir}/bin/sersync.sh -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} -f ./ -e DELETE --rsync-timeout 600 --logs-dir ${logs_dir} && echo "[INFO] Full sync ${sync_dir} complete" || echo "[ERROR] Error in full sync ${sync_dir}"
-
-		done
-
 	fi
 
 	if [[ -n ${exclude_file} ]];then
@@ -81,6 +110,7 @@ run_ctl(){
 	for d in ${listen_dir[@]}
 	do
 		sync_dir="${d}"
+		remote_sync_dir=$(echo ${sync_dir} | sed 's!/!_!g' )
 		###获取当前目录监听排除
                 for e in ${exclude_file_rule[@]}
                 do
@@ -92,22 +122,31 @@ run_ctl(){
 		for m in ${rsyncd_mod[@]}
 		do
 			module_name=$(echo ${m} | grep -o ".*${sync_dir}" | awk -F '=' '{print$1}')
-			module_ip_list=$(echo ${rsyncd_ip[@]} | grep -oE "${module_name}=.*" | awk -F = '{print$2}')
+			[[ -z ${module_name} ]] && continue
+			module_ip_list=$(echo ${rsyncd_ip[@]} | grep -oE "${module_name}=[0-9\.\,]{1,}" | awk -F = '{print$2}')
 			[[ ! -z ${module_name} ]] && break
 		done
-		sync_dir_module_ip[${sync_dir}]="$(echo ${module_ip_list} | sed 's/,/ /g')"
 		[[ -z ${module_name} ]] && continue
-		echo "[INFO] Start monitor ${sync_dir}"
-		inotify_fun &
+		sync_dir_module_ip[${sync_dir}]="$(echo ${module_ip_list} | sed 's/,/ /g')"
+		if [[ ${full_rsync_first_enable} = "1" ]];then
+			full_rsync_first &
+		fi
+		if [[ ${full_rsync_enable} = "1" ]];then
+			full_rsync_fun &
+		fi
+		if [[ ${real_time_sync_enable} = "1" ]];then
+			echo "[INFO] Start monitor ${sync_dir}"
+			inotify_fun &
+		fi
 	done
-	rsync_fun &
+	rsync_fun
 }
 
 program=$(basename $0)
 #-o或--options选项后面接可接受的短选项，如ex:s::，表示可接受的短选项为-e -x -s，其中-e选项不接参数，-x选项后必须接参数，-s选项的参数为可选的
 #-l或--long选项后面接可接受的长选项，用逗号分开，冒号的意义同短选项。
 #-n选项后接选项解析错误时提示的脚本名字["std.sh: unknown option -- d"]
-ARGS=$(getopt -a -o f:r -n "${program}" -- "$@")
+ARGS=$(getopt -a -o f: -n "${program}" -- "$@")
 
 #如果参数不正确，打印提示信息
 [[ $? -ne 0 ]] && usage && exit 1
@@ -129,12 +168,8 @@ do
 			fi
 			shift 2
 			;;
-                -r)
-                   	full_rsync=y     
-                        shift 2
-                        ;;
 		--)
-			shift 2
+			shift
 			break
 			;;
 		*)

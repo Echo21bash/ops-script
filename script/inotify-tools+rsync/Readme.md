@@ -81,10 +81,10 @@ Description=sersync
 After=syslog.target network.target
 
 [Service]
-Type=forking
+Type=simple
 User=root
 WorkingDirectory=/usr/local/sersync
-ExecStart=/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf -r
+ExecStart=/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf
 TimeoutStopSec=5
 Restart=on-failure
 LimitNOFILE=204800
@@ -129,7 +129,7 @@ hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 
 ###创建密码验证
 echo 'rsync:Ki13W@yYZvbJ' >/etc/rsync.pass
-echo 'Ki13W@yYZvbJ' >/etc/rsync.pas
+echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
 
 ###设置权限
 chmod  600 /etc/rsyncd.conf
@@ -137,7 +137,7 @@ chmod  600 /etc/rsync.pass
 chmod  600 /etc/rsync.pas
 
 ###创建目录
-mkdir -p /data/file /data/code
+mkdir -p /data/file /data/db
 
 ###启动
 systemctl start rsyncd
@@ -149,25 +149,44 @@ systemctl enable rsyncd
 >修改配置文件etc/sersync.conf
 
 ```shell
+##############################通用配置##############################
 #工作目录
 work_dir=/usr/local/sersync
+#日志目录
 logs_dir=${work_dir}/logs
-#监听目录
-listen_dir=('/data/file' '/data/db')
-#rsyncd模块与监听目录备份关系，格式[模式名=监听目录]，要求模式名称唯一
-rsyncd_mod=('backup1=/data/file' 'backup2=/data/db')
-#模块所在主机地址可以多个地址逗号分隔
-rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
+##############################通用配置##############################
+
+##############################监听配置##############################
+#监听目录支持多个
+listen_dir=('/data/file' '/data/db' '/data/img')
 #监听忽略匹配
-exclude_file_rule=('/data/file=logs|tmp' '/data/db=.gif')
+#exclude_file_rule=('/data/file=logs|tmp' '/data/img=.gif')
+##############################监听配置##############################
+
+##############################同步配置##############################
+#首次全量同步
+full_rsync_first_enable=1
+#实时同步配置
+real_time_sync_enable=1
+#周期性全量同步
+full_rsync_enable=1
+#全量同步周期单位d
+full_rsync_interval=15
+#rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应
+#多个待同步目录逗号分隔，要求模式名称唯一，一个带同步目录只能对应一个模块，否则
+#第一个生效，同步内容在形如_data_file、_data_db、_data_img目录下。
+rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
+#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
+rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
 #同步的用户
 rsync_user=rsync
 #rsync密码文件
-rsync_passwd_file=/etc/rsync.pas
+rsync_passwd_file=/etc/rsync.passwd
 #同步超时时间
 rsync_timeout=180
 #传输限速
-rsync_bwlimit=100M
+rsync_bwlimit=50M
+##############################同步配置##############################
 ```
 
 ## 数据同步验证
@@ -177,6 +196,19 @@ rsync_bwlimit=100M
 systemctl daemon-reload
 systemctl start sersync
 ```
+
+## Docker容器
+
+```shell
+#修改配置文件并且将需要同步的目录挂载到容器
+docker run --name sersync --privileged -itd -v /data/file:/data/file \
+-v /data/db:/data/db \
+-v /etc/rsync.passwd:/etc/rsync.passwd \
+-v /usr/local/sersync/etc/sersync.conf:/usr/local/sersync/etc/sersync.conf \
+echo21bash/sersync:1.0
+```
+
+
 
 ## 其他说明
 
