@@ -67,10 +67,9 @@ DefaultLimitNPROC=65536
 ### 监听脚本安装
 
 ```shell
-mkdir -p /usr/local/sersync/
-cp inotify.sh sersync.sh /usr/local/sersync
-chmod +x /usr/local/sersync/inotify.sh
-chmod +x /usr/local/sersync/sersync.sh
+mkdir -p /usr/local/sersync/{bin,etc,logs}
+cp inotify.sh sersync.sh /usr/local/sersync/bin
+chmod -R +x /usr/local/sersync/bin
 ```
 
 ```shell
@@ -106,7 +105,7 @@ uid = root
 gid = root
 max connections = 200
 port = 873
-secrets file = /etc/rsync.secret
+secrets file = /etc/rsyncd.secret
 ignore errors = yes
 reverse lookup = no
 log file = /var/log/rsyncd.log
@@ -128,12 +127,12 @@ auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 
 ###创建密码验证
-echo 'rsync:Ki13W@yYZvbJ' >/etc/rsync.secret
+echo 'rsync:Ki13W@yYZvbJ' >/etc/rsyncd.secret
 echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
 
 ###设置权限
 chmod  600 /etc/rsyncd.conf
-chmod  600 /etc/rsync.secret
+chmod  600 /etc/rsyncd.secret
 chmod  600 /etc/rsync.passwd
 
 ###创建目录
@@ -205,13 +204,15 @@ systemctl start sersync
 #运行模式sersync为监听同步将文件同步到远程服务器，rsyncd为rsync模式daemon。
 RUN_MODE=${RUN_MODE:-sersync}
 #rsync认证用户
-RSYNCD_USER=${RSYNC_USER:-rsync}
+RSYNCD_USER=${RSYNCD_USER:-rsync}
 #rsync认证密码
-RSYNCD_PASSWD=${RSYNC_PASSWD:-Ki13W@yYZvbJ}
+RSYNCD_PASSWD=${RSYNCD_PASSWD:-Ki13W@yYZvbJ}
+#rsyncd模块名称
+RSYNCD_MOD_NAME=${RSYNCD_MOD_NAME:-data}
 #rsyncd存储目录
 RSYNCD_PATH=${RSYNCD_PATH:-/data}
 #rsyncd最大连接数
-RSYNCD_MAX_CONN=${RSYNC_MAX_CONN:-300}
+RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
 #rsyncd白名单
 RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
 
@@ -219,7 +220,7 @@ docker run --name sersync --privileged -itd -v /data/file:/data/file \
 -v /data/db:/data/db \
 -v /etc/rsync.passwd:/etc/rsync.passwd \
 -v /usr/local/sersync/etc/sersync.conf:/usr/local/sersync/etc/sersync.conf \
-echo21bash/sersync:1.0
+registry-prod.cnzhiyuanhui.com:1555/service_components/sersync:1.0
 ```
 
 

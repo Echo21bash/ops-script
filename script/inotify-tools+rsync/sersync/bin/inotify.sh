@@ -8,14 +8,15 @@ usage()
 }
 
 full_rsync_first(){
-	
+
 	cd ${sync_dir}
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
-		rsyncd_ip=${ipaddr}
+		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
+		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
-		flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
+		flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -rlptDRu --port=${rsyncd_port} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
 
 	done
 
@@ -33,10 +34,11 @@ full_rsync_fun(){
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
-					rsyncd_ip=${ipaddr}
+					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
+					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
-					flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -au -R --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
+					flock -n -x ${logs_dir}/${lockfile} -c "timeout 28800 rsync -rlptDRu --port=${rsyncd_port} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} ./ ${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";rm -rf ${logs_dir}/${lockfile}"
 				done
 				break
 			else
@@ -90,9 +92,10 @@ rsync_fun(){
 				##对rsync操作加锁防止多个周期一个文件重复同步
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
-					rsyncd_ip=${ipaddr}
+					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
+					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
-					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit};rm -rf ${logs_dir}/${lockfile}" &
+					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit};rm -rf ${logs_dir}/${lockfile}" &
 					
 				done
 			done < ${logs_dir}/inotify-exe.log
@@ -123,7 +126,7 @@ run_ctl(){
 		do
 			module_name=$(echo ${m} | grep -o ".*${sync_dir}" | awk -F '=' '{print$1}')
 			[[ -z ${module_name} ]] && continue
-			module_ip_list=$(echo ${rsyncd_ip[@]} | grep -oE "${module_name}=[0-9\.\,]{1,}" | awk -F = '{print$2}')
+			module_ip_list=$(echo ${rsyncd_ip[@]} | grep -oE "${module_name}=[0-9\.\,\:]{1,}" | awk -F = '{print$2}')
 			[[ ! -z ${module_name} ]] && break
 		done
 		[[ -z ${module_name} ]] && continue
