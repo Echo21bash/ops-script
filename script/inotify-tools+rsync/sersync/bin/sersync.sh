@@ -12,6 +12,7 @@ usage()
         --rsyncd-ip  指定rsyncd服务地址
         --rsyncd-port  指定rsyncd服务端口,默认873
         --rsync-root-dir 指定同步的根目录
+        --rsync-remote-dir 指定远程目录
         --rsync-timeout 同步超时时间,默认60s
         --rsync-bwlimit 带宽限速,默认50M
 	EOF
@@ -66,7 +67,7 @@ rysnc_fun(){
 }
 
 program=$(basename $0)
-ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit: -n "${program}" -- "$@")
+ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,rsync-remote-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit: -n "${program}" -- "$@")
 
 [[ $? -ne 0 ]] && echo 未知参数 && usage && exit 1
 [[ $# -eq 0 ]] && echo 缺少参数 && usage && exit 1
@@ -110,6 +111,10 @@ do
                         sync_dir="$2"
                         shift 2
                         ;;
+                --rsync-remote-dir)
+                        remote_sync_dir="$2"
+                        shift 2
+                        ;;
                 --logs-dir)
                         rsync_tmp_dir="$2"
 			[[ ! -d $rsync_tmp_dir ]] && mkdir -p $rsync_tmp_dir
@@ -136,9 +141,7 @@ do
 	esac
 done
 
-if [[ -d ${sync_dir} ]];then
-	remote_sync_dir=$(echo ${sync_dir} | sed 's!/!_!g' )
-else
+if [[ ! -d ${sync_dir} ]];then
 	echo "[ERROR] No such file or directory ${sync_dir}"
 	exit 1
 fi

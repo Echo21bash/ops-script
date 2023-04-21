@@ -95,8 +95,7 @@ rsync_fun(){
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
-					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit};rm -rf ${logs_dir}/${lockfile}" &
-					
+					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit};rm -rf ${logs_dir}/${lockfile}" &
 				done
 			done < ${logs_dir}/inotify-exe.log
 		fi
@@ -112,8 +111,8 @@ run_ctl(){
 
 	for d in ${listen_dir[@]}
 	do
-		sync_dir="${d}"
-		remote_sync_dir=$(echo ${sync_dir} | sed 's!/!_!g' )
+		remote_sync_dir=$(echo ${d} | awk -F '=' '{print$1}')
+		sync_dir=$(echo ${d} | awk -F '=' '{print$2}')
 		###获取当前目录监听排除
                 for e in ${exclude_file_rule[@]}
                 do
