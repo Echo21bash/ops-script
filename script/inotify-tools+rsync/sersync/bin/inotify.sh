@@ -9,7 +9,13 @@ usage()
 
 full_rsync_first(){
 
-	cd ${sync_dir}
+	if [[ ! -d ${sync_dir} ]];then
+		echo "[ERROR] No such file or directory ${sync_dir}"
+		exit
+	else
+		cd ${sync_dir}
+	fi
+	
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
 		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
@@ -25,7 +31,13 @@ full_rsync_first(){
 
 full_rsync_fun(){
 
-	cd ${sync_dir}
+	if [[ ! -d ${sync_dir} ]];then
+		echo "[ERROR] No such file or directory ${sync_dir}"
+		exit
+	else
+		cd ${sync_dir}
+	fi
+
 	while true
 	do
 		sleep ${full_rsync_interval}d
