@@ -16,6 +16,7 @@ usage()
         --rsync-timeout 同步超时时间,默认60s
         --rsync-bwlimit 带宽限速,默认50M
         --rsync-extra-args rsync额外参数
+        --rsync-command-path 定义rsync路径
 	EOF
 }
 
@@ -25,7 +26,7 @@ rysnc_fun(){
 	CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|MOVED_TOXISDIR|CREATEXISDIR)
 		cd ${sync_dir}
 		cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
-		timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+		timeout ${rsync_timeout} ${rsync_command_path} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		;;
 	DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
 		cd ${sync_dir}
@@ -35,7 +36,7 @@ rysnc_fun(){
 		if [[ ${file} = "./" || ${file} = "." ]];then
 
 			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
-			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+			timeout ${rsync_timeout} ${rsync_command_path} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		else
 			#获取--include参数
 			i=0
@@ -59,7 +60,7 @@ rysnc_fun(){
 				((i++))
 			done
 			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} --include=${include[*]}"			
-			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+			timeout ${rsync_timeout} ${rsync_command_path} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 			rm -rf ${rsync_tmp_dir}/${include_file}
 		fi
 
@@ -68,7 +69,7 @@ rysnc_fun(){
 }
 
 program=$(basename $0)
-ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,rsync-remote-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit:,rsync-extra-args: -n "${program}" -- "$@")
+ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,rsync-remote-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit:,rsync-extra-args:,rsync-command-path: -n "${program}" -- "$@")
 
 [[ $? -ne 0 ]] && echo 未知参数 && usage && exit 1
 [[ $# -eq 0 ]] && echo 缺少参数 && usage && exit 1
@@ -134,6 +135,11 @@ do
 			rsync_extra_args="$2"
 			shift 2
 			;;
+		 --rsync-command-path)
+			rsync_command_path="$2"
+			[[ ! -x ${rsync_command_path} ]] && echo "[ERROR] No such file or none execute permission ${rsync_command_path}" && exit
+			shift 2
+			;;
 		--)
 			shift
 			break
@@ -168,6 +174,10 @@ fi
 
 if [[ -z ${rsync_bwlimit} ]];then
         rsync_bwlimit=50M
+fi
+
+if [[ -z ${rsync_command_path} ]];then
+        rsync_command_path=rsync
 fi
 
 rysnc_fun
