@@ -113,7 +113,7 @@ rsync_fun(){
 				sync_dir=$(echo ${line} | awk -F ';' '{print$2}')
 				module_name=$(echo ${line} | awk -F ';' '{print$3}')
 				event=$(echo ${line} | awk -F ';' '{print$4}')
-				file=$(echo "${line}" | awk -F ';' '{print$5}' | sed -e 's/[] ()$*^[]/\\&/g')
+				file=$(echo "${line}" | awk -F ';' '{print$5}' | sed -e 's/[] (){}$&%*^!@#[]/\\&/g')
 				##对rsync操作加锁防止多个周期一个文件重复同步
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
