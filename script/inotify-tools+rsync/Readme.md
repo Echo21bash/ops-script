@@ -167,6 +167,8 @@ listen_dir=('file_backup=/data/file' 'db_backup=/data/db' 'img_backup=/data/img'
 full_rsync_first_enable=1
 #实时同步配置
 real_time_sync_enable=1
+#实时同步延时s
+real_time_sync_delay=60
 #周期性全量同步
 full_rsync_enable=1
 #全量同步周期单位d
@@ -187,7 +189,7 @@ rsync_timeout=180
 #传输限速
 rsync_bwlimit=50M
 #rsync额外参数
-extra_rsync_args="--ignore-missing-args"
+extra_rsync_args="--partial --append-verify --ignore-missing-args"
 ######################################同步配置######################################
 ```
 
