@@ -85,13 +85,13 @@ inotify_fun(){
 
 	if [[ -n ${exclude_file} ]];then
 		echo "[INFO] Start monitor ${sync_dir}"
-		inotifywait --exclude "${exclude_file}" -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,attrib,close_write,move ./ | while read time event file
+		inotifywait --exclude "${exclude_file}" -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,close_write,move ./ | while read time event file
 		do
 			echo "${time};${sync_dir};${module_name};${event};${file};" >> ${logs_dir}/inotify-file.log
 		done || echo "[ERROR] Failed to monitor ${sync_dir}"
 	else
 		
-		inotifywait -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,attrib,close_write,move ./ | while read time event file
+		inotifywait -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,close_write,move ./ | while read time event file
 		do
 			echo "${time};${sync_dir};${module_name};${event};${file}" >> ${logs_dir}/inotify-file.log
 		done || echo "[ERROR] Failed to monitor ${sync_dir}"
