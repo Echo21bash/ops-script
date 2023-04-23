@@ -101,7 +101,7 @@ inotify_fun(){
 rsync_fun(){
 	while true
 	do
-		sleep 20
+		sleep ${real_time_sync_delay}
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
 			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-tmp.log
 			##对重复文件的事件去重并保留最新的事件类型
