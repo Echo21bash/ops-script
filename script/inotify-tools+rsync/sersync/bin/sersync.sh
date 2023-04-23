@@ -41,7 +41,7 @@ rysnc_fun(){
 			i=0
 			while true
 			do
-				dirname=$(dirname $file_dir | head -1)
+				dirname=$(dirname "$file_dir" | head -1)
 				if [[ $dirname != '.' ]];then
 					include[$i]=$dirname
 					file_dir=$dirname
