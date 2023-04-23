@@ -24,7 +24,7 @@ full_rsync_first(){
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 		flock -n -x ${logs_dir}/${lockfile} -c "
 		timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % \
-		rsync -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+		${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} % \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 		echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
@@ -58,7 +58,7 @@ full_rsync_fun(){
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 					flock -n -x ${logs_dir}/${lockfile} -c "
 					timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % \
-					rsync -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+					${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
 					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} % \
 					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 					echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
@@ -120,7 +120,7 @@ rsync_fun(){
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
-					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\";rm -rf ${logs_dir}/${lockfile}" &
+					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" --rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
 			done < ${logs_dir}/inotify-exe.log
 		fi
