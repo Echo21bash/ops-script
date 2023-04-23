@@ -23,7 +23,7 @@ full_rsync_first(){
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 		flock -n -x ${logs_dir}/${lockfile} -c "
-		timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % | \
+		timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % \
 		rsync -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} % \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
