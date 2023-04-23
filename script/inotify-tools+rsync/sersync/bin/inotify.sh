@@ -20,12 +20,13 @@ full_rsync_first(){
 	do
 		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
+		rsyncd_port=873
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 		flock -n -x ${logs_dir}/${lockfile} -c "
-		timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % \
+		timeout ${full_rsync_timeout}h \
 		${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
-		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} % \
+		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 		echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
 		echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";\
@@ -46,7 +47,7 @@ full_rsync_fun(){
 
 	while true
 	do
-		sleep ${full_rsync_interval}d
+		sleep ${full_rsync_interval}m
 		while true
 		do
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
@@ -57,9 +58,9 @@ full_rsync_fun(){
 					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 					flock -n -x ${logs_dir}/${lockfile} -c "
-					timeout ${full_rsync_timeout}h ls -1 |xargs -P 3 -n 3 -I % \
+					timeout ${full_rsync_timeout}h \
 					${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
-					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} % \
+					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 					echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
 					echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";\
@@ -87,13 +88,13 @@ inotify_fun(){
 		echo "[INFO] Start monitor ${sync_dir}"
 		inotifywait --exclude "${exclude_file}" -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,close_write,move ./ | while read time event file
 		do
-			echo "${time};${sync_dir};${module_name};${event};${file};" >> ${logs_dir}/inotify-file.log
+			echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-file.log
 		done || echo "[ERROR] Failed to monitor ${sync_dir}"
 	else
 		
 		inotifywait -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,close_write,move ./ | while read time event file
 		do
-			echo "${time};${sync_dir};${module_name};${event};${file}" >> ${logs_dir}/inotify-file.log
+			echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file}" >> ${logs_dir}/inotify-file.log
 		done || echo "[ERROR] Failed to monitor ${sync_dir}"
 	fi
 }
@@ -105,20 +106,21 @@ rsync_fun(){
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
 			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-tmp.log
 			##对重复文件的事件去重并保留最新的事件类型
-			awk -F ';' '{a[$5]=$0}END{for(i in a){print a[i]}}' ${logs_dir}/inotify-tmp.log > ${logs_dir}/inotify-exe.log
+			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${logs_dir}/inotify-tmp.log > ${logs_dir}/inotify-exe.log
 			while read line
 			do
 				
 				sleep 0.05
 				sync_dir=$(echo ${line} | awk -F ';' '{print$2}')
 				module_name=$(echo ${line} | awk -F ';' '{print$3}')
-				event=$(echo ${line} | awk -F ';' '{print$4}')
-				file=$(echo "${line}" | awk -F ';' '{print$5}' | sed -e 's/[] (){}$&%*^!@#[]/\\&/g')
+				remote_sync_dir=$(echo ${line} | awk -F ';' '{print$4}')
+				event=$(echo ${line} | awk -F ';' '{print$5}')
+				file=$(echo "${line}" | awk -F ';' '{print$6}' | sed -e 's/[] (){}$&%*^!@#[]/\\&/g')
 				##对rsync操作加锁防止多个周期一个文件重复同步
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
-					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
+					rsyncd_port=873
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" --rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
