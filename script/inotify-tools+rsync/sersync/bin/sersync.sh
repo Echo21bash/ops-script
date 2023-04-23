@@ -15,6 +15,7 @@ usage()
         --rsync-remote-dir 指定远程目录
         --rsync-timeout 同步超时时间,默认60s
         --rsync-bwlimit 带宽限速,默认50M
+        --rsync-extra-args rsync额外参数
 	EOF
 }
 
@@ -23,8 +24,8 @@ rysnc_fun(){
 	case ${event} in
 	CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|MOVED_TOXISDIR|CREATEXISDIR)
 		cd ${sync_dir}
-		cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
-		timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+		cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
+		timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		;;
 	DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
 		cd ${sync_dir}
@@ -33,8 +34,8 @@ rysnc_fun(){
 		include_file=$(echo -n "${file}" | md5sum | awk '{print $1}')
 		if [[ ${file} = "./" || ${file} = "." ]];then
 
-			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
-			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}"
+			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		else
 			#获取--include参数
 			i=0
@@ -57,8 +58,8 @@ rysnc_fun(){
 				fi
 				((i++))
 			done
-			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} --include=${include[*]}"			
-			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
+			cmd="timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude=\"*\" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} --include=${include[*]}"			
+			timeout ${rsync_timeout} rsync -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 			rm -rf ${rsync_tmp_dir}/${include_file}
 		fi
 
@@ -67,7 +68,7 @@ rysnc_fun(){
 }
 
 program=$(basename $0)
-ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,rsync-remote-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit: -n "${program}" -- "$@")
+ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-port:,rsync-root-dir:,rsync-remote-dir:,logs-dir:,rsync-timeout:,rsync-bwlimit:,rsync-extra-args: -n "${program}" -- "$@")
 
 [[ $? -ne 0 ]] && echo 未知参数 && usage && exit 1
 [[ $# -eq 0 ]] && echo 缺少参数 && usage && exit 1
@@ -94,42 +95,45 @@ do
 			event="$2"
 			shift 2
 			;;
-                --passwd-file)
-                        rsync_passwd_file="$2"
-                        shift 2
-                        ;;
+		--passwd-file)
+			rsync_passwd_file="$2"
+			shift 2
+			;;
 
-                --rsyncd-ip)
-                        remote_ip="$2"
-                        shift 2
-                        ;;
-                --rsyncd-port)
-                        remote_port="$2"
-                        shift 2
-                        ;;
-                --rsync-root-dir)
-                        sync_dir="$2"
-                        shift 2
-                        ;;
-                --rsync-remote-dir)
-                        remote_sync_dir="$2"
-                        shift 2
-                        ;;
-                --logs-dir)
-                        rsync_tmp_dir="$2"
+		--rsyncd-ip)
+			remote_ip="$2"
+			shift 2
+			;;
+		--rsyncd-port)
+			remote_port="$2"
+			shift 2
+			;;
+		--rsync-root-dir)
+			sync_dir="$2"
+			shift 2
+			;;
+		--rsync-remote-dir)
+			remote_sync_dir="$2"
+			shift 2
+			;;
+		--logs-dir)
+			rsync_tmp_dir="$2"
 			[[ ! -d $rsync_tmp_dir ]] && mkdir -p $rsync_tmp_dir
 			rsync_err_file=rsync-err.log
-                        shift 2
-                        ;;
-                --rsync-timeout)
-                        rsync_timeout="$2"
-                        shift 2
-                        ;;
-                --rsync-bwlimit)
-                        rsync_bwlimit="$2"
-                        shift 2
-                        ;;
-
+			shift 2
+			;;
+		--rsync-timeout)
+			rsync_timeout="$2"
+			shift 2
+			;;
+		--rsync-bwlimit)
+			rsync_bwlimit="$2"
+			shift 2
+			;;
+		 --rsync-extra-args)
+			rsync_extra_args="$2"
+			shift 2
+			;;
 		--)
 			shift
 			break
