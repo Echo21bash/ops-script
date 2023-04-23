@@ -47,7 +47,7 @@ full_rsync_fun(){
 
 	while true
 	do
-		sleep ${full_rsync_interval}m
+		sleep ${full_rsync_interval}d
 		while true
 		do
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
