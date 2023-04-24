@@ -6,101 +6,26 @@
 
 **基于inotify监听文件事件类型，然后调用rsync进行远程同步到rsyncd服务端**
 
-## 使用说明
-
-### 组件部署说明
+## 组件说明
 
 > * inotify、rsync需要部署在需要同步的服务器；
->
-> * rsyncd需要部署在备份服务器用于接收客户端数据；
->
+>* rsyncd需要部署在备份服务器用于接收客户端数据；
 > * inotify.sh脚本用于监听目录变化并处理重复事件；
->
-> * sersync.sh脚本用于根据传入的参数调用rsync与远程服务器(依赖rsyncd服务)进行数据增量同步；
+>* sersync.sh脚本用于根据传入的参数调用rsync与远程服务器(依赖rsyncd服务)进行数据增量同步；
 
-### 依赖安装
+## 备份服务安装
 
-* inotify-tools
+### 虚拟机部署
 
-```shell
-##Centos7
-yum install epel-relase -y
-yum install inotify-tools -y
-##Openeuler
-yum install inotify-tools -y
-```
-
->也可使用最新版inotify-tools编译安装
-
-```shell
-wget https://ghproxy.com/https://github.com/inotify-tools/inotify-tools/archive/refs/tags/3.22.6.0.tar.gz
-tar zxf 3.22.6.0.tar.gz
-cd inotify-tools-3.22.6.0/
-yum install automake autoconf libtool -y
-sh autogen.sh
-./configure && make && make install
-```
-
-* rsync
+#### 安装rsync
 
 ```shell
 yum install rsync -y
 ```
 
-### 内核参数优化
-
-```shell
-echo 'fs.inotify.max_user_watches = 999999' >> /etc/sysctl.conf
-echo 'fs.inotify.max_user_instances = 1024' >> /etc/sysctl.conf
-echo 'fs.inotify.max_queued_events = 999999' >> /etc/sysctl.conf
-sysctl -p
-```
-
-### systemd参数优化
-
-```shell
-cat /etc/systemd/system.conf
-DefaultLimitNOFILE=204800
-DefaultLimitNPROC=65536
-```
-
-### 监听脚本安装
-
-```shell
-mkdir -p /usr/local/sersync/{bin,etc,logs}
-cp inotify.sh sersync.sh /usr/local/sersync/bin
-chmod -R +x /usr/local/sersync/bin
-```
-
-```shell
-###配置守护进程
-cat > /etc/systemd/system/sersync.service <<EOF
-[Unit]
-Description=sersync
-After=syslog.target network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/usr/local/sersync
-ExecStart=/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf
-TimeoutStopSec=5
-Restart=on-failure
-LimitNOFILE=204800
-[Install]
-WantedBy=multi-user.target
-EOF
-```
-
-
-
-## 配置说明
-
-### rsync服务端
-
 ```shell
 # 配置示例，两个模块分别是backup1和backup2，hosts allow字段根据实际修改
-cat /etc/rsyncd.conf
+cat > /etc/rsyncd.conf <<'EOF'
 uid = root
 gid = root
 max connections = 200
@@ -125,6 +50,7 @@ read only = no
 list = no
 auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
+EOF
 
 ###创建密码验证
 echo 'rsync:Ki13W@yYZvbJ' >/etc/rsyncd.secret
@@ -143,11 +69,69 @@ systemctl start rsyncd
 systemctl enable rsyncd
 ```
 
-### 监听配置
 
->修改配置文件etc/sersync.conf
+
+## 备份源安装
+
+### 虚拟机部署
+
+#### 安装inotify-tools
+
+> yum安装
 
 ```shell
+##Centos7
+yum install epel-relase -y
+yum install inotify-tools -y
+##Openeuler
+yum install inotify-tools -y
+```
+
+>编译安装
+
+```shell
+cd /usr/local/src/
+wget https://ghproxy.com/https://github.com/inotify-tools/inotify-tools/archive/refs/tags/3.22.6.0.tar.gz
+tar zxf 3.22.6.0.tar.gz
+cd inotify-tools-3.22.6.0/
+yum install automake autoconf libtool -y
+sh autogen.sh
+./configure && make && make install
+```
+
+#### 安装rsync
+
+```shell
+yum install rsync -y
+```
+
+#### 内核参数优化
+
+```shell
+echo 'fs.inotify.max_user_watches = 999999' >> /etc/sysctl.conf
+echo 'fs.inotify.max_user_instances = 1024' >> /etc/sysctl.conf
+echo 'fs.inotify.max_queued_events = 999999' >> /etc/sysctl.conf
+sysctl -p
+```
+
+#### 脚本配置
+
+> 下载脚本
+
+```shell
+mkdir -p /usr/local/sersync/{bin,etc,logs}
+curl -o /usr/local/sersync/bin/inotify.sh https://raw.githubusercontent.com/Echo21bash/ops_script/master/script/inotify-tools%2Brsync/sersync/bin/inotify.sh
+curl -o /usr/local/sersync/bin/sersync.sh https://raw.githubusercontent.com/Echo21bash/ops_script/master/script/inotify-tools%2Brsync/sersync/bin/sersync.sh
+curl -o /usr/local/sersync/bin/rsync.sh https://raw.githubusercontent.com/Echo21bash/ops_script/master/script/inotify-tools%2Brsync/sersync/bin/rsync.sh
+curl -o /usr/local/sersync/bin/stop.sh https://raw.githubusercontent.com/Echo21bash/ops_script/master/script/inotify-tools%2Brsync/sersync/bin/stop.sh
+chmod -R +x /usr/local/sersync/bin
+```
+
+> 创建配置文件
+
+```shell
+###配置守护进程
+cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
 ######################################通用配置######################################
 #工作目录一般不修改
 work_dir=/usr/local/sersync
@@ -189,38 +173,97 @@ rsync_timeout=180
 #传输限速
 rsync_bwlimit=50M
 #rsync额外参数
-extra_rsync_args="--partial --append-verify --ignore-missing-args"
+extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
 ######################################同步配置######################################
+EOF
 ```
 
-## 数据同步验证
+> 配置守护进程
 
 ```shell
-#启动增量同步创建文件进行验证
+cat > /etc/systemd/system/sersync.service <<EOF
+[Unit]
+Description=sersync
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/sersync
+ExecStart=/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf
+TimeoutStopSec=5
+Restart=on-failure
+LimitNOFILE=204800
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+> 启动同步
+
+```shell
+#启动同步
 systemctl daemon-reload
 systemctl start sersync
 ```
 
-## Docker容器
+### 容器部署
+
+#### 创建配置
 
 ```shell
-#修改配置文件并且将需要同步的目录挂载到容器
-#支持的环境变量及其说明
-#运行模式sersync为监听同步将文件同步到远程服务器，rsyncd为rsync模式daemon。
-RUN_MODE=${RUN_MODE:-sersync}
-#rsync认证用户
-RSYNCD_USER=${RSYNCD_USER:-rsync}
-#rsync认证密码
-RSYNCD_PASSWD=${RSYNCD_PASSWD:-Ki13W@yYZvbJ}
-#rsyncd模块名称
-RSYNCD_MOD_NAME=${RSYNCD_MOD_NAME:-data}
-#rsyncd存储目录
-RSYNCD_PATH=${RSYNCD_PATH:-/data}
-#rsyncd最大连接数
-RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
-#rsyncd白名单
-RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
+mkdir -p /usr/local/sersync/{bin,etc,logs}
+###配置守护进程
+cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
+######################################通用配置######################################
+#工作目录一般不修改
+work_dir=/usr/local/sersync
+#日志目录一般不修改
+logs_dir=${work_dir}/logs
+######################################通用配置######################################
 
+######################################监听配置######################################
+#配置同步及其别名用于rsyncd模块创建目录名，格式[别名=监听目录]，支持多个目录
+listen_dir=('file_backup=/data/file' 'db_backup=/data/db' 'img_backup=/data/img')
+#监听忽略匹配
+#exclude_file_rule=('/data/file=logs|tmp' '/data/img=.gif')
+######################################监听配置######################################
+
+######################################同步配置######################################
+#首次全量同步
+full_rsync_first_enable=1
+#实时同步配置
+real_time_sync_enable=1
+#实时同步延时s
+real_time_sync_delay=60
+#周期性全量同步
+full_rsync_enable=1
+#全量同步周期单位d
+full_rsync_interval=15
+#全量同步超时时间单位h
+full_rsync_timeout=12
+#rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应多个待同步目录逗号
+#分隔，要求模式名称唯一，一个带同步目录只能对应一个模块，否则第一个生效。
+rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
+#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
+rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
+#同步的用户
+rsync_user=rsync
+#rsync密码文件
+rsync_passwd_file=/etc/rsync.passwd
+#同步超时时间
+rsync_timeout=180
+#传输限速
+rsync_bwlimit=50M
+#rsync额外参数
+extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
+######################################同步配置######################################
+EOF
+```
+
+#### 启动容器
+
+```shell
 docker run --name sersync --privileged -itd -v /data/file:/data/file \
 -v /data/db:/data/db \
 -v /etc/rsync.passwd:/etc/rsync.passwd \
@@ -228,7 +271,24 @@ docker run --name sersync --privileged -itd -v /data/file:/data/file \
 registry-prod.cnzhiyuanhui.com:1555/service_components/sersync:1.0
 ```
 
+#### 环境变量
 
+> #修改配置文件并且将需要同步的目录挂载到容器
+> #支持的环境变量及其说明
+> #运行模式sersync为监听同步将文件同步到远程服务器，rsyncd为rsync模式daemon。
+> RUN_MODE=${RUN_MODE:-sersync}
+> #rsync认证用户
+> RSYNCD_USER=${RSYNCD_USER:-rsync}
+> #rsync认证密码
+> RSYNCD_PASSWD=${RSYNCD_PASSWD:-Ki13W@yYZvbJ}
+> #rsyncd模块名称
+> RSYNCD_MOD_NAME=${RSYNCD_MOD_NAME:-data}
+> #rsyncd存储目录
+> RSYNCD_PATH=${RSYNCD_PATH:-/data}
+> #rsyncd最大连接数
+> RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
+> #rsyncd白名单
+> RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
 
 ## 其他说明
 
