@@ -20,7 +20,7 @@ full_rsync_first(){
 	do
 		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
-		rsyncd_port=873
+		rsyncd_port=${rsyncd_port:-873}
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 		flock -n -x ${logs_dir}/${lockfile} -c "
@@ -47,7 +47,7 @@ full_rsync_fun(){
 
 	while true
 	do
-		sleep ${full_rsync_interval}m
+		sleep ${full_rsync_interval}d
 		while true
 		do
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
@@ -55,6 +55,7 @@ full_rsync_fun(){
 				do
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
+					rsyncd_port=${rsyncd_port:-873}
 					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 					flock -n -x ${logs_dir}/${lockfile} -c "
@@ -120,7 +121,8 @@ rsync_fun(){
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
-					rsyncd_port=873
+					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
+					rsyncd_port=${rsyncd_port:-873}
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" --rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
