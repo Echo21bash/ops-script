@@ -20,8 +20,20 @@
 #### 安装rsync
 
 ```shell
+###安装rsync
 yum install rsync -y
+
+###创建密码验证
+echo 'rsync:Ki13W@yYZvbJ' >/etc/rsyncd.secret
+echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
+
+###设置权限
+chmod  600 /etc/rsyncd.conf
+chmod  600 /etc/rsyncd.secret
+chmod  600 /etc/rsync.passwd
 ```
+
+
 
 ```shell
 # 配置示例，两个模块分别是backup1和backup2，hosts allow字段根据实际修改
@@ -36,34 +48,29 @@ reverse lookup = no
 log file = /var/log/rsyncd.log
 
 [backup1]
-path = /data/file
-comment = file
+path = /data/backup1
+comment = backup1
 read only = no
 list = no
 auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 
 [backup2]
-path = /data/db
-comment = file
+path = /data/backup2
+comment = backup2
 read only = no
 list = no
 auth users = rsync
 hosts allow = 10.255.50.63,10.255.50.64,10.255.60.2
 EOF
 
-###创建密码验证
-echo 'rsync:Ki13W@yYZvbJ' >/etc/rsyncd.secret
-echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
-
-###设置权限
-chmod  600 /etc/rsyncd.conf
-chmod  600 /etc/rsyncd.secret
-chmod  600 /etc/rsync.passwd
-
 ###创建目录
 mkdir -p /data/file /data/db
+```
 
+#### 启动rsyncd
+
+```shell
 ###启动
 systemctl start rsyncd
 systemctl enable rsyncd
@@ -81,7 +88,7 @@ systemctl enable rsyncd
 
 ```shell
 ##Centos7
-yum install epel-relase -y
+yum install epel-release -y
 yum install inotify-tools -y
 ##Openeuler
 yum install inotify-tools -y
@@ -103,6 +110,9 @@ sh autogen.sh
 
 ```shell
 yum install rsync -y
+#认证文件
+echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
+chmod  600 /etc/rsync.passwd
 ```
 
 #### 内核参数优化
@@ -132,49 +142,69 @@ chmod -R +x /usr/local/sersync/bin
 ```shell
 ###配置守护进程
 cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
-######################################通用配置######################################
+#########################################通用配置#########################################
 #工作目录一般不修改
 work_dir=/usr/local/sersync
+
 #日志目录一般不修改
 logs_dir=${work_dir}/logs
-######################################通用配置######################################
+#########################################通用配置#########################################
 
-######################################监听配置######################################
-#配置同步及其别名用于rsyncd模块创建目录名，格式[别名=监听目录]，支持多个目录
-listen_dir=('file_backup=/data/file' 'db_backup=/data/db' 'img_backup=/data/img')
-#监听忽略匹配
+#########################################监听配置#########################################
+#配置同步目录及其别名，别名用于rsyncd模块下创建目录名，格式[别名=监听目录]，支持多个目录。
+listen_dir=('file-backup=/data/file' 'db-backup=/data/db' 'img-backup=/data/img')
+
+#监听忽略匹配，仅实时同步生效，用于忽略临时文同步时配置。
 #exclude_file_rule=('/data/file=logs|tmp' '/data/img=.gif')
-######################################监听配置######################################
+#########################################监听配置#########################################
 
-######################################同步配置######################################
-#首次全量同步
+#########################################同步配置#########################################
+#开启启动时首次全量同步，对于非生产业务直接开启，生产业务根据情况开启。
 full_rsync_first_enable=1
-#实时同步配置
+
+#开启文件实时同步，对于小文件如图片、文档等建议开启，对于大文件如镜像建议关闭。同时考虑实时同步对
+#业务性能的影响酌情开启，
 real_time_sync_enable=1
-#实时同步延时s
+
+#实时同步延时(单位s)，实时同步开启后生效，作为实时同步周期。
 real_time_sync_delay=60
-#周期性全量同步
+
+#开启周期性全量同步，定期对整个目录进行同步。完成首次全量同步后，周期性全量同步只是同步变化的数据
 full_rsync_enable=1
-#全量同步周期单位d
-full_rsync_interval=15
+
+#全量同步周期(单位d)
+full_rsync_interval=3
+
 #全量同步超时时间单位h
 full_rsync_timeout=12
+
 #rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应多个待同步目录逗号
-#分隔，要求模式名称唯一，一个带同步目录只能对应一个模块，否则第一个生效。
+#分隔，要求模式名称唯一，一个待同步目录只能对应一个模块，否则第一个生效。
 rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
+
 #模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
 rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
-#同步的用户
+
+#rsync同步的用户
 rsync_user=rsync
+
 #rsync密码文件
 rsync_passwd_file=/etc/rsync.passwd
+
 #同步超时时间
 rsync_timeout=180
+
 #传输限速
 rsync_bwlimit=50M
-#rsync额外参数
+
+#rsync额外参数，建议开启--partial、--append-verify、--ignore-missing-args，当前已开启必要参数
+#-rlptDRu --delete
 extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
-######################################同步配置######################################
+
+#保留多少天内的历史备份(单位d)，防止误删源文件导致数据丢失，备份目录为rsynd模块下/history-backup/，
+#建议大于全量同步周期full_rsync_interval的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。
+keep_history_backup_days=7
+#########################################同步配置#########################################
 EOF
 ```
 
@@ -212,52 +242,78 @@ systemctl start sersync
 #### 创建配置
 
 ```shell
+#认证文件
+echo 'Ki13W@yYZvbJ' >/etc/rsync.passwd
+chmod  600 /etc/rsync.passwd
+```
+
+```shell
+#创建配置文件
 mkdir -p /usr/local/sersync/{bin,etc,logs}
-###配置守护进程
 cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
-######################################通用配置######################################
+#########################################通用配置#########################################
 #工作目录一般不修改
 work_dir=/usr/local/sersync
+
 #日志目录一般不修改
 logs_dir=${work_dir}/logs
-######################################通用配置######################################
+#########################################通用配置#########################################
 
-######################################监听配置######################################
-#配置同步及其别名用于rsyncd模块创建目录名，格式[别名=监听目录]，支持多个目录
-listen_dir=('file_backup=/data/file' 'db_backup=/data/db' 'img_backup=/data/img')
-#监听忽略匹配
+#########################################监听配置#########################################
+#配置同步目录及其别名，别名用于rsyncd模块下创建目录名，格式[别名=监听目录]，支持多个目录。
+listen_dir=('file-backup=/data/file' 'db-backup=/data/db' 'img-backup=/data/img')
+
+#监听忽略匹配，仅实时同步生效，用于忽略临时文同步时配置。
 #exclude_file_rule=('/data/file=logs|tmp' '/data/img=.gif')
-######################################监听配置######################################
+#########################################监听配置#########################################
 
-######################################同步配置######################################
-#首次全量同步
+#########################################同步配置#########################################
+#开启启动时首次全量同步，对于非生产业务直接开启，生产业务根据情况开启。
 full_rsync_first_enable=1
-#实时同步配置
+
+#开启文件实时同步，对于小文件如图片、文档等建议开启，对于大文件如镜像建议关闭。同时考虑实时同步对
+#业务性能的影响酌情开启，
 real_time_sync_enable=1
-#实时同步延时s
+
+#实时同步延时(单位s)，实时同步开启后生效，作为实时同步周期。
 real_time_sync_delay=60
-#周期性全量同步
+
+#开启周期性全量同步，定期对整个目录进行同步。完成首次全量同步后，周期性全量同步只是同步变化的数据
 full_rsync_enable=1
-#全量同步周期单位d
-full_rsync_interval=15
+
+#全量同步周期(单位d)
+full_rsync_interval=3
+
 #全量同步超时时间单位h
 full_rsync_timeout=12
+
 #rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应多个待同步目录逗号
-#分隔，要求模式名称唯一，一个带同步目录只能对应一个模块，否则第一个生效。
+#分隔，要求模式名称唯一，一个待同步目录只能对应一个模块，否则第一个生效。
 rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
+
 #模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
 rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
-#同步的用户
+
+#rsync同步的用户
 rsync_user=rsync
+
 #rsync密码文件
 rsync_passwd_file=/etc/rsync.passwd
+
 #同步超时时间
 rsync_timeout=180
+
 #传输限速
 rsync_bwlimit=50M
-#rsync额外参数
+
+#rsync额外参数，建议开启--partial、--append-verify、--ignore-missing-args，当前已开启必要参数
+#-rlptDRu --delete
 extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
-######################################同步配置######################################
+
+#保留多少天内的历史备份(单位d)，防止误删源文件导致数据丢失，备份目录为rsynd模块下/history-backup/，
+#建议大于全量同步周期full_rsync_interval的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。
+keep_history_backup_days=7
+#########################################同步配置#########################################
 EOF
 ```
 

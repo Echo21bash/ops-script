@@ -30,8 +30,8 @@ rysnc_fun(){
 		;;
 	DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
 		cd ${sync_dir}
-		full_file_dir=`echo "${file}" | sed 's/.\///'`
-		file_dir=`echo "${file}" | sed 's/.\///'`
+		full_file_dir=`echo "${file}" | sed 's/\.\///'`
+		file_dir=`echo "${file}" | sed 's/\.\///'`
 		include_file=$(echo -n "${file}" | md5sum | awk '{print $1}')
 		if [[ ${file} = "./" || ${file} = "." ]];then
 

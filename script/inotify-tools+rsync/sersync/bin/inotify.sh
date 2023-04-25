@@ -9,6 +9,7 @@ usage()
 
 full_rsync_first(){
 
+	
 	if [[ ! -d ${sync_dir} ]];then
 		echo "[ERROR] No such file or directory ${sync_dir}"
 		exit
@@ -18,6 +19,7 @@ full_rsync_first(){
 	
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
+		rsync_date=$(date +%Y-%m-%d)
 		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 		rsyncd_port=${rsyncd_port:-873}
@@ -26,6 +28,7 @@ full_rsync_first(){
 		flock -n -x ${logs_dir}/${lockfile} -c "
 		timeout ${full_rsync_timeout}h \
 		${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 		echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
@@ -50,9 +53,11 @@ full_rsync_fun(){
 		sleep ${full_rsync_interval}d
 		while true
 		do
+			###默认业务低峰全量同步
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
+					rsync_date=$(date +%Y-%m-%d)
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					rsyncd_port=${rsyncd_port:-873}
@@ -61,11 +66,32 @@ full_rsync_fun(){
 					flock -n -x ${logs_dir}/${lockfile} -c "
 					timeout ${full_rsync_timeout}h \
 					${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+					--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
 					echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
 					echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";\
 					rm -rf ${logs_dir}/${lockfile}"
+
+					###删除最近保留天数到30天的数据
+					del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
+					del_start_rsync_date=$(date -d "-30 day" +%Y-%m-%d)
+					local i
+					i=0
+					while [[ ${del_start_rsync_date} -le ${del_end_rsync_date} ]]
+					do
+						now_date=$(date -d "${del_start_rsync_date} +${i} day" +%Y-%m-%d )
+                                                [[ ${now_date} = ${del_end_rsync_date} ]] && break
+						${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+						--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+						--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
+						-f ${now_date} --logs-dir ${logs_dir} -e DELETEXISDIR --rsync-timeout ${rsync_timeout} \
+						--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" \
+						--rsync-command-path ${work_dir}/bin/rsync.sh && \
+						echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}" || \
+						echo "[ERROR] Error delete history backup /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}"
+						((i++))
+					done
 				done
 				break
 			else
@@ -120,11 +146,19 @@ rsync_fun(){
 				##对rsync操作加锁防止多个周期一个文件重复同步
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
+					rsync_date=$(date +%Y-%m-%d)
 					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					rsyncd_port=${rsyncd_port:-873}
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
-					flock -n -x ${logs_dir}/${lockfile} -c "${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} --rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} --rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} --logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} --rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" --rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
+					flock -n -x ${logs_dir}/${lockfile} -c "
+					${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+					--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+					--rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} \
+					--logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} \
+					--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \
+					\"${extra_rsync_args} --backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date}\" \
+					--rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
 			done < ${logs_dir}/inotify-exe.log
 		fi
@@ -132,9 +166,18 @@ rsync_fun(){
 }
 
 run_ctl(){
+
+	###创建日志目录
 	if [[ ! -d ${logs_dir} ]];then
 		mkdir -p ${logs_dir}
 	fi
+	###创建临时空目录
+	if [[ ! -d ${logs_dir}/empty ]];then
+		mkdir -p ${logs_dir}/empty
+	else
+		rm -rf ${logs_dir}/empty/*
+	fi
+	###定义关联数组
 	declare -A sync_dir_module_ip
 	sync_dir_module_ip=""
 
