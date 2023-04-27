@@ -86,7 +86,7 @@ full_rsync_fun(){
 						--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
 						--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
 						-f ${now_date} --logs-dir ${logs_dir} -e DELETEXISDIR --rsync-timeout ${rsync_timeout} \
-						--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \"${extra_rsync_args}\" \
+						--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
 						--rsync-command-path ${work_dir}/bin/rsync.sh && \
 						echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}" || \
 						echo "[ERROR] Error delete history backup /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}"
