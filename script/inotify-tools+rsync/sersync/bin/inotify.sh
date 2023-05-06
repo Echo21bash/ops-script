@@ -78,7 +78,7 @@ full_rsync_fun(){
 					del_start_rsync_date=$(date -d "-30 day" +%Y-%m-%d)
 					local i
 					i=0
-					while [[ ${del_start_rsync_date} -le ${del_end_rsync_date} ]]
+					while [[ ${del_start_rsync_date} < ${del_end_rsync_date} ]]
 					do
 						now_date=$(date -d "${del_start_rsync_date} +${i} day" +%Y-%m-%d )
                                                 [[ ${now_date} = ${del_end_rsync_date} ]] && break
