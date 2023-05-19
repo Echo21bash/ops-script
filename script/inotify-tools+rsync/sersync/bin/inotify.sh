@@ -1,4 +1,5 @@
 #!/bin/bash
+
 usage()
 {
 	cat <<-EOF
@@ -25,15 +26,22 @@ full_rsync_first(){
 		rsyncd_port=${rsyncd_port:-873}
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
-		flock -n -x ${logs_dir}/${lockfile} -c "
+		flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 		timeout ${full_rsync_timeout}h \
 		${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
 		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
-		echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
-		echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";\
 		rm -rf ${logs_dir}/${lockfile}"
+		exit_code=$?
+		if [[ ${exit_code} = '0' ]];then
+			echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
+		elif [[ ${exit_code} = '111' ]];then
+			echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
+		else
+			echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
+		fi
+
 	done
 
 }
@@ -63,15 +71,24 @@ full_rsync_fun(){
 					rsyncd_port=${rsyncd_port:-873}
 					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
-					flock -n -x ${logs_dir}/${lockfile} -c "
+					flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 					timeout ${full_rsync_timeout}h \
 					${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
 					--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
-					echo \"[INFO] Full sync ${sync_dir} complete to ${ipaddr}\" || \
-					echo \"[ERROR] Error in full sync ${sync_dir} to ${ipaddr}\";\
 					rm -rf ${logs_dir}/${lockfile}"
+
+					exit_code=$?
+					if [[ ${exit_code} = '0' ]];then
+						echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
+					elif [[ ${exit_code} = '111' ]];then
+						echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
+						break
+					else
+						echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
+						break
+					fi
 
 					###删除最近保留天数到30天的数据
 					del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
