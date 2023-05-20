@@ -6,12 +6,21 @@
 
 **基于inotify监听文件事件类型，然后调用rsync进行远程同步到rsyncd服务端**
 
+## 脚本特点
+
+>* 支持实时同步；
+>* 支持周期性全量同步；
+>* 支持启动时首次同步；
+>* 支持历史备份数据保留指定天数；
+>* 删除多余事件减少资源使用；
+
 ## 组件说明
 
 > * inotify、rsync需要部署在需要同步的服务器；
->* rsyncd需要部署在备份服务器用于接收客户端数据；
+> * rsyncd需要部署在备份服务器用于接收客户端数据；
 > * inotify.sh脚本用于监听目录变化并处理重复事件；
->* sersync.sh脚本用于根据传入的参数调用rsync与远程服务器(依赖rsyncd服务)进行数据增量同步；
+> * rsync.sh脚本用于对错误码24屏蔽；
+> * sersync.sh脚本用于根据传入的参数调用rsync与远程服务器(依赖rsyncd服务)进行数据增量同步；
 
 ## 备份服务安装
 
@@ -33,7 +42,7 @@ chmod  600 /etc/rsyncd.secret
 chmod  600 /etc/rsync.passwd
 ```
 
-
+#### 创建配置文件
 
 ```shell
 # 配置示例，两个模块分别是backup1和backup2，hosts allow字段根据实际修改
@@ -66,6 +75,18 @@ EOF
 
 ###创建目录
 mkdir -p /data/file /data/db
+```
+
+#### 创建日志分割
+
+```shell
+cat > /etc/logrotate.d/rsync <<'EOF'
+/var/log/rsyncd.log{
+notifempty
+daily
+rotate 7
+}
+EOF
 ```
 
 #### 启动rsyncd

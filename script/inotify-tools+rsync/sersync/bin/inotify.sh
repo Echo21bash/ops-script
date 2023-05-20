@@ -149,10 +149,13 @@ rsync_fun(){
 		sleep ${real_time_sync_delay}
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
 			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-tmp.log
-			##去除重复数据以及不必要的事件
+			###START去除重复数据以及不必要的事件
+			##获取针对目录的事件并保留最新事件
 			grep -E 'DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR' ${logs_dir}/inotify-tmp.log | awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' > ${logs_dir}/dir-tmp.txt
+			##获取针对文件的事件并保留最新事件
 			grep -vE 'DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR' ${logs_dir}/inotify-tmp.log | awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' > ${logs_dir}/file-tmp.txt
 			\cp ${logs_dir}/dir-tmp.txt ${logs_dir}/dir-exe.txt
+			##删除存在子目录关系的数据，保留父目录
 			while read line
 			do
 				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
@@ -161,15 +164,16 @@ rsync_fun(){
 					grep -E "${parentdir}$" ${logs_dir}/dir-tmp.txt && sed -i "/${basedir}/d" ${logs_dir}/dir-exe.txt
 				fi
 			done < ${logs_dir}/dir-tmp.txt
-			##去除重复数据以及不必要的事件
 			\cp ${logs_dir}/file-tmp.txt ${logs_dir}/file-exe.txt
+			##删除已经有目录事件所对应的文件事件
 			while read line
 			do
 				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
 				sed -i "/${basedir}/d" ${logs_dir}/file-exe.txt
 
 			done < ${logs_dir}/dir-exe.txt
-
+			###END去除重复数据以及不必要的事件
+			###START逐行对变化的文件目录同步到rsynd服务端
 			cat ${logs_dir}/dir-exe.txt ${logs_dir}/file-exe.txt | while read line
 			do
 				sleep 0.05
@@ -178,7 +182,7 @@ rsync_fun(){
 				remote_sync_dir=$(echo ${line} | awk -F ';' '{print$4}')
 				event=$(echo ${line} | awk -F ';' '{print$5}')
 				file=$(echo "${line}" | awk -F ';' '{print$6}' | sed -e 's/[] (){}$&%*^!@#[]/\\&/g')
-				##对rsync操作加锁防止多个周期一个文件重复同步
+				##对变化的文件或者文档循环同步到不同的rsynd服务端
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
 					rsync_date=$(date +%Y-%m-%d)
@@ -186,6 +190,7 @@ rsync_fun(){
 					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 					rsyncd_port=${rsyncd_port:-873}
 					lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
+					##对rsync操作使用flock加锁防止多个周期一个文件重复同步造成IO阻塞
 					flock -n -x ${logs_dir}/${lockfile} -c "
 					${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
 					--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
@@ -196,6 +201,7 @@ rsync_fun(){
 					--rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
 			done 
+			###END逐行对变化的文件目录同步到rsynd服务端
 		fi
 	done
 }
@@ -221,11 +227,11 @@ run_ctl(){
 		remote_sync_dir=$(echo ${d} | awk -F '=' '{print$1}')
 		sync_dir=$(echo ${d} | awk -F '=' '{print$2}')
 		###获取当前目录监听排除
-                for e in ${exclude_file_rule[@]}
-                do
-                        exclude_file=$(echo ${e} | grep -o "${sync_dir}=.*" | awk -F '=' '{print$2}')
+		for e in ${exclude_file_rule[@]}
+		do
+			exclude_file=$(echo ${e} | grep -o "${sync_dir}=.*" | awk -F '=' '{print$2}')
 			[[ ! -z ${exclude_file} ]] && break
-                done
+		done
 
 		###获取当前目录所对应的模块名称和模块ip
 		for m in ${rsyncd_mod[@]}
