@@ -149,11 +149,29 @@ rsync_fun(){
 		sleep ${real_time_sync_delay}
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
 			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-tmp.log
-			##对重复文件的事件去重并保留最新的事件类型
-			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${logs_dir}/inotify-tmp.log > ${logs_dir}/inotify-exe.log
+			##去除重复数据以及不必要的事件
+			grep -E 'DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR' ${logs_dir}/inotify-tmp.log | awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' > ${logs_dir}/dir-tmp.txt
+			grep -vE 'DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR' ${logs_dir}/inotify-tmp.log | awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' > ${logs_dir}/file-tmp.txt
+			\cp ${logs_dir}/dir-tmp.txt ${logs_dir}/dir-exe.txt
 			while read line
 			do
-				
+				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
+				parentdir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
+				if [[ ${parentdir} != "." ]];then
+					grep -E "${parentdir}$" ${logs_dir}/dir-tmp.txt && sed -i "/${basedir}/d" ${logs_dir}/dir-exe.txt
+				fi
+			done < ${logs_dir}/dir-tmp.txt
+			##去除重复数据以及不必要的事件
+			\cp ${logs_dir}/file-tmp.txt ${logs_dir}/file-exe.txt
+			while read line
+			do
+				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
+				sed -i "/${basedir}/d" ${logs_dir}/file-exe.txt
+
+			done < ${logs_dir}/dir-exe.txt
+
+			cat ${logs_dir}/dir-exe.txt ${logs_dir}/file-exe.txt | while read line
+			do
 				sleep 0.05
 				sync_dir=$(echo ${line} | awk -F ';' '{print$2}')
 				module_name=$(echo ${line} | awk -F ';' '{print$3}')
@@ -177,7 +195,7 @@ rsync_fun(){
 					\"${extra_rsync_args} --backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date}\" \
 					--rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
 				done
-			done < ${logs_dir}/inotify-exe.log
+			done 
 		fi
 	done
 }
@@ -209,7 +227,7 @@ run_ctl(){
 			[[ ! -z ${exclude_file} ]] && break
                 done
 
-                ###获取当前目录所对应的模块名称和模块ip
+		###获取当前目录所对应的模块名称和模块ip
 		for m in ${rsyncd_mod[@]}
 		do
 			module_name=$(echo ${m} | grep -o ".*${sync_dir}" | awk -F '=' '{print$1}')
