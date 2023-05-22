@@ -3,7 +3,7 @@
 ignoreexit=24
 ignoreout='vanished'
 set -o pipefail
-rsync "$@" 2>&1 | (grep -v "$ignoreout"|| true)
+rsync "$@" | (grep -v "$ignoreout"|| true)
 code=$?
 if [ $code == $ignoreexit ]; then
     exit 0
