@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -o pipefail
 usage()
 {
 	cat <<-EOF
@@ -98,7 +98,7 @@ full_rsync_fun(){
 					while [[ ${del_start_rsync_date} < ${del_end_rsync_date} ]]
 					do
 						now_date=$(date -d "${del_start_rsync_date} +${i} day" +%Y-%m-%d )
-                                                [[ ${now_date} = ${del_end_rsync_date} ]] && break
+						[[ ${now_date} = ${del_end_rsync_date} ]] && break
 						${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
 						--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
 						--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
@@ -277,9 +277,9 @@ do
 		-f)
 			config_file="$2"
 			if [[ ! -f ${config_file} ]];then
-				echo error
+				echo "[ERROR] No such file or directory ${config_file}"
 			else
-				. ${config_file}
+				. ${config_file} || exit
 			fi
 			shift 2
 			;;
