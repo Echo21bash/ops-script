@@ -42,7 +42,7 @@ elif [[ ${RUN_MODE} = 'sersync' ]];then
 	echo 'fs.inotify.max_user_instances = 1024' >> /etc/sysctl.conf
 	echo 'fs.inotify.max_queued_events = 999999' >> /etc/sysctl.conf
 	#内核参数生效
-	sysctl -p
+	sudo sysctl -p
 	#设置权限
 	echo "${RSYNCD_PASSWD}" >/etc/rsync.passwd
 	chmod 600 /etc/rsync.passwd
