@@ -199,12 +199,15 @@ gpconfig -c statement_mem -v 1000MB
   gpconfig -c gp_resqueue_priority_cpucores_per_segment -v 8
   ```
 
-* 控制记录哪些SQL语句。有效值是none（off），ddl，mod和all（所有语句）
+* 日志相关配置
 
   ```shell
+  #有效值是none（off），ddl，mod和all
   gpconfig -c log_statement -v none -m all
-  #-1表示关闭,0表示打开,100表示记录大于100ms的sql
-  gpconfig -c log_min_duration_statement -v -1 -m 50
+  #有效值是-1表示关闭,0表示记录所有,100表示记录大于100ms的sql
+  gpconfig -c log_min_duration_statement -v -1 -m 100
+  #有效值是debug1、info、notice、warning、log、error、fatal、panic
+  gpconfig -c log_min_messages -v fatal -m error
   ```
 
 
@@ -531,7 +534,7 @@ primary segment节点和mirror segment节点的故障修复方式是一样的，
         ```shell
         [gpadmin@l-test5 ~]$ gprecoverseg -r
         ```
-        
+    
 
 ## 集群扩容
 
