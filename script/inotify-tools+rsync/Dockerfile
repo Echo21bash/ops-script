@@ -6,7 +6,7 @@ ADD docker-entrypoint.sh /usr/local/sersync/bin
 
 ENV PATH=$PATH:/usr/local/sersync/bin
 
-RUN sed -i 's/security-cdn.debian.org/mirrors.aliyun.com' /etc/apt/sources.list && \
+RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     localedef -c -f UTF-8 -i zh_CN zh_CN.UTF-8 && \
     chmod -R +x /usr/local/sersync/bin/* && \
     ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
