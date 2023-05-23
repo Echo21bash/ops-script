@@ -35,7 +35,9 @@ EOF
 	chmod  600 /etc/rsyncd.secret
 	chmod  600 /etc/rsyncd.conf
 	[[ ! -d ${RSYNCD_PATH} ]] && mkdir -p ${RSYNCD_PATH}
-	rsync --no-detach --daemon --config /etc/rsyncd.conf && "$@"
+	rsync --no-detach --daemon --config /etc/rsyncd.conf &
+	exec "$@"
+	tail -F /dev/stdout
 elif [[ ${RUN_MODE} = 'sersync' ]];then
 	#内核参数修改
 	echo 'fs.inotify.max_user_watches = 999999' >> /etc/sysctl.conf
@@ -48,5 +50,6 @@ elif [[ ${RUN_MODE} = 'sersync' ]];then
 	chmod 600 /etc/rsync.passwd
 	#启动进程
 	/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf &
-	tail -F /usr/local/sersync/logs/rsync-err.log && "$@"
+	exec "$@"
+	tail -F /usr/local/sersync/logs/rsync-err.log
 fi
