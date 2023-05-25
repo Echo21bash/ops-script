@@ -36,7 +36,7 @@ EOF
 	chmod  600 /etc/rsyncd.conf
 	echo "root:${RSYNCD_PASSWD}" | chpasswd
 	[[ ! -d ${RSYNCD_PATH} ]] && mkdir -p ${RSYNCD_PATH}
-	rsync --no-detach --daemon --config /etc/rsyncd.conf &
+	rsync --daemon --config /etc/rsyncd.conf
 	service ssh restart
 	exec "$@"
 	tail -F /dev/stdout
