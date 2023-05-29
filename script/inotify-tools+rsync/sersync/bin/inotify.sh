@@ -8,6 +8,18 @@ usage()
 	EOF
 }
 
+run_script(){
+
+	if [[ ${exec_command_enable} = '1' ]];then
+		if [[ -x ${work_dir}/scripts/${exec_shell_file} && -f ${work_dir}/scripts/${exec_shell_file} ]]; then
+			echo "[INFO] Running the script ${work_dir}/scripts/${exec_shell_file}"
+			"${work_dir}/scripts/${exec_shell_file}"
+		fi
+
+	fi
+	
+}
+
 full_rsync_first(){
 
 	
@@ -17,7 +29,7 @@ full_rsync_first(){
 	else
 		cd ${sync_dir}
 	fi
-	
+	run_script
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
 		rsync_date=$(date +%Y-%m-%d)
@@ -63,6 +75,7 @@ full_rsync_fun(){
 		do
 			###默认业务低峰全量同步
 			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
+				run_script
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
 					rsync_date=$(date +%Y-%m-%d)
@@ -232,7 +245,12 @@ run_ctl(){
 			exclude_file=$(echo ${e} | grep -o "${sync_dir}=.*" | awk -F '=' '{print$2}')
 			[[ ! -z ${exclude_file} ]] && break
 		done
-
+		###获取当前目录执行脚本
+		for r in ${exec_command_list[@]}
+		do
+			exec_shell_file=$(echo ${r} | grep -o "${sync_dir}=.*" | awk -F '=' '{print$2}')
+			[[ ! -z ${exec_shell_file} ]] && break
+		done
 		###获取当前目录所对应的模块名称和模块ip
 		for m in ${rsyncd_mod[@]}
 		do
