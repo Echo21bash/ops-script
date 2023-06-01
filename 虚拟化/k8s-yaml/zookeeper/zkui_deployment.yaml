@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zkui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zkui
+    spec:
+      containers:
+      - name: zkui
+        image: rootww/zkui
+        env:
+          - name: ZK_SERVER
+            value: "172.26.32.172:1949"
+        resources:
+          requests:
+            memory: "256Mi"
+          limits:
+            memory: "512Mi"
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: zkui
+  name: zkui
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 9090
+  selector:
+    app: zkui

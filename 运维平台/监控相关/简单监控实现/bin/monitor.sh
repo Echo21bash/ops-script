@@ -45,7 +45,6 @@ alarm_ok_fun(){
 run_ctl(){
 	for i in ${!monitor_list[@]}
 	do
-		
 		app_name="${i}"
 		url="${monitor_list[${i}]}"
 		monitor_fun &

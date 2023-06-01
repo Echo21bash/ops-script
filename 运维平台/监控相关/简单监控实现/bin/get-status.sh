@@ -20,7 +20,7 @@ check(){
 	fi			
 
 	if [[ ${check_type} = 'http' ]];then
-		http_code=`curl -sI ${url} 2>/dev/null | grep '^HTTP' | awk '{print$2}'`
+		http_code=`timeout 3 curl -sI ${url} 2>/dev/null | grep '^HTTP' | awk '{print$2}'`
 		if [[ -n ${http_code} && ${http_code} = "200" ]];then
 			echo "1"
 		else
