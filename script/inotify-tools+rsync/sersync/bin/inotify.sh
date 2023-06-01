@@ -40,7 +40,7 @@ full_rsync_first(){
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 		flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 		timeout ${full_rsync_timeout}h \
-		${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+		${work_dir}/bin/rsync.sh -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
 		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
@@ -86,7 +86,7 @@ full_rsync_fun(){
 					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 					flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 					timeout ${full_rsync_timeout}h \
-					${work_dir}/bin/rsync.sh -rlptDRu --delete --port=${rsyncd_port} ${extra_rsync_args} \
+					${work_dir}/bin/rsync.sh -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
 					--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
