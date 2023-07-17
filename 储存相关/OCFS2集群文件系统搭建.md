@@ -138,7 +138,7 @@ systemctl status o2cb.service
 * 格式化为ocfs2文件系统
 
 ```shell
-mkfs -t ocfs2 -b 4k -C 256K -N 2 -L ocfs2 /dev/sdb
+mkfs -t ocfs2 -b 4k -C 256K -N 2 -L ocfs2 -J size=128M /dev/sdb
 #-C 集群大小参考值
 #File System Size	Suggested Minimum Cluster Size 
 #1 GB - 10 GB 		8K 

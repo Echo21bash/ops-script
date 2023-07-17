@@ -87,7 +87,7 @@ libxxx-devel >= 1.1.1 openssl-devel 。 注意：“>=”号两边需用空格�
 
 ### kmod-ocfs2制作
 
-> 基于openeuler-oe2203内核5.10.0-60.18.0.50
+> 基于openeuler-oe2203内核5.10.0-60.18.0.50，内核模块单独打包相较普通软件比较复杂，安装后需要执行weak-modules命令，对模块依赖关系更新，否则需要手动执行depmod命令更新modules.dep、modules.dep.bin文件，不然无法加载内核模块。同时weak-modules会在兼容的内核目录/lib/modules/${kernel-version}/weak-updates/创建模块的软连接，做到内核模块和内核分离。
 
 #### 源码准备
 
@@ -121,7 +121,7 @@ keyUsage=digitalSignature
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid
 EOF
-openssl req -new -nodes -utf8 -sha512 -days 36500 -batch -x509 -config x509.genkey -outform DER -out signing_key.x509 -keyout signing_key.pem
+openssl req -new -nodes -utf8 -sha256 -days 36500 -batch -x509 -config x509.genkey -outform DER -out signing_key.x509 -keyout signing_key.pem
 ```
 
 #### spec创建
