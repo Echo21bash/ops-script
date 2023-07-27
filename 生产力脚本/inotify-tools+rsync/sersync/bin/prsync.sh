@@ -113,7 +113,7 @@ do
 	olddir=${dir}
 	type=$(echo -n "${dir}" | grep -oE "/$" || true)
 	i=1
-	result=$(("${j}" % "${CHUNKS_SUM}"))
+	result=$((${j} % ${CHUNKS_SUM}))
 	while true
 	do
 		dirname=$(dirname "$dir" | head -1)
@@ -149,7 +149,7 @@ if [[ -s "${TMPDIR}/updatefile.all" ]];then
 	i=1
 	while read -r FSIZE FPATH;
 	do
-		result=$(("${i}" % "${CHUNKS_SUM}"))
+		result=$((${i}" % "${CHUNKS_SUM}))
 		echo "${FPATH}" >> "${TMPDIR}/chunk.${result}"
 		((i++))
 	done < "${TMPDIR}/updatefile.all"
@@ -159,7 +159,7 @@ if [[ -s "${TMPDIR}/updatedirexe.all" ]];then
 	i=1
 	while read -r FSIZE FPATH;
 	do
-		result=$(("${i}" % "${CHUNKS_SUM}"))
+		result=$((${i} % ${CHUNKS_SUM}))
 		echo "${FPATH}" >> "${TMPDIR}/chunk.${result}"
 		((i++))
 	done < "${TMPDIR}/updatedirexe.all"
@@ -171,7 +171,7 @@ echo -e "${GREEN}[INFO] Starting transfers ...${NC}"
 find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" | (grep -v "${rsync_ignore_out}"|| true)
 find "${TMPDIR}" -type f -name "delete.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" | (grep -v "${rsync_ignore_out}"|| true)
 exit_code="$?"
-if [[ "${rsync_ignore_exit_code}" =~ "${exit_code}" ]]
+if [[ "${rsync_ignore_exit_code}" =~ "${exit_code}" ]];then
 	exit_code=0
 fi
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
