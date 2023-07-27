@@ -36,10 +36,10 @@ EOF
 	chmod  600 /etc/rsyncd.conf
 	echo "root:${RSYNCD_PASSWD}" | chpasswd
 	[[ ! -d ${RSYNCD_PATH} ]] && mkdir -p ${RSYNCD_PATH}
-	rsync --daemon --config /etc/rsyncd.conf
-	service ssh restart
 	exec "$@"
-	tail -F /dev/stdout
+	service ssh restart
+	rsync --no-detach --daemon --config /etc/rsyncd.conf
+	
 elif [[ ${RUN_MODE} = 'sersync' ]];then
 	#内核参数修改
 	echo 'fs.inotify.max_user_watches = 999999' >> /etc/sysctl.conf

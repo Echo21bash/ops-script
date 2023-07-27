@@ -1,12 +1,11 @@
 #!/bin/bash
-#将退出码24视为正常
-ignoreexit=24
-ignoreout='vanished'
 set -o pipefail
-rsync "$@" | (grep -v "$ignoreout"|| true)
-code=$?
-if [ $code == $ignoreexit ]; then
-    exit 0
-else
-    exit $code
+#将退出码24视为正常
+rsync_ignore_exit_code=('24')
+rsync_ignore_out='vanished'
+rsync "$@" | (grep -v "${rsync_ignore_out}"|| true)
+exit_code=$?
+if [[ ${exit_code} =~ ${rsync_ignore_exit_code} ]]; then
+    exit_code=0
 fi
+exit ${exit_code}

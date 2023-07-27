@@ -22,13 +22,7 @@ run_script(){
 
 full_rsync_first(){
 
-	
-	if [[ ! -d ${sync_dir} ]];then
-		echo "[ERROR] No such file or directory ${sync_dir}"
-		exit
-	else
-		cd ${sync_dir}
-	fi
+	cd ${sync_dir}
 	run_script
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
@@ -43,13 +37,15 @@ full_rsync_first(){
 		${work_dir}/bin/rsync.sh -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
 		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
-		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
+		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir}/ && \
 		rm -rf ${logs_dir}/${lockfile}"
 		exit_code=$?
-		if [[ ${exit_code} = '0' ]];then
+		if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
 			echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
 		elif [[ ${exit_code} = '111' ]];then
 			echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
+		elif [[ ${exit_code} = '124' ]];then
+			echo "[INFO] Timeout exit syncing in ${sync_dir} to ${ipaddr}"
 		else
 			echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
 		fi
@@ -60,87 +56,78 @@ full_rsync_first(){
 
 
 full_rsync_fun(){
-
-	if [[ ! -d ${sync_dir} ]];then
-		echo "[ERROR] No such file or directory ${sync_dir}"
-		exit
+	cd ${sync_dir}
+	if [[ ${parallel_rsync_enable} = '1' ]];then
+		rsync_command_path=${work_dir}/bin/prsync.sh
 	else
-		cd ${sync_dir}
+		rsync_command_path=${work_dir}/bin/rsync.sh
 	fi
-
+	old_changes_tatus=$(stat -c %z ${work_dir}/logs/runcron 2>/dev/null)
 	while true
 	do
-		sleep ${full_rsync_interval}d
-		while true
-		do
-			###默认业务低峰全量同步
-			if [[ "23 00 01 02 03 04" =~ `date +'%H'` ]];then
-				run_script
-				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
-				do
-					rsync_date=$(date +%Y-%m-%d)
-					rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
-					rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
-					rsyncd_port=${rsyncd_port:-873}
-					lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
-					echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
-					flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
-					timeout ${full_rsync_timeout}h \
-					${work_dir}/bin/rsync.sh -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
-					--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
-					--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
-					${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir} && \
-					rm -rf ${logs_dir}/${lockfile}"
+		sleep 30
+		new_changes_tatus=$(stat -c %z ${work_dir}/logs/runcron 2>/dev/null)
 
-					exit_code=$?
-					if [[ ${exit_code} = '0' ]];then
-						echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
-					elif [[ ${exit_code} = '111' ]];then
-						echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
-						break
-					else
-						echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
-						break
-					fi
-
-					###删除最近保留天数到30天的数据
+		if [[ ${old_changes_tatus} != ${new_changes_tatus} ]];then
+			old_changes_tatus=${new_changes_tatus}
+			run_script
+			for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
+			do
+				rsync_date=$(date +%Y-%m-%d)
+				rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
+				rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
+				rsyncd_port=${rsyncd_port:-873}
+				lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
+				echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
+				flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
+				timeout ${full_rsync_timeout}h \
+				${rsync_command_path} --parallel=${parallel_rsync_num} -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
+				--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
+				--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
+				${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir}/ && \
+				rm -rf ${logs_dir}/${lockfile}"
+				exit_code=$?
+				if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
+					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
+					###删除${keep_history_backup_days}数据
 					del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
-					del_start_rsync_date=$(date -d "-30 day" +%Y-%m-%d)
-					local i
-					i=0
-					while [[ ${del_start_rsync_date} < ${del_end_rsync_date} ]]
-					do
-						now_date=$(date -d "${del_start_rsync_date} +${i} day" +%Y-%m-%d )
-						[[ ${now_date} = ${del_end_rsync_date} ]] && break
-						${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
-						--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
-						--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
-						-f ${now_date} --logs-dir ${logs_dir} -e DELETEXISDIR --rsync-timeout ${rsync_timeout} \
-						--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
-						--rsync-command-path ${work_dir}/bin/rsync.sh && \
-						echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}" || \
-						echo "[ERROR] Error delete history backup /history-backup/${remote_sync_dir}/${now_date} in ${ipaddr}"
-						((i++))
-					done
-				done
-				break
-			else
-				sleep 1h
-			fi
-		done
+					${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+					--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+					--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
+					-f ${del_end_rsync_date} --logs-dir ${logs_dir} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
+					--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
+					--rsync-command-path ${work_dir}/bin/rsync.sh && \
+					echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}" || \
+					echo "[ERROR] Error delete history backup /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
+				elif [[ ${exit_code} = '111' ]];then
+					echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
+					break
+				elif [[ ${exit_code} = '124' ]];then
+					echo "[INFO] Timeout exit syncing in ${sync_dir} to ${ipaddr}"
+					break
+				else
+					echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
+					break
+				fi
+			done
+		fi
 	done
 
 }
 
+run_tasker(){
+	echo "[INFO] Starting scheduled tasks..."
+	echo "${cron_exp} echo runcron >${work_dir}/logs/runcron" > ${work_dir}/etc/tasker.conf
+	${work_dir}/bin/tasker -file ${work_dir}/etc/tasker.conf 2>/dev/null
+	if [[ $? != 0 ]];then
+		echo "[ERROR] Scheduled task start failed"
+		exit 111
+	fi
+}
+
 inotify_fun(){
 
-	if [[ ! -d ${sync_dir} ]];then
-		echo "[ERROR] No such file or directory ${sync_dir}"
-		exit
-	else
-		cd ${sync_dir}
-	fi
-
+	cd ${sync_dir}
 	if [[ -n ${exclude_file} ]];then
 		echo "[INFO] Start monitor ${sync_dir}"
 		inotifywait --exclude "${exclude_file}" -mrq --timefmt "%y-%m-%d_%H:%M:%S" --format "%T %Xe %w%f" -e create,delete,close_write,move ./ | while read time event file
@@ -162,6 +149,7 @@ rsync_fun(){
 		sleep ${real_time_sync_delay}
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
 			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-tmp.log
+
 			###START去除重复数据以及不必要的事件
 			##获取针对目录的事件并保留最新事件
 			grep -E 'DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR' ${logs_dir}/inotify-tmp.log | awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' > ${logs_dir}/dir-tmp.txt
@@ -186,6 +174,7 @@ rsync_fun(){
 
 			done < ${logs_dir}/dir-exe.txt
 			###END去除重复数据以及不必要的事件
+
 			###START逐行对变化的文件目录同步到rsynd服务端
 			cat ${logs_dir}/dir-exe.txt ${logs_dir}/file-exe.txt | while read line
 			do
@@ -208,7 +197,7 @@ rsync_fun(){
 					${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
 					--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
 					--rsync-root-dir ${sync_dir} --rsync-remote-dir ${remote_sync_dir} -f ${file} \
-					--logs-dir ${logs_dir} -e ${event} --rsync-timeout ${rsync_timeout} \
+					--logs-dir ${logs_dir} -e ${event} --rsync-timeout ${real_time_rsync_timeout} \
 					--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args \
 					\"${extra_rsync_args} --backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date}\" \
 					--rsync-command-path ${work_dir}/bin/rsync.sh;rm -rf ${logs_dir}/${lockfile}" &
@@ -239,6 +228,10 @@ run_ctl(){
 	do
 		remote_sync_dir=$(echo ${d} | awk -F '=' '{print$1}')
 		sync_dir=$(echo ${d} | awk -F '=' '{print$2}')
+		if [[ ! -d ${sync_dir} ]];then
+			echo "[ERROR] No such file or directory ${sync_dir}"
+			exit
+		fi
 		###获取当前目录监听排除
 		for e in ${exclude_file_rule[@]}
 		do
@@ -272,7 +265,11 @@ run_ctl(){
 			inotify_fun &
 		fi
 	done
-	rsync_fun
+	
+	if [[ ${full_rsync_enable} = "1" ]];then
+		run_tasker &
+	fi
+	rsync_fun 
 }
 
 program=$(basename $0)
@@ -286,7 +283,7 @@ ARGS=$(getopt -a -o f: -n "${program}" -- "$@")
 [[ $# -eq 0 ]] && usage && exit 1
 
 echo ${ARGS} | grep -qE '\-f'
-[[ $? -ne 0 ]] && echo 缺少参数 && usage && exit 1
+[[ $? -ne 0 ]] && usage && exit 1
 
 eval set -- "${ARGS}"
 while true

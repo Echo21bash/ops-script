@@ -39,7 +39,7 @@ rysnc_fun(){
 			timeout ${rsync_timeout} ${rsync_command_path} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir} 3>&1 1>&2 2>&3 | xargs -i echo "$(date +"%Y-%m-%d %H:%M:%S") cmd=${cmd} output={}" >>${rsync_tmp_dir}/${rsync_err_file}
 		else
 			#获取--include参数
-			i=0
+			i=1
 			while true
 			do
 				dirname=$(dirname "$file_dir" | head -1)

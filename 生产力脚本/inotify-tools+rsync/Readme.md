@@ -19,8 +19,10 @@
 > * inotify、rsync需要部署在需要同步的服务器；
 > * rsyncd需要部署在备份服务器用于接收客户端数据；
 > * inotify.sh脚本用于监听目录变化并处理重复事件；
-> * rsync.sh脚本用于对错误码24屏蔽；
+> * prsync.sh脚本是对rsync命令封装用于并发传输文件；
+> * rsync.sh脚本是对rsync命令简单封装；
 > * sersync.sh脚本用于根据传入的参数调用rsync与远程服务器(依赖rsyncd服务)进行数据增量同步；
+> * tasker是一个基于Go开发的cron表达式解析工具https://github.com/adhocore/gronx
 
 ## 备份服务安装
 
