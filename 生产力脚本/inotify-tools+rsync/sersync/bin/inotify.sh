@@ -118,7 +118,7 @@ full_rsync_fun(){
 run_tasker(){
 	echo "[INFO] Starting scheduled tasks..."
 	echo "${cron_exp} echo runcron >${work_dir}/logs/runcron" > ${work_dir}/etc/tasker.conf
-	${work_dir}/bin/tasker -file ${work_dir}/etc/tasker.conf -verbose 2>/dev/null
+	${work_dir}/bin/tasker -file ${work_dir}/etc/tasker.conf -verbose
 	if [[ $? != 0 ]];then
 		echo "[ERROR] Scheduled task start failed"
 		exit 111
