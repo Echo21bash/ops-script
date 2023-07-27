@@ -8,9 +8,9 @@ ENV PATH=$PATH:/usr/local/sersync/bin
 
 RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     chmod -R +x /usr/local/sersync/bin/* && \
-    ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     apt-get update && \
-    apt-get install -y rsync inotify-tools openssh-server && \
+    apt-get install -y tzdata rsync inotify-tools openssh-server && \
+    ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     apt-get clean all
 
