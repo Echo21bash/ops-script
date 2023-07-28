@@ -91,7 +91,7 @@ done < "${TMPDIR}/updatedir.all"
 # 忽略已经删除文件夹的文件
 while read size dir
 do
-	basedir=$(echo "${dir}" | xargs basename )
+	basedir=$(echo "${dir}" | sed -e 's/[]`!@#$%^&*(){}|\;:<>,. []/\\&/g' | xargs basename )
 	if [[ -n "${basedir}" ]];then
 		sed -i "/${basedir}/d" "${TMPDIR}/deletefile.all"
 	fi
@@ -168,12 +168,8 @@ echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
 SECONDS=0
 echo -e "${GREEN}[INFO] Starting transfers ...${NC}"
-find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" | (grep -v "${rsync_ignore_out}"|| true)
-find "${TMPDIR}" -type f -name "delete.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" | (grep -v "${rsync_ignore_out}"|| true)
-exit_code="$?"
-if [[ "${rsync_ignore_exit_code}" =~ "${exit_code}" ]];then
-	exit_code=0
-fi
+find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) || \
+find "${TMPDIR}" -type f -name "delete.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) 
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
-exit 0
+
 

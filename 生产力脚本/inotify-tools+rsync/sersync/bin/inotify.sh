@@ -15,7 +15,6 @@ run_script(){
 			echo "[INFO] Running the script ${work_dir}/scripts/${exec_shell_file}"
 			"${work_dir}/scripts/${exec_shell_file}"
 		fi
-
 	fi
 	
 }
@@ -89,6 +88,10 @@ full_rsync_fun(){
 				exit_code=$?
 				if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
 					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
+					if [[ ${exit_code} = '123' ]];then
+						echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs"
+						echo "[INFO] Warnings while transferring files in ${sync_dir} to ${ipaddr}"
+					fi
 					###删除${keep_history_backup_days}数据
 					del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
 					${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
@@ -183,7 +186,7 @@ rsync_fun(){
 				module_name=$(echo ${line} | awk -F ';' '{print$3}')
 				remote_sync_dir=$(echo ${line} | awk -F ';' '{print$4}')
 				event=$(echo ${line} | awk -F ';' '{print$5}')
-				file=$(echo "${line}" | awk -F ';' '{print$6}' | sed -e 's/[] (){}$&%*^!@#[]/\\&/g')
+				file=$(echo "${line}" | awk -F ';' '{print$6}' | sed -e 's/[]`!@#$%^&*(){}|\;:<>,. []/\\&/g')
 				##对变化的文件或者文档循环同步到不同的rsynd服务端
 				for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 				do
