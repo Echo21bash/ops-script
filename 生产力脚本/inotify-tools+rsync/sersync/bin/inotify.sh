@@ -57,9 +57,9 @@ full_rsync_first(){
 full_rsync_fun(){
 	cd ${sync_dir}
 	if [[ ${parallel_rsync_enable} = '1' ]];then
-		rsync_command_path=${work_dir}/bin/prsync.sh --parallel=${parallel_rsync_num}
+		rsync_command_path="${work_dir}/bin/prsync.sh --parallel=${parallel_rsync_num}"
 	else
-		rsync_command_path=${work_dir}/bin/rsync.sh
+		rsync_command_path="${work_dir}/bin/rsync.sh"
 	fi
 	old_changes_tatus=$(stat -c %z ${work_dir}/logs/runcron 2>/dev/null)
 	while true
