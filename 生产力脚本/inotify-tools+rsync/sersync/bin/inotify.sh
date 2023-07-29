@@ -57,7 +57,7 @@ full_rsync_first(){
 full_rsync_fun(){
 	cd ${sync_dir}
 	if [[ ${parallel_rsync_enable} = '1' ]];then
-		rsync_command_path=${work_dir}/bin/prsync.sh
+		rsync_command_path=${work_dir}/bin/prsync.sh --parallel=${parallel_rsync_num}
 	else
 		rsync_command_path=${work_dir}/bin/rsync.sh
 	fi
@@ -80,7 +80,7 @@ full_rsync_fun(){
 				echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
 				flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 				timeout ${full_rsync_timeout}h \
-				${rsync_command_path} --parallel=${parallel_rsync_num} -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
+				${rsync_command_path} -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
 				--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
 				--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 				${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir}/ && \
