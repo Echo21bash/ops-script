@@ -149,7 +149,7 @@ if [[ -s "${TMPDIR}/updatefile.all" ]];then
 	i=1
 	while read -r FSIZE FPATH;
 	do
-		result=$((${i}" % "${CHUNKS_SUM}))
+		result=$((${i} % ${CHUNKS_SUM}))
 		echo "${FPATH}" >> "${TMPDIR}/chunk.${result}"
 		((i++))
 	done < "${TMPDIR}/updatefile.all"
