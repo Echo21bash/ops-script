@@ -59,6 +59,7 @@ rsync "$@" --out-format="%l %n" --no-v --dry-run 2> /dev/null \
   > "${TMPDIR}/files.all"
 
 # check for nothing-to-do
+sed -i -e '/\.\/$/d' -e '/^sending/d' "${TMPDIR}/files.all"
 TOTAL_FILES=$(wc -l < "${TMPDIR}/files.all")
 TOTAL_SIZE=$(awk '{ts+=$1}END{printf "%.0f", ts}' < "${TMPDIR}/files.all")
 echo -e "${GREEN}[INFO] ${TOTAL_FILES} ($(( TOTAL_SIZE/1024**2 )) MB) files to transfer.${NC}"
@@ -66,7 +67,6 @@ if [ "${TOTAL_FILES}" -eq "0" ]; then
 	echo -e "${ORANGE}[WARN] Nothing to transfer :)${NC}"
 	exit 0
 fi
-
 
 # 将更新列表和删除列表分开
 sed '/^deleting/d' "${TMPDIR}/files.all" > "${TMPDIR}/update.all"
@@ -168,7 +168,7 @@ echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
 SECONDS=0
 echo -e "${GREEN}[INFO] Starting transfers ...${NC}"
-find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) || \
+find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) && \
 find "${TMPDIR}" -type f -name "delete.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) 
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
