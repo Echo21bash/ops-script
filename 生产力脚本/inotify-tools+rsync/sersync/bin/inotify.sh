@@ -226,6 +226,7 @@ rsync_fun(){
 		exec 5<>${fifo_file}
 		rm ${fifo_file}
 		##初始化任务队列
+		real_time_sync_parallel_num=${real_time_sync_parallel_num:-10}
 		for ((i=0;i<${real_time_sync_parallel_num};i++))
 		do
 			echo ""
