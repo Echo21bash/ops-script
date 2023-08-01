@@ -97,10 +97,10 @@ full_rsync_fun(){
 				exit_code=$?
 				if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
 					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
-					if [[ ${exit_code} = '123' ]];then
-						echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs"
-						echo "[INFO] Warnings while transferring files in ${sync_dir} to ${ipaddr}"
-					fi
+					###删除历史备份数据
+					delete_history_backup
+				elif [[ ${exit_code} = '123' ]];then
+					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs"
 					###删除历史备份数据
 					delete_history_backup
 				elif [[ ${exit_code} = '111' ]];then
@@ -121,18 +121,28 @@ full_rsync_fun(){
 
 delete_history_backup(){
 
-	###删除历史变更数据
-	del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
-	${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
-	--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
-	--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
-	-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
-	--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
-	--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
-	if [[ ${exit_code} = '0' || ${exit_code} = '123' ]];then
+	if [[ ${parallel_rsync_enable} = '1' ]];then
+		del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
+		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
+		-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
+		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
+		--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
+	else
+		del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
+		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
+		-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
+		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
+		--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
+	fi
+
+	if [[ ${exit_code} = '0' ]];then
 		echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
 	else
-		echo "[ERROR] Error delete history backup /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"8il/
+		echo "[ERROR] Some errors occurred while deleting historical backups /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
 	fi
 }
 
