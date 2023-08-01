@@ -51,7 +51,6 @@ elif [[ ${RUN_MODE} = 'sersync' ]];then
 	echo "${RSYNCD_PASSWD}" >/etc/rsync.passwd
 	chmod 600 /etc/rsync.passwd
 	#启动进程
-	/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf &
 	exec "$@"
-	tail -F /usr/local/sersync/logs/rsync-err.log
+	/usr/local/sersync/bin/inotify.sh -f /usr/local/sersync/etc/sersync.conf
 fi
