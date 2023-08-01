@@ -136,7 +136,7 @@ delete_history_backup(){
 		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
 		-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
 		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
-		--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
+		--rsync-command-path ${rsync_command_path}
 	fi
 
 	if [[ ${exit_code} = '0' ]];then
