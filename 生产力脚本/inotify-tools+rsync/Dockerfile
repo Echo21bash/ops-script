@@ -15,4 +15,6 @@ RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.l
     locale-gen zh_CN.UTF-8 && \
     apt-get clean all
 
+WORKDIR /usr/local/sersync/
+
 ENTRYPOINT ["docker-entrypoint.sh"]
