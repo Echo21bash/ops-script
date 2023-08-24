@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 set -o pipefail
 # Usage:
 #   rsync_parallel.sh [--parallel=N] [rsync args...]
@@ -88,6 +87,17 @@ do
 	fi
 done < "${TMPDIR}/updatedir.all"
 
+# 删除存在子目录关系的数据，保留父目录
+cp "${TMPDIR}/deletedir.all" "${TMPDIR}/deletedir.rsync"
+while read line
+do
+	basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
+	parentdir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
+	if [[ ${parentdir} != "." ]];then
+		grep -E "${parentdir}$" "${TMPDIR}/deletedir.all" && sed -i "/${parentdir}.${basedir}$/d" "${TMPDIR}/deletedir.rsync"
+	fi
+done < "${TMPDIR}/deletedir.all"
+
 # 忽略已经删除文件夹的文件
 while read size dir
 do
@@ -135,41 +145,20 @@ do
 		((i++))
 	done
 	((j++))
-done < <( cat "${TMPDIR}/deletefile.all" "${TMPDIR}/deletedir.all")
+done < <( cat "${TMPDIR}/deletefile.all" "${TMPDIR}/deletedir.rsync")
 
-for ((i=0;i<"${CHUNKS_SUM}";i++))
-do
-	if [[ -s "${TMPDIR}/deleteTmp.${i}" ]];then
-		sort -u "${TMPDIR}/deleteTmp.${i}" > "${TMPDIR}/delete.${i}"
-	fi
-done
-
-
-if [[ -s "${TMPDIR}/updatefile.all" ]];then
-	i=1
-	while read -r FSIZE FPATH;
-	do
-		result=$((${i} % ${CHUNKS_SUM}))
-		echo "${FPATH}" >> "${TMPDIR}/chunk.${result}"
-		((i++))
-	done < "${TMPDIR}/updatefile.all"
+if [[ -s "${TMPDIR}/updatefile.all" ]];then	
+	split -d -n ${CHUNKS_SUM} "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
 fi
 
 if [[ -s "${TMPDIR}/updatedirexe.all" ]];then
-	i=1
-	while read -r FSIZE FPATH;
-	do
-		result=$((${i} % ${CHUNKS_SUM}))
-		echo "${FPATH}" >> "${TMPDIR}/chunk.${result}"
-		((i++))
-	done < "${TMPDIR}/updatedirexe.all"
+	split -d -n ${CHUNKS_SUM} "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
 fi
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
 SECONDS=0
 echo -e "${GREEN}[INFO] Starting transfers ...${NC}"
 find "${TMPDIR}" -type f -name "chunk.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --files-from={} "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) && \
-find "${TMPDIR}" -type f -name "delete.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) 
+find "${TMPDIR}" -type f -name "deleteTmp.*" | xargs -I{} -P "${PARALLEL_RSYNC}" rsync --include-from={} --exclude="*" "$@" 2>&1 | (grep -Ev "${rsync_ignore_out}" || true) 
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
-
 

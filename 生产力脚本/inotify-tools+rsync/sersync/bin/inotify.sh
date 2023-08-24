@@ -78,6 +78,7 @@ full_rsync_fun(){
 
 		if [[ ${old_changes_tatus} != ${new_changes_tatus} ]];then
 			old_changes_tatus=${new_changes_tatus}
+			del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
 			run_script
 			for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 			do
@@ -122,7 +123,6 @@ full_rsync_fun(){
 delete_history_backup(){
 
 	if [[ ${parallel_rsync_enable} = '1' ]];then
-		del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
 		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
 		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
 		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
@@ -130,7 +130,6 @@ delete_history_backup(){
 		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
 		--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
 	else
-		del_end_rsync_date=$(date -d "-${keep_history_backup_days} day" +%Y-%m-%d)
 		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
 		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
 		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
@@ -138,7 +137,7 @@ delete_history_backup(){
 		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
 		--rsync-command-path ${rsync_command_path}
 	fi
-
+	exit_code=$?
 	if [[ ${exit_code} = '0' ]];then
 		echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
 	else
