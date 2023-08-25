@@ -89,12 +89,12 @@ done < "${TMPDIR}/updatedir.all"
 
 # 删除存在子目录关系的数据，保留父目录
 cp "${TMPDIR}/deletedir.all" "${TMPDIR}/deletedir.rsync"
-while read line
+while read size dir
 do
-	basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
-	parentdir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
+	basedir=$(echo "${dir}" | awk -F ';' '{print$6}' | xargs basename )
+	parentdir=$(echo "${dir}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
 	if [[ ${parentdir} != "." ]];then
-		grep -E "${parentdir}$" "${TMPDIR}/deletedir.all" && sed -i "/${parentdir}.${basedir}$/d" "${TMPDIR}/deletedir.rsync"
+		grep -E "${parentdir}$" "${TMPDIR}/deletedir.all" && sed -i "/${parentdir}\/${basedir}$/d" "${TMPDIR}/deletedir.rsync"
 	fi
 done < "${TMPDIR}/deletedir.all"
 
