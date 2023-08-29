@@ -68,8 +68,8 @@ if [ "${TOTAL_FILES}" -eq "0" ]; then
 fi
 
 # 将更新列表和删除列表分开
-sed '/^deleting/d' "${TMPDIR}/files.all" > "${TMPDIR}/update.all"
-sed '/^[0-9]/d' "${TMPDIR}/files.all" > "${TMPDIR}/delete.all"
+sed '/^deleting/d' "${TMPDIR}/files.all" | awk '{print $2}' > "${TMPDIR}/update.all"
+sed '/^[0-9]/d' "${TMPDIR}/files.all" | awk '{print $2}' > "${TMPDIR}/delete.all"
 
 # 将更新列表按照文件和目录分开
 sed '/\/$/d' "${TMPDIR}/update.all" > "${TMPDIR}/updatefile.all"
@@ -80,16 +80,16 @@ sed '/\/$/d' "${TMPDIR}/delete.all" > "${TMPDIR}/deletefile.all"
 sed '/\/$/!d' "${TMPDIR}/delete.all" > "${TMPDIR}/deletedir.all"
 
 # 筛选出不在文件更新列表的目录、只是创建了文件夹
-while read size dir
+while read dir
 do
 	if [[ -s "${TMPDIR}/updatefile.all" && -z $(grep "${dir}" "${TMPDIR}/updatefile.all") ]];then
-		echo "${size} ${dir}" >> "${TMPDIR}/updatedirexe.all"
+		echo "${dir}" >> "${TMPDIR}/updatedirexe.all"
 	fi
 done < "${TMPDIR}/updatedir.all"
 
 # 删除存在子目录关系的数据，保留父目录
 cp "${TMPDIR}/deletedir.all" "${TMPDIR}/deletedir.rsync"
-while read size dir
+while read dir
 do
 	basedir=$(echo "${dir}" | xargs basename )
 	parentdir=$(echo "${dir}" | xargs dirname | xargs basename )
@@ -99,7 +99,7 @@ do
 done < "${TMPDIR}/deletedir.all"
 
 # 忽略已经删除文件夹的文件
-while read size dir
+while read dir
 do
 	basedir=$(echo "${dir}" | sed -e 's/[]`!@#$%^&*(){}|\;:<>,. []/\\&/g' | xargs basename )
 	if [[ -n "${basedir}" ]];then
@@ -118,7 +118,7 @@ fi
 
 # 按照并发数量生成多个include-from文件
 j=1
-while read size dir
+while read dir
 do
 	olddir=${dir}
 	type=$(echo -n "${dir}" | grep -oE "/$" || true)
@@ -147,12 +147,14 @@ do
 	((j++))
 done < <( cat "${TMPDIR}/deletefile.all" "${TMPDIR}/deletedir.rsync")
 
-if [[ -s "${TMPDIR}/updatefile.all" ]];then	
-	split -d -n ${CHUNKS_SUM} "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
+if [[ -s "${TMPDIR}/updatefile.all" ]];then
+	rows_num=$(wc -l < "${TMPDIR}/updatefile.all")
+	split -d -l $((${CHUNKS_SUM}/${rows_num})) "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
 fi
 
 if [[ -s "${TMPDIR}/updatedirexe.all" ]];then
-	split -d -n ${CHUNKS_SUM} "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
+	rows_num=$(wc -l < "${TMPDIR}/updatedirexe.all")
+	split -d -l $((${CHUNKS_SUM}/${rows_num})) "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
 fi
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
