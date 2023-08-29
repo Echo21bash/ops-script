@@ -91,8 +91,8 @@ done < "${TMPDIR}/updatedir.all"
 cp "${TMPDIR}/deletedir.all" "${TMPDIR}/deletedir.rsync"
 while read size dir
 do
-	basedir=$(echo "${dir}" | awk -F ';' '{print$6}' | xargs basename )
-	parentdir=$(echo "${dir}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
+	basedir=$(echo "${dir}" | xargs basename )
+	parentdir=$(echo "${dir}" | xargs dirname | xargs basename )
 	if [[ ${parentdir} != "." ]];then
 		grep -E "${parentdir}$" "${TMPDIR}/deletedir.all" && sed -i "/${parentdir}\/${basedir}$/d" "${TMPDIR}/deletedir.rsync"
 	fi
