@@ -94,7 +94,7 @@ do
 	basedir=$(echo "${dir}" | xargs basename )
 	parentdir=$(echo "${dir}" | xargs dirname | xargs basename )
 	if [[ ${parentdir} != "." ]];then
-		grep -E "${parentdir}$" "${TMPDIR}/deletedir.all" && sed -i "/${parentdir}\/${basedir}$/d" "${TMPDIR}/deletedir.rsync"
+		grep -E "${parentdir}$|${parentdir}/$" "${TMPDIR}/deletedir.all" && sed -i -e "/${parentdir}\/${basedir}$/d" -e "/${parentdir}\/${basedir}\/$/d" "${TMPDIR}/deletedir.rsync"
 	fi
 done < "${TMPDIR}/deletedir.all"
 
