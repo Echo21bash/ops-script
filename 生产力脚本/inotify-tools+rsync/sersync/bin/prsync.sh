@@ -149,12 +149,20 @@ done < <( cat "${TMPDIR}/deletefile.all" "${TMPDIR}/deletedir.rsync")
 
 if [[ -s "${TMPDIR}/updatefile.all" ]];then
 	rows_num=$(wc -l < "${TMPDIR}/updatefile.all")
-	split -d -l $((${CHUNKS_SUM}/${rows_num})) "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
+	line_num=$((${rows_num}/${CHUNKS_SUM}))
+	if [[ ${line_num} = "0" ]];then
+		line_num = "1"
+	fi
+	split -d -l ${line_num} "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
 fi
 
 if [[ -s "${TMPDIR}/updatedirexe.all" ]];then
 	rows_num=$(wc -l < "${TMPDIR}/updatedirexe.all")
-	split -d -l $((${CHUNKS_SUM}/${rows_num})) "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
+	line_num=$((${rows_num}/${CHUNKS_SUM}))
+	if [[ ${line_num} = "0" ]];then
+		line_num = "1"
+	fi
+	split -d -l ${line_num} "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
 fi
 echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
