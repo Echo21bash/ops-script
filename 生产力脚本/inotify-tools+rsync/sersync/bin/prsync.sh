@@ -151,7 +151,7 @@ if [[ -s "${TMPDIR}/updatefile.all" ]];then
 	rows_num=$(wc -l < "${TMPDIR}/updatefile.all")
 	line_num=$((${rows_num}/${CHUNKS_SUM}))
 	if [[ ${line_num} = "0" ]];then
-		line_num = "1"
+		line_num="1"
 	fi
 	split -d -l ${line_num} "${TMPDIR}/updatefile.all" "${TMPDIR}/chunk.f"
 fi
@@ -160,7 +160,7 @@ if [[ -s "${TMPDIR}/updatedirexe.all" ]];then
 	rows_num=$(wc -l < "${TMPDIR}/updatedirexe.all")
 	line_num=$((${rows_num}/${CHUNKS_SUM}))
 	if [[ ${line_num} = "0" ]];then
-		line_num = "1"
+		line_num="1"
 	fi
 	split -d -l ${line_num} "${TMPDIR}/updatedirexe.all" "${TMPDIR}/chunk.d"
 fi
