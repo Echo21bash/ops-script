@@ -222,6 +222,226 @@ Prometheus+grafana
 
 # GreenPlum维护
 
+## 基础命令
+
+### 用户与角色
+
+```sql
+---查看用户信息
+select * from pg_user;
+---新增用户
+create user tableau with nosuperuser nocreatedb password 'tableau';
+---更改密码
+alter user gpadmin with password 'gpadmin';
+
+```
+
+### 连接数
+
+```sql
+---获取锁信息
+select * from gp_toolkit.gp_locks_on_relation;
+---获取当前正在运行的SQL
+select * from pg_stat_activity;
+---获取当前活跃的连接数
+select count(*) from pg_stat_activity where state = 'active';
+
+---长事务查询
+SELECT
+  pid,
+  client_addr,
+  usename,
+  datname,
+  waiting,
+  clock_timestamp() - xact_start AS xact_age,
+  clock_timestamp() - query_start AS query_age,
+  state,
+  query
+FROM
+  pg_stat_activity
+WHERE
+  (
+    now() - xact_start > interval '10 sec'
+    OR now() - query_start > interval '10 sec'
+  )
+  AND query !~ '^COPY'
+  AND state LIKE '%transaction%'
+ORDER BY
+  coalesce(xact_start, query_start);
+  
+---长连接查询
+SELECT
+  pid,
+  client_addr,
+  usename,
+  datname,
+  waiting,
+  clock_timestamp() - xact_start AS xact_age,
+  clock_timestamp() - query_start AS query_age,
+  state,
+  query
+FROM
+  pg_stat_activity
+WHERE
+  (
+    now() - xact_start > interval '1 day'
+    OR now() - query_start > interval '1 day'
+  )
+  AND query !~ '^COPY'
+  AND NOT STATE LIKE '%transaction%'
+ORDER BY
+  coalesce(xact_start, query_start);
+```
+
+### 数据表维护
+
+```sql
+---查看表的存储结构
+select distinct relstorage from pg_class;
+--- a  -- 行存储AO表    
+--- h  -- heap堆表、索引    
+--- x  -- 外部表(external table)    
+--- v  -- 视图    
+--- c  -- 列存储AO表
+
+---查询当前数据库有哪些AO表
+select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relnamespace=t2.oid and relstorage in ('c', 'a');
+
+---查询当前数据库有哪些HEAP表
+select t2.nspname, t1.relname from pg_class t1, pg_namespace t2 where t1.relnamespace=t2.oid and relstorage in ('h');
+
+---查询表大小
+select pg_size_pretty(pg_relation_size('schemaname.tablename'));
+
+---查询当前库所有表大小
+SELECT
+	table_schema || '.' || TABLE_NAME AS table_full_name,
+	pg_size_pretty ( pg_total_relation_size ( '"' || table_schema || '"."' || TABLE_NAME || '"' ) ) AS SIZE 
+FROM
+	information_schema.tables 
+ORDER BY
+	pg_total_relation_size ( '"' || table_schema || '"."' || TABLE_NAME || '"' ) DESC;
+	
+---查询当前库所有表大小	
+SELECT
+    pg_size_pretty(pg_total_relation_size(c.oid)) AS total_size,
+    pg_size_pretty(pg_indexes_size(c.oid)) AS index_size,
+    pg_size_pretty(pg_total_relation_size(c.oid) - pg_indexes_size(c.oid)) AS data_size,
+    nspname AS schema_name,
+    relname AS table_name
+FROM
+    pg_class c
+LEFT JOIN
+    pg_namespace n ON n.oid = c.relnamespace
+WHERE
+    relkind = 'r'
+    AND nspname NOT LIKE 'pg_%'
+    AND nspname != 'information_schema'
+ORDER BY
+    pg_total_relation_size(c.oid) DESC;
+    
+--单个库大小
+select pg_size_pretty(pg_database_size('dbname'));
+--所有库大小
+select datname,pg_size_pretty(pg_database_size(datname)) from pg_database;
+
+---查看表状态
+select * from pg_stat_all_tables;
+```
+
+### 节点维护
+
+```sql
+select * from gp_segment_configuration;
+```
+
+### 集群维护
+
+#### gpstate命令
+
+```shell
+gpstate
+命令     参数   作用 
+gpstate -b => 显示简要状态
+gpstate -c => 显示主镜像映射
+gpstart -d => 指定数据目录（默认值：$MASTER_DATA_DIRECTORY）
+gpstate -e => 显示具有镜像状态问题的片段
+gpstate -f => 显示备用主机详细信息
+gpstate -i => 显示GRIPLUM数据库版本
+gpstate -m => 显示镜像实例同步状态
+gpstate -p => 显示使用端口
+gpstate -Q => 快速检查主机状态
+gpstate -s => 显示集群详细信息
+gpstate -v => 显示详细信息
+
+```
+
+#### gpconfig命令
+
+```shell
+命令    参数                              作用
+gpconfig -c => --change param_name  通过在postgresql.conf 文件的底部添加新的设置来改变配置参数的设置。
+gpconfig -v => --value value 用于由-c选项指定的配置参数的值。默认情况下，此值将应用于所有Segment及其镜像、Master和后备Master。
+gpconfig -m => --mastervalue master_value 用于由-c 选项指定的配置参数的Master值。如果指定，则该值仅适用于Master和后备Master。该选项只能与-v一起使用。
+gpconfig -masteronly =>当被指定时，gpconfig 将仅编辑Master的postgresql.conf文件。
+gpconfig -r => --remove param_name 通过注释掉postgresql.conf文件中的项删除配置参数。
+gpconfig -l => --list 列出所有被gpconfig工具支持的配置参数。
+gpconfig -s => --show param_name 显示在Greenplum数据库系统中所有实例（Master和Segment）上使用的配置参数的值。如果实例中参数值存在差异，则工具将显示错误消息。使用-s=>选项运行gpconfig将直接从数据库中读取参数值，而不是从postgresql.conf文件中读取。如果用户使用gpconfig 在所有Segment中设置配置参数，然后运行gpconfig -s来验证更改，用户仍可能会看到以前的（旧）值。用户必须重新加载配置文件（gpstop -u）或重新启动系统（gpstop -r）以使更改生效。
+gpconfig --file => 对于配置参数，显示在Greenplum数据库系统中的所有Segment（Master和Segment）上的postgresql.conf文件中的值。如果实例中的参数值存在差异，则工具会显示一个消息。必须与-s选项一起指定。
+gpconfig --file-compare 对于配置参数，将当前Greenplum数据库值与主机（Master和Segment）上postgresql.conf文件中的值进行比较。
+gpconfig --skipvalidation 覆盖gpconfig的系统验证检查，并允许用户对任何服务器配置参数进行操作，包括隐藏参数和gpconfig无法更改的受限参数。当与-l选项（列表）一起使用时，它显示受限参数的列表。 警告： 使用此选项设置配置参数时要格外小心。
+gpconfig --verbose 在gpconfig命令执行期间显示额外的日志信息。
+gpconfig --debug 设置日志输出级别为调试级别。
+gpconfig -? | -h | --help 显示在线帮助。
+```
+
+#### gpstart命令
+
+```shell
+命令     参数   作用 
+gpstart -a => 快速启动
+gpstart -d => 指定数据目录（默认值：$MASTER_DATA_DIRECTORY）
+gpstart -q => 在安静模式下运行。命令输出不显示在屏幕，但仍然写入日志文件。
+gpstart -m => 以维护模式连接到Master进行目录维护。例如：$ PGOPTIONS='-c gp_session_role=utility' psql postgres
+gpstart -R => 管理员连接
+gpstart -v => 显示详细启动信息
+```
+
+#### gpstop命令
+
+```shell
+命令     参数   作用 
+gpstop -a => 快速停止
+gpstop -d => 指定数据目录（默认值：$MASTER_DATA_DIRECTORY）
+gpstop -m => 维护模式
+gpstop -q => 在安静模式下运行。命令输出不显示在屏幕，但仍然写入日志文件。
+gpstop -r => 停止所有实例，然后重启系统
+gpstop -u => 重新加载配置文件 postgresql.conf 和 pg_hba.conf
+gpstop -v => 显示详细启动信息
+gpstop -M fast          => 快速关闭。正在进行的任何事务都被中断。然后滚回去。
+gpstop -M immediate     => 立即关闭。正在进行的任何事务都被中止。不推荐这种关闭模式，并且在某些情况下可能导致数据库损坏需要手动恢复。
+gpstop -M smart         => 智能关闭。如果存在活动连接，则此命令在警告时失败。这是默认的关机模式。
+gpstop --host hostname  => 停用segments数据节点，不能与-m、-r、-u、-y同时使用 
+```
+
+#### gprecoverseg命令
+
+```shell
+命令     参数   作用 
+gprecoverseg -a => 快速恢复
+gprecoverseg -F => 全量恢复
+gprecoverseg -i => 指定恢复文件
+gprecoverseg -d => 指定数据目录
+gprecoverseg -l => 指定日志文件
+gprecoverseg -r => 平衡数据
+gprecoverseg -s => 指定配置空间文件
+gprecoverseg -o => 指定恢复配置文件
+gprecoverseg -p => 指定额外的备用机
+gprecoverseg -S => 指定输出配置空间文件
+```
+
+
+
 ## 数据表维护
 
 ### 数据表统计信息优化
@@ -271,6 +491,28 @@ Prometheus+grafana
   4）执行vacuum后，最好对表上的索引进行重建
 
 **注意：** *在执行vacuum时如有未释放的事务时垃圾回收会失败，需要将所有事务中断执行，最好在夜晚执行*
+
+```sql
+---查看表膨胀率 脏数据大于1万条按照膨胀率降序打印20条
+SELECT
+  schemaname || '.' || relname as table_name,
+  pg_size_pretty(
+    pg_relation_size('"' || schemaname || '"' || '.' || relname)
+  ) as table_size,
+  n_dead_tup,
+  n_live_tup,
+  round(n_dead_tup * 100 / (n_live_tup + n_dead_tup), 2) AS dead_tup_ratio
+FROM
+  pg_stat_all_tables
+WHERE
+  n_dead_tup >= 10000
+ORDER BY
+  dead_tup_ratio DESC
+LIMIT
+  20;
+```
+
+
 
 ## 集群维护
 
@@ -650,5 +892,24 @@ gw_sdw3:gw_sdw3:40005:/data/primary/gpseg17:19:17:p
 ```shell
 [gpadmin@gw_mdw1 ~]$ gpexpand -a -S -t /tmp -v -n 1
 ```
+
+## 备份与恢复
+
+### 备份
+
+```shell
+全量备份
+gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data
+增量备份
+gpbackup --dbname test1 --backup-dir /tmp --leaf-partition-data --incremental
+```
+
+### 恢复
+
+```shell
+gprestore --backup-dir /tmp --timestamp 20200707144340 --redirect-db test2 --data-only --incremental
+```
+
+
 
 更多参考http://docs-cn.greenplum.org/v6/homenav.html
