@@ -165,10 +165,10 @@ inotify_fun(){
 		do
 			case ${event} in
 			DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR)
-				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-file.log
+				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-dir.log
 			;;
 			CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|DELETE|MOVED_FROM)
-				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-dir.log
+				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-file.log
 			;;
 			esac
 		done
@@ -178,10 +178,10 @@ inotify_fun(){
 		do
 			case ${event} in
 			DELETEXISDIR|MOVED_FROMXISDIR|MOVED_TOXISDIR|CREATEXISDIR)
-				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-file.log
+				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-dir.log
 			;;
 			CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|DELETE|MOVED_FROM)
-				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-dir.log
+				echo "${time};${sync_dir};${module_name};${remote_sync_dir};${event};${file};" >> ${logs_dir}/inotify-file.log
 			;;
 			esac
 		done
@@ -195,38 +195,51 @@ rsync_fun(){
 	while true
 	do
 		sleep ${real_time_sync_delay}
+		tmpdir=$(mktemp -d -p ${logs_dir})
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
-			\mv ${logs_dir}/inotify-file.log ${logs_dir}/inotify-file-tmp.log
-			##获取针对文件的事件并保留最新事件
-			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${logs_dir}/inotify-file-tmp.log > ${logs_dir}/file-tmp.txt
-		elif [[  -s ${logs_dir}/inotify-dir.log ]];then
-			\mv ${logs_dir}/inotify-dir.log ${logs_dir}/inotify-dir-tmp.log
-			##获取针对目录的事件并保留最新事件
-			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${logs_dir}/inotify-dir-tmp.log > ${logs_dir}/dir-tmp.txt
-		elif [[ ! -s ${logs_dir}/inotify-file.log && ! -s ${logs_dir}/inotify-dir.log ]];then
+			\mv ${logs_dir}/inotify-file.log ${tmpdir}/inotify-file-tmp.log
+		fi
+		if [[  -s ${logs_dir}/inotify-dir.log ]];then
+			\mv ${logs_dir}/inotify-dir.log ${tmpdir}/inotify-dir-tmp.log
+		fi
+		if [[ ! -s ${tmpdir}/inotify-file-tmp.log && ! -s ${tmpdir}/inotify-dir-tmp.log ]];then
+			rm -rf "${tmpdir}"
 			continue
 		fi
 		
+		if [[ -s ${tmpdir}/inotify-file-tmp.log ]];then
+			##获取针对文件的事件并保留最新事件
+			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${tmpdir}/inotify-file-tmp.log > ${tmpdir}/file-tmp.txt
+		fi
+		if [[  -s ${tmpdir}/inotify-dir-tmp.log ]];then
+			##获取针对目录的事件并保留最新事件
+			awk -F ';' '{a[$6]=$0}END{for(i in a){print a[i]}}' ${tmpdir}/inotify-dir-tmp.log > ${tmpdir}/dir-tmp.txt
+		fi
 		###START去除重复数据以及不必要的事件
-		\cp ${logs_dir}/dir-tmp.txt ${logs_dir}/dir-exe.txt
-		##删除存在子目录关系的数据，保留父目录
-		while read line
-		do
-			basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
-			parentdir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
-			if [[ ${parentdir} != "." ]];then
-				grep -E "${parentdir}$" ${logs_dir}/dir-tmp.txt && sed -i "/${parentdir}.${basedir}$/d" ${logs_dir}/dir-exe.txt
-			fi
-		done < ${logs_dir}/dir-tmp.txt
-		\cp ${logs_dir}/file-tmp.txt ${logs_dir}/file-exe.txt
-		##删除已经有目录事件所对应的文件事件
-		while read line
-		do
-			basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
-			sed -i "/${basedir}/d" ${logs_dir}/file-exe.txt
-		done < ${logs_dir}/dir-exe.txt
-		###END去除重复数据以及不必要的事件
-
+		if [[ -s ${tmpdir}/dir-tmp.txt ]];then
+			\cp ${tmpdir}/dir-tmp.txt ${tmpdir}/dir-exe.txt
+			##删除存在子目录关系的数据，保留父目录
+			while read line
+			do
+				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
+				parentdir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs dirname | xargs basename )
+				if [[ ${parentdir} != "." ]];then
+					grep -E "${parentdir};$" ${tmpdir}/dir-tmp.txt && sed -i "/${parentdir}.${basedir};$/d" ${tmpdir}/dir-exe.txt
+				fi
+			done < ${tmpdir}/dir-tmp.txt
+		fi
+		if [[ -s ${tmpdir}/file-tmp.txt ]];then
+			\cp ${tmpdir}/file-tmp.txt ${tmpdir}/file-exe.txt
+		fi
+		if [[ -s ${tmpdir}/file-tmp.txt && -s ${tmpdir}/dir-tmp.txt ]];then
+			##删除已经有目录事件所对应的文件事件
+			while read line
+			do
+				basedir=$(echo "${line}" | awk -F ';' '{print$6}' | xargs basename )
+				sed -i "/${basedir}/d" ${tmpdir}/file-exe.txt
+			done < ${tmpdir}/dir-exe.txt
+			###END去除重复数据以及不必要的事件
+		fi
 		###START逐行对变化的文件目录同步到rsynd服务端
 		fifo_file=rsync.pipe
 		##创建管道符
@@ -247,12 +260,14 @@ rsync_fun(){
 				sersync_call
 				echo "" >&5
 			} &
-		done < <( cat ${logs_dir}/dir-exe.txt ${logs_dir}/file-exe.txt)
+		done < <( cat ${tmpdir}/dir-exe.txt ${tmpdir}/file-exe.txt 2>/dev/null)
 		##等待所有子进程执行完毕
 		wait
 		##关闭任务队列
 		exec 5>&-
 		###END逐行对变化的文件目录同步到rsynd服务端
+		cat ${tmpdir}/dir-exe.txt ${tmpdir}/file-exe.txt 2>/dev/null >>${logs_dir}/rsync-history.log
+		rm -rf ${tmpdir}
 	done
 }
 
