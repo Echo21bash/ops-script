@@ -97,7 +97,7 @@ wget https://repo.openeuler.org/openEuler-22.03-LTS/OS/x86_64/Packages/kernel-so
 yum install ./kernel-source-5.10.0-60.18.0.50.oe2203.x86_64.rpm -y
 ###打包为ocfs2-1.8.0
 cp -rp /usr/src/linux-5.10.0-60.18.0.50.oe2203.x86_64/fs/ocfs2/ ocfs2-1.8.0
-tar zcf ocfs2-1.8.0.tar.gz
+tar zcf ocfs2-1.8.0.tar.gz ocfs2-1.8.0
 ```
 
 #### 证书签名
