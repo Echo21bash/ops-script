@@ -181,10 +181,10 @@ chmod -R +x /usr/local/sersync/bin
 ###配置守护进程
 cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
 #########################################通用配置#########################################
-#工作目录一般不修改
+#工作目录一般不修改，是sersync软件的安装目录。
 work_dir=/usr/local/sersync
 
-#日志目录一般不修改
+#日志目录一般不修改，用于存放运行过程中的日志文件。
 logs_dir=${work_dir}/logs
 #########################################通用配置#########################################
 
@@ -207,21 +207,30 @@ real_time_sync_enable=1
 #实时同步延时(单位s)，实时同步开启后生效，作为实时同步周期。
 real_time_sync_delay=60
 
+#实时同步并发数，根据服务器资源配置，默认为10，不建议过高。
+#real_time_sync_parallel_num=10
+
+#实时同步超时时间(s)
+real_time_rsync_timeout=180
+
 #开启周期性全量同步，定期对整个目录进行同步。完成首次全量同步后，周期性全量同步只是同步变化的数据
 full_rsync_enable=1
 
-#全量同步周期(单位d)
-full_rsync_interval=3
+#周期性全量同步多线程数量，默认是CPU等于核数。
+#full_rsync_parallel_rsync_num=10
 
-#全量同步超时时间单位h
+#全量同步超时时间，超过该时间后将推出同步进程，单位是小时（h）
 full_rsync_timeout=12
+
+#全量同步cron表达式，配置格式同linux定时任务cron时间格式。
+cron_exp="05 23 * * *"
 
 #rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应多个待同步目录逗号
 #分隔，要求模式名称唯一，一个待同步目录只能对应一个模块，否则第一个生效。
 rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
 
-#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
-rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
+#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份。
+rsyncd_ip=('backup1=127.0.0.1:873' 'backup2=127.0.0.1:873,192.168.0.163:873')
 
 #rsync同步的用户
 rsync_user=rsync
@@ -229,26 +238,23 @@ rsync_user=rsync
 #rsync密码文件
 rsync_passwd_file=/etc/rsync.passwd
 
-#同步超时时间
-rsync_timeout=180
-
-#传输限速
-rsync_bwlimit=50M
+#单个rsync进程传输限速，总的带宽速率为并发数量乘以单个进程带宽限速。
+rsync_bwlimit=10M
 
 #rsync额外参数，建议开启--partial、--append-verify、--ignore-missing-args，当前已开启必要参数
-#-rlptDRu --delete
-extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
+#-rlptDR --delete
+extra_rsync_args="-v --partial --append-verify --ignore-missing-args --contimeout 120"
 
 #保留多少天内的历史备份(单位d)，防止误删源文件导致数据丢失，备份目录为rsynd模块下/history-backup/，
-#建议大于全量同步周期full_rsync_interval的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。
+#建议大于全量同步周期cron_exp配置的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。使用rsync
+#的--backup和--backup-dir参数实现
 keep_history_backup_days=7
 #########################################同步配置#########################################
 
 #########################################其他配置#########################################
 #开启额外脚本执行,全量同步前会执行，可用于备份数据库、生成逻辑备份文件、清除无用文件等操作
 exec_command_enable=0
-
-#监听目录对应的脚本名称，在scripts目录创建对应的脚本即可
+#监听目录对应的脚本名称
 #exec_command_list=('/data/file=clean_file.sh' '/data/img=clean_img.sh')
 #########################################其他配置#########################################
 EOF
@@ -298,10 +304,10 @@ chmod  600 /etc/rsync.passwd
 mkdir -p /usr/local/sersync/{bin,etc,logs}
 cat > /usr/local/sersync/etc/sersync.conf <<'EOF'
 #########################################通用配置#########################################
-#工作目录一般不修改
+#工作目录一般不修改，是sersync软件的安装目录。
 work_dir=/usr/local/sersync
 
-#日志目录一般不修改
+#日志目录一般不修改，用于存放运行过程中的日志文件。
 logs_dir=${work_dir}/logs
 #########################################通用配置#########################################
 
@@ -324,21 +330,30 @@ real_time_sync_enable=1
 #实时同步延时(单位s)，实时同步开启后生效，作为实时同步周期。
 real_time_sync_delay=60
 
+#实时同步并发数，根据服务器资源配置，默认为10，不建议过高。
+#real_time_sync_parallel_num=10
+
+#实时同步超时时间(s)
+real_time_rsync_timeout=180
+
 #开启周期性全量同步，定期对整个目录进行同步。完成首次全量同步后，周期性全量同步只是同步变化的数据
 full_rsync_enable=1
 
-#全量同步周期(单位d)
-full_rsync_interval=3
+#周期性全量同步多线程数量，默认是CPU等于核数。
+#full_rsync_parallel_rsync_num=10
 
-#全量同步超时时间单位h
+#全量同步超时时间，超过该时间后将推出同步进程，单位是小时（h）
 full_rsync_timeout=12
+
+#全量同步cron表达式，配置格式同linux定时任务cron时间格式。
+cron_exp="05 23 * * *"
 
 #rsyncd模块与监听目录备份关系，格式[模式名=监听目录,监听目录]一个模式可以对应多个待同步目录逗号
 #分隔，要求模式名称唯一，一个待同步目录只能对应一个模块，否则第一个生效。
 rsyncd_mod=('backup1=/data/file,/data/db' 'backup2=/data/img')
 
-#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份
-rsyncd_ip=('backup1=127.0.0.1' 'backup2=127.0.0.1,192.168.0.163')
+#模块所在主机地址支持多个地址使用逗号分隔，多个地址实现多份备份。
+rsyncd_ip=('backup1=127.0.0.1:873' 'backup2=127.0.0.1:873,192.168.0.163:873')
 
 #rsync同步的用户
 rsync_user=rsync
@@ -346,26 +361,23 @@ rsync_user=rsync
 #rsync密码文件
 rsync_passwd_file=/etc/rsync.passwd
 
-#同步超时时间
-rsync_timeout=180
-
-#传输限速
-rsync_bwlimit=50M
+#单个rsync进程传输限速，总的带宽速率为并发数量乘以单个进程带宽限速。
+rsync_bwlimit=10M
 
 #rsync额外参数，建议开启--partial、--append-verify、--ignore-missing-args，当前已开启必要参数
-#-rlptDRu --delete
-extra_rsync_args="-v --partial --append-verify --ignore-missing-args"
+#-rlptDR --delete
+extra_rsync_args="-v --partial --append-verify --ignore-missing-args --contimeout 120"
 
 #保留多少天内的历史备份(单位d)，防止误删源文件导致数据丢失，备份目录为rsynd模块下/history-backup/，
-#建议大于全量同步周期full_rsync_interval的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。
+#建议大于全量同步周期cron_exp配置的时间否则在未开启实时同步时，数据有误删除无法恢复的风险。使用rsync
+#的--backup和--backup-dir参数实现
 keep_history_backup_days=7
 #########################################同步配置#########################################
 
 #########################################其他配置#########################################
 #开启额外脚本执行,全量同步前会执行，可用于备份数据库、生成逻辑备份文件、清除无用文件等操作
 exec_command_enable=0
-
-#监听目录对应的脚本名称，在scripts目录创建对应的脚本即可
+#监听目录对应的脚本名称
 #exec_command_list=('/data/file=clean_file.sh' '/data/img=clean_img.sh')
 #########################################其他配置#########################################
 EOF
@@ -426,3 +438,8 @@ RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
 
 * 更换ubuntu为基础镜像
 * 新增执行额外脚本功能
+
+2024-02-29
+
+* 优化脚本
+* 新增promethues监控指标

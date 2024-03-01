@@ -24,52 +24,53 @@ run_script(){
 full_rsync_first(){
 
 	cd ${sync_dir}
-	if [[ ${parallel_rsync_enable} = '1' ]];then
-		rsync_command_path="${work_dir}/bin/prsync.sh"
-		other_extra_args="--parallel=${parallel_rsync_num}"
-	else
-		rsync_command_path="${work_dir}/bin/rsync.sh"
-	fi
+	rsync_command_path="${work_dir}/bin/prsync.sh"
+	other_extra_args="--parallel=${parallel_rsync_num}"
 	run_script
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
-		rsync_date=$(date +%Y-%m-%d)
+		rsync_current_date=$(date +%Y-%m-%d)
+		rsync_start_time=$(date "+%Y-%m-%d %H:%M:%S")
 		rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 		rsyncd_port=${rsyncd_port:-873}
 		lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
+		###声明变量用于子进程引用
+		export rsyncd_ipaddr=${rsyncd_ip}
+		export remote_sync_dir=${remote_sync_dir}
 		echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
+		SECONDS=0
 		flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 		timeout ${full_rsync_timeout}h \
 		${rsync_command_path} ${other_extra_args} -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
-		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
+		--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_current_date} \
 		--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 		${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir}/ && \
-		rm -rf ${logs_dir}/${lockfile}"
-		exit_code=$?
-		if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
-			echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
-		elif [[ ${exit_code} = '111' ]];then
+		rm -rf ${logs_dir}/${lockfile}" > ${logs_dir}/${remote_sync_dir}.log
+		full_rsync_exit_code=$?
+		rsync_duration_time=${SECONDS}
+		if [[ ${full_rsync_exit_code} = '0' || ${full_rsync_exit_code} = '24' ]];then
+			echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr} DONE (${rsync_duration_time}s)"
+		elif [[ ${full_rsync_exit_code} = '123' ]];then
+			echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs DONE (${rsync_duration_time}s)"
+		elif [[ ${full_rsync_exit_code} = '111' ]];then
 			echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
-		elif [[ ${exit_code} = '124' ]];then
+		elif [[ ${full_rsync_exit_code} = '124' ]];then
 			echo "[INFO] Timeout exit syncing in ${sync_dir} to ${ipaddr}"
 		else
 			echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
 		fi
-
+		make_monitoring_data
 	done
 
 }
 
-
 full_rsync_fun(){
+
 	cd ${sync_dir}
-	if [[ ${parallel_rsync_enable} = '1' ]];then
-		rsync_command_path="${work_dir}/bin/prsync.sh"
-		other_extra_args="--parallel=${parallel_rsync_num}"
-	else
-		rsync_command_path="${work_dir}/bin/rsync.sh"
-	fi
+	rsync_command_path="${work_dir}/bin/prsync.sh"
+	other_extra_args="--parallel=${parallel_rsync_num}"
+
 	old_changes_tatus=$(stat -c %z ${work_dir}/logs/runcron 2>/dev/null)
 	while true
 	do
@@ -82,38 +83,45 @@ full_rsync_fun(){
 			run_script
 			for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 			do
-				rsync_date=$(date +%Y-%m-%d)
+				rsync_current_date=$(date +%Y-%m-%d)
+				rsync_start_time=$(date "+%s")
 				rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 				rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 				rsyncd_port=${rsyncd_port:-873}
 				lockfile=$(echo -n "${sync_dir}${rsyncd_ip}" | md5sum | awk '{print $1}')
+				###声明变量用于子进程引用
+				export rsyncd_ipaddr=${rsyncd_ip}
+				export remote_sync_dir=${remote_sync_dir}
 				echo "[INFO] Syncing ${sync_dir} in full to ${ipaddr}..."
+				SECONDS=0
 				flock -n -x -E 111 ${logs_dir}/${lockfile} -c "
 				timeout ${full_rsync_timeout}h \
 				${rsync_command_path} ${other_extra_args} -rlptDR --delete --port=${rsyncd_port} ${extra_rsync_args} \
-				--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_date} \
+				--backup --backup-dir=/history-backup/${remote_sync_dir}/${rsync_current_date} \
 				--bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} ./ \
 				${rsync_user}@${rsyncd_ip}::${module_name}/${remote_sync_dir}/ && \
-				rm -rf ${logs_dir}/${lockfile}"
-				exit_code=$?
-				if [[ ${exit_code} = '0' || ${exit_code} = '24' ]];then
-					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr}"
+				rm -rf ${logs_dir}/${lockfile}" > ${logs_dir}/${remote_sync_dir}.log
+				full_rsync_exit_code=$?
+				rsync_duration_time=${SECONDS}
+				if [[ ${full_rsync_exit_code} = '0' || ${full_rsync_exit_code} = '24' ]];then
+					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr} DONE (${rsync_duration_time}s)"
 					###删除历史备份数据
 					delete_history_backup
-				elif [[ ${exit_code} = '123' ]];then
-					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs"
+				elif [[ ${full_rsync_exit_code} = '123' ]];then
+					echo "[INFO] Full sync ${sync_dir} complete to ${ipaddr},but there are warnings,please check the logs DONE (${rsync_duration_time}s)"
 					###删除历史备份数据
 					delete_history_backup
-				elif [[ ${exit_code} = '111' ]];then
+				elif [[ ${full_rsync_exit_code} = '111' ]];then
 					echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
 					break
-				elif [[ ${exit_code} = '124' ]];then
+				elif [[ ${full_rsync_exit_code} = '124' ]];then
 					echo "[INFO] Timeout exit syncing in ${sync_dir} to ${ipaddr}"
 					break
 				else
 					echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
 					break
 				fi
+				make_monitoring_data
 			done
 		fi
 	done
@@ -121,34 +129,62 @@ full_rsync_fun(){
 }
 
 delete_history_backup(){
-
-	if [[ ${parallel_rsync_enable} = '1' ]];then
-		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
-		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
-		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
-		-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
-		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
-		--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
-	else
-		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
-		--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
-		--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
-		-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
-		--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
-		--rsync-command-path ${rsync_command_path}
-	fi
-	exit_code=$?
-	if [[ ${exit_code} = '0' ]];then
-		echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
+	SECONDS=0
+	echo "[INFO] Start delete history backup /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
+	${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
+	--rsyncd-ip ${rsyncd_ip} --rsyncd-port ${rsyncd_port} --passwd-file ${rsync_passwd_file} \
+	--rsync-root-dir ${logs_dir}/empty --rsync-remote-dir /history-backup/${remote_sync_dir} \
+	-f ${del_end_rsync_date} -e DELETEXISDIR --rsync-timeout ${full_rsync_timeout}h \
+	--rsync-bwlimit ${rsync_bwlimit} --rsync-extra-args "${extra_rsync_args}" \
+	--rsync-command-path ${rsync_command_path} --other-extra-args ${other_extra_args}
+	delete_history_exit_code=$?
+	if [[ ${delete_history_exit_code} = '0' ]];then
+		echo "[INFO] Delete history backup complete /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr} DONE (${SECONDS}s)"
+	elif [[ ${delete_history_exit_code} = '124' ]];then
+		echo "[INFO] Timeout delete history backup /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
 	else
 		echo "[ERROR] Some errors occurred while deleting historical backups /history-backup/${remote_sync_dir}/${del_end_rsync_date} in ${ipaddr}"
 	fi
 }
 
+make_monitoring_data(){
+	rsync_files_num=$(grep -oE '[0-9]+ \([0-9]+ MB\)' ${logs_dir}/${remote_sync_dir}.log | grep -oE '^[0-9]+')
+	rsync_files_size=$(grep -oE '[0-9]+ \([0-9]+ MB\)' ${logs_dir}/${remote_sync_dir}.log | grep -oE '[0-9]+ MB' | grep -oE '[0-9]+')
+	if [[ ${full_rsync_exit_code} != "0" ]];then
+		rsync_status="1"
+	else
+		rsync_status=${full_rsync_exit_code}
+	fi
+	if [[ ! -d ${textfile_collector_dir} ]];then
+		mkdir -p ${textfile_collector_dir}
+	fi
+	cat >${textfile_collector_dir}/promethues.${remote_sync_dir}.prom <<-EOF
+	# HELP rsync_status Rsync synchronization status
+	# TYPE rsync_status gauge
+	rsync_status{dirname="${remote_sync_dir}"} ${rsync_status}
+	
+	# HELP rsync_total_files_sum The total number of files transferred by rsync
+	# TYPE rsync_total_files_sum gauge
+	rsync_total_files_sum{dirname="${remote_sync_dir}"} ${rsync_files_num}
+	
+	# HELP rsync_total_size_mb The total size of files transferred by rsync
+	# TYPE rsync_total_size_mb gauge
+	rsync_total_size_mb{dirname="${remote_sync_dir}"} ${rsync_files_size}
+	
+	# HELP rsync_start_time Rsync transmission start time
+	# TYPE rsync_start_time gauge
+	rsync_start_time{dirname="${remote_sync_dir}"} ${rsync_start_time}
+	
+	# HELP rsync_duration_time_sec Rsync transmission consumes time
+	# TYPE rsync_duration_time_sec gauge
+	rsync_duration_time_sec{dirname="${remote_sync_dir}"} ${rsync_duration_time}
+	EOF
+}
 
 run_tasker(){
 	echo "[INFO] Starting scheduled tasks..."
 	echo "${cron_exp} echo runcron >${work_dir}/logs/runcron" > ${work_dir}/etc/tasker.conf
+	echo "00 23 * * * rm -rf ${logs_dir}/\$(date -d \"-7 day\" +%Y-%m-%d)_*" >> ${work_dir}/etc/tasker.conf
 	${work_dir}/bin/tasker -file ${work_dir}/etc/tasker.conf -verbose
 	if [[ $? != 0 ]];then
 		echo "[ERROR] Scheduled task start failed"
@@ -194,6 +230,7 @@ inotify_fun(){
 rsync_fun(){
 	while true
 	do
+		currentDate=$(date +%Y-%m-%d)
 		sleep ${real_time_sync_delay}
 		tmpdir=$(mktemp -d -p ${logs_dir})
 		if [[ -s ${logs_dir}/inotify-file.log ]];then
@@ -266,7 +303,7 @@ rsync_fun(){
 		##关闭任务队列
 		exec 5>&-
 		###END逐行对变化的文件目录同步到rsynd服务端
-		cat ${tmpdir}/dir-exe.txt ${tmpdir}/file-exe.txt 2>/dev/null >>${logs_dir}/rsync-history.log
+		cat ${tmpdir}/dir-exe.txt ${tmpdir}/file-exe.txt 2>/dev/null >>${logs_dir}/${currentDate}_rsync_history.log
 		rm -rf ${tmpdir}
 	done
 }
@@ -286,6 +323,9 @@ sersync_call(){
 		rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 		rsyncd_port=${rsyncd_port:-873}
 		lockfile=$(echo -n "${file}${rsyncd_ip}" | md5sum | awk '{print $1}')
+		###声明变量用于子进程引用
+		export rsyncd_ipaddr=${rsyncd_ip}
+		export remote_sync_dir=${remote_sync_dir}
 		##对rsync操作使用flock加锁防止多个周期一个文件重复同步造成IO阻塞
 		flock -n -x ${logs_dir}/${lockfile} -c "
 		${work_dir}/bin/sersync.sh  -m ${module_name} -u ${rsync_user} \
@@ -299,7 +339,9 @@ sersync_call(){
 }
 
 run_ctl(){
-
+	
+	###声明变量用于子进程存储日志
+	export logs_dir=${work_dir}/logs
 	###创建日志目录
 	if [[ ! -d ${logs_dir} ]];then
 		mkdir -p ${logs_dir}

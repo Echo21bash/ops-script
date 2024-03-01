@@ -25,7 +25,7 @@ rysnc_fun(){
 	case ${event} in
 	CREATE|ATTRIB|CLOSE_WRITEXCLOSE|MOVED_TO|MOVED_TOXISDIR|CREATEXISDIR)
 		cd ${sync_dir}
-		timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDR --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}
+		timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDR --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${rsync_remote_dir}
 		;;
 	DELETE|MOVED_FROM|DELETEXISDIR|MOVED_FROMXISDIR)
 		cd ${sync_dir}
@@ -34,7 +34,7 @@ rysnc_fun(){
 		include_file=$(echo -n "${file}" | md5sum | awk '{print $1}')
 		if [[ ${file} = "./" || ${file} = "." ]];then
 
-			timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}
+			timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDRu --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete --password-file=${rsync_passwd_file} "${file}" ${user}@${remote_ip}::${module_name}/${rsync_remote_dir}
 		else
 			#获取--include参数
 			i=1
@@ -57,7 +57,7 @@ rysnc_fun(){
 				fi
 				((i++))
 			done
-			timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDR --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${remote_sync_dir}
+			timeout ${rsync_timeout} ${rsync_command_path} ${other_extra_args} -rlptDR --port=${remote_port} ${rsync_extra_args} --bwlimit=${rsync_bwlimit} --delete ./ --password-file=${rsync_passwd_file} --include-from=${rsync_tmp_dir}/${include_file} --exclude="*" ${user}@${remote_ip}::${module_name}/${rsync_remote_dir}
 			rm -rf ${rsync_tmp_dir}/${include_file}
 		fi
 	;;
@@ -71,6 +71,7 @@ ARGS=$(getopt -o m:u:f:e: -l rsync-file:,event:,passwd-file:,rsyncd-ip:,rsyncd-p
 [[ $# -eq 0 ]] && echo 缺少参数 && usage && exit 1
 echo ${ARGS} | grep -E '\-m|\-\-module' | grep -E '\-u' | grep -E '\-f|\-\-rsync\-file' | grep -E '\-\-passwd\-file' | grep -E '\-\-rsyncd\-ip' | grep -qE '\-\-rsync\-root\-dir'
 [[ $? -ne 0 ]] && echo 缺少参数 && usage && exit 1
+
 
 eval set -- "${ARGS}"
 while true
@@ -110,7 +111,7 @@ do
 			shift 2
 			;;
 		--rsync-remote-dir)
-			remote_sync_dir="$2"
+			rsync_remote_dir="$2"
 			shift 2
 			;;
 		--rsync-timeout)
