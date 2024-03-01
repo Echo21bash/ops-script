@@ -84,7 +84,7 @@ full_rsync_fun(){
 			for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 			do
 				rsync_current_date=$(date +%Y-%m-%d)
-				rsync_start_time=$(date "+%s")
+				rsync_start_time=$(($(date +%s%N)/1000000))
 				rsyncd_ip=$(echo ${ipaddr} | awk -F ':' '{print$1}')
 				rsyncd_port=$(echo ${ipaddr} | awk -F ':' '{print$2}')
 				rsyncd_port=${rsyncd_port:-873}
