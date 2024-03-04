@@ -256,6 +256,9 @@ keep_history_backup_days=7
 exec_command_enable=0
 #监听目录对应的脚本名称
 #exec_command_list=('/data/file=clean_file.sh' '/data/img=clean_img.sh')
+
+#promethues metrics目录，用于node-exporter获取监控指标
+textfile_collector_dir=/usr/local/node_exporter/textfile_collector
 #########################################其他配置#########################################
 EOF
 ```
@@ -379,6 +382,9 @@ keep_history_backup_days=7
 exec_command_enable=0
 #监听目录对应的脚本名称
 #exec_command_list=('/data/file=clean_file.sh' '/data/img=clean_img.sh')
+
+#promethues metrics目录，用于node-exporter获取监控指标
+textfile_collector_dir=/usr/local/node_exporter/textfile_collector
 #########################################其他配置#########################################
 EOF
 ```
@@ -390,6 +396,7 @@ docker run --name sersync --privileged -itd -v /data/file:/data/file \
 -v /data/db:/data/db \
 -v /etc/rsync.passwd:/etc/rsync.passwd \
 -v /usr/local/sersync/etc/sersync.conf:/usr/local/sersync/etc/sersync.conf \
+-v /usr/local/node_exporter/textfile_collector:/usr/local/node_exporter/textfile_collector \
 echo21bash/sersync:1.0
 ```
 
@@ -414,7 +421,9 @@ RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
 RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
 ```
 
+## 监控指标
 
+> 默认会在配置文件中textfile_collector_dir配置项的目录生成同步的promethues监控指标，需要将指标目录挂载到node-exporter可以读取到的目录，即可通过node-exporter采集到监控指标。
 
 ## 其他说明
 
