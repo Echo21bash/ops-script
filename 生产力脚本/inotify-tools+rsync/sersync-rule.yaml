@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: prome
+    app: app-rules
+  name: sersync-rule
+  namespace: monitoring
+spec:
+  groups:
+  - name: sersync.rule
+    rules:
+    - alert:  rsync同步异常
+      annotations:
+        message:  当前有rsync同步异常 {{ $value }} ，请检查同步日志，请及时处理
+      expr:       (rsync_status) == 1
+      for:  5m
+      labels:
+        severity:  warning

@@ -425,6 +425,80 @@ RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
 
 > 默认会在配置文件中textfile_collector_dir配置项的目录生成同步的promethues监控指标，需要将指标目录挂载到node-exporter可以读取到的目录，即可通过node-exporter采集到监控指标。
 
+### node_exporter配置
+
+```shell
+##node_exporter 新增配置项，如果已经存在配置项，确保和sersycn的textfile_collector_dir配置项一致。
+--collector.textfile.directory /usr/local/node_exporter/textfile_collector
+```
+
+### sersync配置
+
+```shell
+##确保sersync配置项textfile_collector_dir的目录与node_exporter配置项目录一致。
+#promethues metrics目录，用于node-exporter获取监控指标
+textfile_collector_dir=/usr/local/node_exporter/textfile_collector
+```
+
+### 监控项示例
+
+> 配置完成并生效后，全量同步后会创建prom结尾的监控项指标。
+
+```shell
+[root@test ~]# cat /usr/local/node_exporter/textfile_collector/promethues.mail-data-backup.prom
+# HELP rsync_status Rsync synchronization status
+# TYPE rsync_status gauge
+rsync_status{dirname="mail-data-backup"} 0
+
+# HELP rsync_total_files_sum The total number of files transferred by rsync
+# TYPE rsync_total_files_sum gauge
+rsync_total_files_sum{dirname="mail-data-backup"} 16015
+
+# HELP rsync_total_size_mb The total size of files transferred by rsync
+# TYPE rsync_total_size_mb gauge
+rsync_total_size_mb{dirname="mail-data-backup"} 40281
+
+# HELP rsync_start_time Rsync transmission start time
+# TYPE rsync_start_time gauge
+rsync_start_time{dirname="mail-data-backup"} 1709307017234
+
+# HELP rsync_duration_time_sec Rsync transmission consumes time
+# TYPE rsync_duration_time_sec gauge
+rsync_duration_time_sec{dirname="mail-data-backup"} 5789
+```
+
+### Grafana图表
+
+> 完成后可以导入Grafana-Sersync.json文件创建监控可视化数据
+
+### Promethus告警
+
+> 告警规则导入，即可实现告警通知。
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: prome
+    app: app-rules
+  name: sersync-rule
+  namespace: monitoring
+spec:
+  groups:
+  - name: sersync.rule
+    rules:
+    - alert:  rsync同步异常
+      annotations:
+        message:  当前有rsync同步异常 {{ $value }} ，请检查同步日志，请及时处理
+      expr:       (rsync_status) == 1
+      for:  5m
+      labels:
+        severity:  warning
+```
+
+
+
 ## 其他说明
 
 > 对于目录深度深、文件数量众多的场景，inotify监听启动时间较长；
