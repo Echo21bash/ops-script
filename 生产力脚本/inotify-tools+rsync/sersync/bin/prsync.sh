@@ -49,7 +49,7 @@ fi
 rsync_args="$@"
 echo -e "${GREEN}[INFO] Using up to ${PARALLEL_RSYNC} processes for transfer.${NC}"
 TMPDIR=$(mktemp -d)
-#trap 'rm -rf "${TMPDIR}"' EXIT
+trap 'rm -rf "${TMPDIR}"' EXIT
 currentDate=$(date +%Y-%m-%d)
 logsFile=${logs_dir:-${TMPDIR}}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.rsync.log
 
@@ -244,11 +244,15 @@ transfer_task(){
 	do
 		if [[ ${file} =~ 'chunk' ]];then
 			cat > ${file}.sh <<-EOF
+			#!/bin/bash
+			set -o pipefail
 			cd ${workdir} && \
 			rsync --timeout=60 --files-from=${file} ${rsync_args} 2>&1 | xargs -I{} echo {} >> ${logsFile}
 			EOF
 		elif [[ ${file} =~ 'include' ]];then
 			cat > ${file}.sh <<-EOF
+			#!/bin/bash
+			set -o pipefail
 			cd ${workdir} && \
 			rsync --timeout=60 --include-from=${file} --exclude="*" ${rsync_args} 2>&1 | xargs -I{} echo {} >> ${logsFile}
 			EOF
@@ -260,12 +264,12 @@ transfer_task(){
 			do	
 				${file}.sh
 				rsync_exit_code=$?
-				echo ${rsync_exit_code} >> "${TMPDIR}/rsync.status"
+				echo "${file}.sh exit code is ${rsync_exit_code}" >> "${TMPDIR}/rsync.status"
 				if [[ ${rsync_exit_code} =~ ${rsync_ignore_exit_code} || ${rsync_exit_code} = "23" || ${rsync_exit_code} = "0" ]];then
 					rsync_exit_code=0
 					break
 				elif [[ ${rsync_exit_code} = "30" ]];then
-					echo -ne "Process seems to be stuck. Restarting..."
+					echo -ne "${ORANGE}Process ${file}.sh seems to be stuck. Restarting...${NC}"
 				fi
 				sleep 5
 			done
@@ -283,14 +287,9 @@ transfer_task(){
 save_logs(){
 
 	if [[ -n ${logs_dir} ]];then
-		if [[ -f ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.files.all ]];then
-			cat "${TMPDIR}/files.all" >> ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.files.all
-		else
-			cp "${TMPDIR}/files.all" ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.files.all
-			cp "${TMPDIR}/rsync.status" ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.rsync.status
-		fi
+		cat "${TMPDIR}/files.all" >> ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.files.all
+		cat "${TMPDIR}/rsync.status" ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.rsync.status
 	fi
-	exit ${rsync_exit_code}
 
 }
 
@@ -303,3 +302,4 @@ main(){
 }
 
 main
+
