@@ -25,7 +25,7 @@ full_rsync_first(){
 
 	cd ${sync_dir}
 	rsync_command_path="${work_dir}/bin/prsync.sh"
-	other_extra_args="--parallel=${parallel_rsync_num}"
+	other_extra_args="--parallel=${full_rsync_parallel_rsync_num}"
 	run_script
 	for ipaddr in ${sync_dir_module_ip[${sync_dir}]}
 	do
@@ -69,7 +69,7 @@ full_rsync_fun(){
 
 	cd ${sync_dir}
 	rsync_command_path="${work_dir}/bin/prsync.sh"
-	other_extra_args="--parallel=${parallel_rsync_num}"
+	other_extra_args="--parallel=${full_rsync_parallel_rsync_num}"
 
 	old_changes_tatus=$(stat -c %z ${work_dir}/logs/runcron 2>/dev/null)
 	while true
