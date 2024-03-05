@@ -113,13 +113,10 @@ full_rsync_fun(){
 					delete_history_backup
 				elif [[ ${full_rsync_exit_code} = '111' ]];then
 					echo "[INFO] Has other processes syncing in ${sync_dir} to ${ipaddr}"
-					break
 				elif [[ ${full_rsync_exit_code} = '124' ]];then
 					echo "[INFO] Timeout exit syncing in ${sync_dir} to ${ipaddr}"
-					break
 				else
 					echo "[ERROR] Error in full sync ${sync_dir} to ${ipaddr}"
-					break
 				fi
 				make_monitoring_data
 			done
