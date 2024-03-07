@@ -7,7 +7,7 @@ ADD docker-entrypoint.sh /usr/local/sersync/bin
 ENV PATH=$PATH:/usr/local/sersync/bin LC_ALL=zh_CN.UTF-8
 
 RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
-    sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.lis && \
+    sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     apt-get update && \
     apt-get install -y locales tzdata rsync inotify-tools openssh-server language-pack-zh-hans && \
     chmod -R +x /usr/local/sersync/bin/* && \
