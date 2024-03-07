@@ -152,30 +152,34 @@ make_monitoring_data(){
 	else
 		rsync_status=${full_rsync_exit_code}
 	fi
-	if [[ ! -d ${textfile_collector_dir} ]];then
-		mkdir -p ${textfile_collector_dir}
+	
+	if [[ -n ${textfile_collector_dir} ]];then
+		if [[ ! -d ${textfile_collector_dir} ]];then
+			mkdir -p ${textfile_collector_dir}
+		fi
+		cat >${textfile_collector_dir}/promethues.${remote_sync_dir}.prom <<-EOF
+		# HELP rsync_status Rsync synchronization status
+		# TYPE rsync_status gauge
+		rsync_status{dirname="${remote_sync_dir}"} ${rsync_status}
+		
+		# HELP rsync_total_files_sum The total number of files transferred by rsync
+		# TYPE rsync_total_files_sum gauge
+		rsync_total_files_sum{dirname="${remote_sync_dir}"} ${rsync_files_num}
+		
+		# HELP rsync_total_size_mb The total size of files transferred by rsync
+		# TYPE rsync_total_size_mb gauge
+		rsync_total_size_mb{dirname="${remote_sync_dir}"} ${rsync_files_size}
+		
+		# HELP rsync_start_time Rsync transmission start time
+		# TYPE rsync_start_time gauge
+		rsync_start_time{dirname="${remote_sync_dir}"} ${rsync_start_time}
+		
+		# HELP rsync_duration_time_sec Rsync transmission consumes time
+		# TYPE rsync_duration_time_sec gauge
+		rsync_duration_time_sec{dirname="${remote_sync_dir}"} ${rsync_duration_time}
+		EOF
 	fi
-	cat >${textfile_collector_dir}/promethues.${remote_sync_dir}.prom <<-EOF
-	# HELP rsync_status Rsync synchronization status
-	# TYPE rsync_status gauge
-	rsync_status{dirname="${remote_sync_dir}"} ${rsync_status}
-	
-	# HELP rsync_total_files_sum The total number of files transferred by rsync
-	# TYPE rsync_total_files_sum gauge
-	rsync_total_files_sum{dirname="${remote_sync_dir}"} ${rsync_files_num}
-	
-	# HELP rsync_total_size_mb The total size of files transferred by rsync
-	# TYPE rsync_total_size_mb gauge
-	rsync_total_size_mb{dirname="${remote_sync_dir}"} ${rsync_files_size}
-	
-	# HELP rsync_start_time Rsync transmission start time
-	# TYPE rsync_start_time gauge
-	rsync_start_time{dirname="${remote_sync_dir}"} ${rsync_start_time}
-	
-	# HELP rsync_duration_time_sec Rsync transmission consumes time
-	# TYPE rsync_duration_time_sec gauge
-	rsync_duration_time_sec{dirname="${remote_sync_dir}"} ${rsync_duration_time}
-	EOF
+
 }
 
 run_tasker(){
