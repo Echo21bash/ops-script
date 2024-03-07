@@ -239,7 +239,7 @@ init_rsync_queue(){
 transfer_task(){
 
 	SECONDS=0
-	echo -ne "${GREEN}[INFO] Starting transfers ...${NC}"
+	echo -e "${GREEN}[INFO] Starting transfers ...${NC}"
 	for file in `ls ${TMPDIR}/chunk.*  ${TMPDIR}/*.include 2>/dev/null`
 	do
 		if [[ ${file} =~ 'chunk' ]];then
@@ -269,7 +269,7 @@ transfer_task(){
 					rsync_exit_code=0
 					break
 				elif [[ ${rsync_exit_code} = "30" ]];then
-					echo -ne "${ORANGE}Process ${file}.sh seems to be stuck. Restarting...${NC}"
+					echo -e "${ORANGE}Process ${file}.sh seems to be stuck. Restarting...${NC}"
 				fi
 				sleep 5
 			done
@@ -281,14 +281,14 @@ transfer_task(){
 	wait
 	##关闭任务队列
 	exec 5>&-
-	echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
+	echo -e "${GREEN}Complete transfers DONE (${SECONDS}s)${NC}"
 }
 
 save_logs(){
 
 	if [[ -n ${logs_dir} ]];then
 		cat "${TMPDIR}/files.all" >> ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.files.all
-		cat "${TMPDIR}/rsync.status" ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.rsync.status
+		cat "${TMPDIR}/rsync.status" >> ${logs_dir}/${currentDate}_${remote_sync_dir:-non}_${rsyncd_ipaddr:-non}.rsync.status
 	fi
 
 }
