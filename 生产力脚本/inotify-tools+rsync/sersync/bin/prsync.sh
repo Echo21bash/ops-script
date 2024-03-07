@@ -281,7 +281,7 @@ transfer_task(){
 	wait
 	##关闭任务队列
 	exec 5>&-
-	echo -e "${GREEN}Complete transfers DONE (${SECONDS}s)${NC}"
+	echo -e "${GREEN}[INFO] Complete transfers DONE (${SECONDS}s)${NC}"
 }
 
 save_logs(){
