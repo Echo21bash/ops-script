@@ -59,6 +59,10 @@ get_change_file(){
 	echo -ne "${GREEN}[INFO] Determining file list for transfer ...${NC}"
 	# 获取发生改变的文件及目录，并按照目录排序
 	rsync ${rsync_args} --out-format="%l %n" --no-v --dry-run 2>> ${logsFile} > "${TMPDIR}/changed.all"
+	rsync_exit_code=$?
+	if [[ ${rsync_exit_code} != "0" ]];then
+		exit ${rsync_exit_code}
+	fi
 	sort -k 2 "${TMPDIR}/changed.all" > "${TMPDIR}/files.all"
 	echo -e "${GREEN}DONE (${SECONDS}s)${NC}"
 
