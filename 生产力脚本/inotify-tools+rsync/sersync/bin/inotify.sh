@@ -164,11 +164,11 @@ make_monitoring_data(){
 		
 		# HELP rsync_total_files_sum The total number of files transferred by rsync
 		# TYPE rsync_total_files_sum gauge
-		rsync_total_files_sum{dirname="${remote_sync_dir}"} ${rsync_files_num}
+		rsync_total_files_sum{dirname="${remote_sync_dir}"} ${rsync_files_num:-0}
 		
 		# HELP rsync_total_size_mb The total size of files transferred by rsync
 		# TYPE rsync_total_size_mb gauge
-		rsync_total_size_mb{dirname="${remote_sync_dir}"} ${rsync_files_size}
+		rsync_total_size_mb{dirname="${remote_sync_dir}"} ${rsync_files_size:-0}
 		
 		# HELP rsync_start_time Rsync transmission start time
 		# TYPE rsync_start_time gauge
