@@ -12,34 +12,36 @@ RSYNCD_PATH=${RSYNCD_PATH:-/data}
 RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
 #rsyncd白名单
 RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
+#使用配置文件
+USE_CONF_FILE=${USE_CONF_FILE:-0}
 
 if [[ ${RUN_MODE} = 'rsyncd' ]];then
-	cat > /etc/rsyncd.conf <<EOF
-uid = root
-gid = root
-port = 873
-secrets file = /etc/rsyncd.secret
-ignore errors = yes
-reverse lookup = no
-log file = /dev/stdout
-max connections = ${RSYNCD_MAX_CONN}
-
-[${RSYNCD_MOD_NAME}]
-hosts allow = ${RSYNCD_HOSTS_ALLOW}
-read only = false
-path = ${RSYNCD_PATH}
-comment = ${RSYNCD_PATH} directory
-auth users = ${RSYNCD_USER}
-EOF
-	echo "${RSYNCD_USER}:${RSYNCD_PASSWD}" >/etc/rsyncd.secret
+	if [[ ${USE_CONF_FILE} = '0' ]];then
+		cat > /etc/rsyncd.conf <<-EOF
+		uid = root
+		gid = root
+		port = 873
+		secrets file = /etc/rsyncd.secret
+		ignore errors = yes
+		reverse lookup = no
+		log file = /dev/stdout
+		max connections = ${RSYNCD_MAX_CONN}
+		[${RSYNCD_MOD_NAME}]
+		hosts allow = ${RSYNCD_HOSTS_ALLOW}
+		read only = false
+		path = ${RSYNCD_PATH}
+		comment = ${RSYNCD_PATH} directory
+		auth users = ${RSYNCD_USER}
+		EOF
+		echo "${RSYNCD_USER}:${RSYNCD_PASSWD}" >/etc/rsyncd.secret
+		[[ ! -d ${RSYNCD_PATH} ]] && mkdir -p ${RSYNCD_PATH}
+	fi
 	chmod  600 /etc/rsyncd.secret
 	chmod  600 /etc/rsyncd.conf
 	echo "root:${RSYNCD_PASSWD}" | chpasswd
-	[[ ! -d ${RSYNCD_PATH} ]] && mkdir -p ${RSYNCD_PATH}
 	exec "$@"
 	service ssh restart
 	rsync --no-detach --daemon --config /etc/rsyncd.conf
-	
 elif [[ ${RUN_MODE} = 'sersync' ]];then
 	#内核参数修改
 	echo 'fs.inotify.max_user_watches = 999999' >> /etc/sysctl.conf
