@@ -4,6 +4,8 @@ RUN_MODE=${RUN_MODE:-sersync}
 RSYNCD_USER=${RSYNCD_USER:-rsync}
 #rsync认证密码
 RSYNCD_PASSWD=${RSYNCD_PASSWD:-Ki13W@yYZvbJ}
+#SSH认证密码开启SFTP
+SSH_PASSWD=${SSH_PASSWD:-}
 #rsyncd模块名称
 RSYNCD_MOD_NAME=${RSYNCD_MOD_NAME:-data}
 #rsyncd存储目录
@@ -38,9 +40,11 @@ if [[ ${RUN_MODE} = 'rsyncd' ]];then
 	fi
 	chmod  600 /etc/rsyncd.secret
 	chmod  600 /etc/rsyncd.conf
-	echo "root:${RSYNCD_PASSWD}" | chpasswd
+	if [[ -n ${SSH_PASSWD} ]];then
+		echo "root:${SSH_PASSWD}" | chpasswd
+		service ssh restart
+	fi
 	exec "$@"
-	service ssh restart
 	rsync --no-detach --daemon --config /etc/rsyncd.conf
 elif [[ ${RUN_MODE} = 'sersync' ]];then
 	#内核参数修改

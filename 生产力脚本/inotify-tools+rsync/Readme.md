@@ -104,12 +104,22 @@ systemctl enable rsyncd
 #### 启动容器
 
 ```shell
+#通过环境变量启动rsyncd
 docker run --name rsyncd --privileged -itd -p 873:873 \
 -e RUN_MODE=rsyncd \
 -e RSYNCD_USER=rsync \
 -e RSYNCD_PASSWD="Ki13W@yYZvbJ" \
 -e RSYNCD_MOD_NAME="filebackup" \
 -e RSYNCD_PATH=/data \
+-v /data:/data \
+echo21bash/sersync:1.0
+
+#通过指定配置文件启动rsyncd
+docker run --name rsyncd --privileged -itd -p 873:873 \
+-e RUN_MODE=rsyncd \
+-e USE_CONF_FILE=1 \
+-v /etc/rsyncd.conf:/etc/rsyncd.conf \
+-v /etc/rsyncd.secret:/etc/rsyncd.secret \
 -v /data:/data \
 echo21bash/sersync:1.0
 ```
@@ -411,6 +421,8 @@ RUN_MODE=${RUN_MODE:-sersync}
 RSYNCD_USER=${RSYNCD_USER:-rsync}
 #rsync认证密码
 RSYNCD_PASSWD=${RSYNCD_PASSWD:-Ki13W@yYZvbJ}
+#SSH认证密码开启SFTP
+SSH_PASSWD=${SSH_PASSWD:-}
 #rsyncd模块名称
 RSYNCD_MOD_NAME=${RSYNCD_MOD_NAME:-data}
 #rsyncd存储目录
@@ -419,6 +431,8 @@ RSYNCD_PATH=${RSYNCD_PATH:-/data}
 RSYNCD_MAX_CONN=${RSYNCD_MAX_CONN:-300}
 #rsyncd白名单
 RSYNCD_HOSTS_ALLOW=${RSYNCD_HOSTS_ALLOW:-0.0.0.0/0}
+#使用配置文件
+USE_CONF_FILE=${USE_CONF_FILE:-0}
 ```
 
 ## 监控指标
