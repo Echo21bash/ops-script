@@ -137,14 +137,13 @@
 
   ```shell
   bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --delete --group test
-  
   ```
-
+  
 * 删除消费组
 
-```shell
-bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092  --delete-offsets --group lzdt-itp-acc --topic lzdt-itp-order-pay-success
-```
+  ```shell
+  bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092  --delete-offsets --group lzdt-itp-acc --topic lzdt-itp-order-pay-success
+  ```
 
 ## 在线修改参数
 
