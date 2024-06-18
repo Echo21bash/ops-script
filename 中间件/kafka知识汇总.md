@@ -1,4 +1,187 @@
-## 常见问题
+# Kafka知识库
+
+## Kafka常用命令
+
+### 集群相关
+
+- 查询集群描述
+
+  ```shell
+  bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+  ```
+
+- 压力测试
+
+  ```shell
+  bin/kafka-producer-perf-test.sh --topic test --num-records 100 --record-size 1 --throughput 100  --producer-props bootstrap.servers=localhost:9092
+  ```
+
+- 分区扩容
+
+  ```shell
+  ##kafka版本 < 2.2
+  bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+  ##kafka版本 >= 2.2
+  bin/kafka-topics.sh --bootstrap-server localhost:9092 --alter --topic topic1 --partitions 2
+  ```
+
+- 迁移分区
+
+  ```shell
+  ##创建规则json
+  
+  cat > increase-replication-factor.json <<EOF
+  {"version":1, "partitions":[
+  {"topic":"__consumer_offsets","partition":0,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":1,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":2,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":3,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":4,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":5,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":6,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":7,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":8,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":9,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":10,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":11,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":12,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":13,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":14,"replicas":[0,1]},
+  {"topic":"__consumer_offsets","partition":15,"replicas":[0,1]}]
+  }
+  EOF
+  
+  ##执行
+  bin/kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --execute
+  	
+  ##验证
+  bin/kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --verify
+  ```
+
+  
+
+### Topic相关
+
+- 创建topic
+
+  ```shell
+  bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partitions 4 --topic test
+  ```
+
+  ```shell
+  ##kafka版本 >= 2.2 推荐
+  bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+  ```
+
+- 查看topic列表
+
+  ```shell
+  bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+  ##（支持0.9版本）
+  bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+  ```
+
+- 生产消息
+
+  ```shell
+  bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+  ```
+
+- 消费消息
+
+  ```shell
+  bin/kafka-console-consumer.sh  --bootstrap-server localhost:9092 --from-beginning --topic test
+  ```
+
+- 重置offset
+
+  ```shell
+  ##所有topic
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --all-topics --to-latest --execute
+  ##指定主题
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --topic test --to-latest --execute
+  ##指定偏移量
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --reset-offsets --topic test --to-offset 1000 --execute
+  ```
+
+- 切换leader
+
+  ```shell
+  ##kafka版本 <= 2.4
+  bin/kafka-preferred-replica-election.sh --zookeeper zk_host:port/chroot
+  ##kafka新版本
+  bin/kafka-preferred-replica-election.sh --bootstrap-server broker_host:port
+  ```
+
+- 查看消费组
+
+  ```shell
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --all-groups
+  ```
+
+- 显示某个消费组的消费详情
+
+  ```shell
+  ##仅支持offset存储在zookeeper上的
+  bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+  bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test
+  ##（0.9版本-0.10.1.0之间）
+  bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test
+  ##（0.10.1.0版本+）
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group test
+  ```
+
+
+* 删除消费组
+
+  ```shell
+  bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --delete --group test
+  
+  ```
+
+* 删除消费组
+
+```shell
+bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092  --delete-offsets --group lzdt-itp-acc --topic lzdt-itp-order-pay-success
+```
+
+## 在线修改参数
+
+### 修改 broker 的参数
+
+```shell
+#改变当前broker 0上的log cleaner threads可以通过下面命令实现：
+bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --alter --add-config log.cleaner.threads=2
+
+#查看当前broker 0的动态配置参数：
+bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --describe
+
+#删除broker id为0的server上的配置参数/设置为默认值：
+bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --alter --delete-config log.cleaner.threads
+
+#同时更新集群上所有broker上的参数（cluster-wide类型，保持所有brokers上参数的一致性）：
+bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-default --alter --add-config log.cleaner.threads=2
+
+#查看当前集群中动态的cluster-wide类型的参数列表：
+bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-default --describe
+```
+
+## Kafka常见问题
+
+### 日志保留时间设置无效问题
+
+> ​		看了网上很多文档，说是要设置log.retention.hour等等参数。默认是保留7天，但我实测下来发现日志根本没有任何变化。查看最早的消息还是7天的。
+>
+> ​		经过查找资料发现kafka只会回收上个分片的数据配置没有生效的原因就是，数据并没有达到分片触发条件，没有分片，所以没有回收。
+>
+> ​		kafka什么时候分片？按照大小分片和按照时间分片达到任意条件即可分片，有两个参数可以配置，log.roll.hours 设置多久滚动一次，滚动也就是之前的数据就会分片分出去，默认是144，log.segment.bytes 设置日志文件到了多大就会自动分片，默认是1GB。
+
+```shell
+#正确的必要配置，以下配置可以实现保留24h的kafka数据
+log.retention.hours=24
+log.roll.hours=24
+```
 
 ### Rebalance
 
