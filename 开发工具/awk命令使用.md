@@ -133,6 +133,12 @@ awk '{s[$1] += $2}END{ for(i in s){  print i, s[i] } }' file
 awk 'NR==FNR{a[$1]=1}NR!=FNR{if(!($1 in a)){print $1}}' file1 file2 
 ```
 
+* 查找file1重复的内容
+
+```shell
+awk '{count[$0]++} count[$0]>1 {print $0}' file1
+```
+
 ## AWK处理csv文件
 
 > 一般来说使用awk处理csv文件是分割符使用-F "," 指定为逗号即可，但是对于csv字段内容包含逗号时，就会出现字段不匹配的问题。使用以下方法可以解决。以下示例为将csv文件第四列排序后输出。

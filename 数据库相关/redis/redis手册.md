@@ -22,7 +22,7 @@ redis-cli cluster nodes
 redis-cli cluster slots
 ```
 
-Redis集群创建添加节点
+#### Redis集群创建添加节点
 
 ```shell
 #新增节点

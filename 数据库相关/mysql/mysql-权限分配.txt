@@ -7,8 +7,10 @@
 更改密码
 	小于5.7
 	use mysql;update user set password=PASSWORD('123456') where user='root'
-	小于等于5.7
+	等于5.7
 	use mysql;update user set authentication_string = password('123456'), password_expired = 'N', password_last_changed = now() where user = 'root';
+	等于8.0
+	ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '新密码';
 删除空用户
 	DELETE FROM mysql.user where user='';
 

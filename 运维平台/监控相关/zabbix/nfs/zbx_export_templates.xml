@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2021-03-24T03:48:45Z</date>
+    <date>2024-05-24T02:55:04Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -9,8 +9,8 @@
     </groups>
     <templates>
         <template>
-            <template>Template App NFS</template>
-            <name>Template App NFS</name>
+            <template>Template App NFS Service</template>
+            <name>Template App NFS Service</name>
             <groups>
                 <group>
                     <name>Templates/Applications</name>
@@ -23,10 +23,11 @@
             </applications>
             <items>
                 <item>
-                    <name>nfs.pro_num</name>
+                    <name>Number of NFSD processes</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>nfs[pro_num]</key>
-                    <delay>5m</delay>
+                    <key>nfsd[common,num]</key>
+                    <delay>30s</delay>
+                    <description>nfsd进程数</description>
                     <applications>
                         <application>
                             <name>NFS Server</name>
@@ -42,11 +43,33 @@
                     </triggers>
                 </item>
                 <item>
-                    <name>nfs.share_dir</name>
+                    <name>NFSD Service Ready Status</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>nfs[share_dir]</key>
+                    <key>nfsd[common,ready]</key>
+                    <delay>30s</delay>
+                    <description>nfsd服务就绪状态</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2)}=0</expression>
+                            <name>NFS service is unavailable on {HOST.NAME}</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>NFSD shared directory</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[common,share]</key>
+                    <delay>30s</delay>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
+                    <description>nfsd共享目录</description>
                     <applications>
                         <application>
                             <name>NFS Server</name>
@@ -62,24 +85,513 @@
                     </triggers>
                 </item>
                 <item>
-                    <name>nfs.status</name>
+                    <name>NFSD Read IO bytes</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>nfs[status]</key>
+                    <key>nfsd[io,read]</key>
+                    <delay>30s</delay>
+                    <units>bytes</units>
+                    <description>NFSD读io字节数</description>
                     <applications>
                         <application>
                             <name>NFS Server</name>
                         </application>
                     </applications>
-                    <triggers>
-                        <trigger>
-                            <expression>{last(#2)}=0</expression>
-                            <name>NFS service is unavailable on {HOST.NAME}</name>
-                            <priority>HIGH</priority>
-                            <manual_close>YES</manual_close>
-                        </trigger>
-                    </triggers>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>NFSD Write IO bytes</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[io,write]</key>
+                    <delay>30s</delay>
+                    <units>bytes</units>
+                    <description>NFSD写io字节数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD network packets</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[net,packets]</key>
+                    <delay>30s</delay>
+                    <description>NFSD网络包总数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD TCP packets</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[net,tcp.packets]</key>
+                    <delay>30s</delay>
+                    <description>NFSD网络TCP包数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD TCP connections</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[net,tcpconn]</key>
+                    <delay>30s</delay>
+                    <description>NFSD网络TCP连接数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD UDP packets</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[net,udp.packets]</key>
+                    <delay>30s</delay>
+                    <description>NFSD网络UDP包数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD cache hits</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[rc,hits]</key>
+                    <delay>30s</delay>
+                    <description>NFSD缓存命中次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD cache misses</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[rc,misses]</key>
+                    <delay>30s</delay>
+                    <description>NFSD缓存未命中次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD not cache</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[rc,nocache]</key>
+                    <delay>30s</delay>
+                    <description>NFSD无需缓存次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of failed NFSD rpc calls</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[rpc,badcalls]</key>
+                    <delay>30s</delay>
+                    <description>NFSD rpc调用失败次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD rpc calls</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[rpc,calls]</key>
+                    <delay>30s</delay>
+                    <description>NFSD rpc调用次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of network packets received by NFSD thread pool</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[th,packets.arrived]</key>
+                    <delay>30s</delay>
+                    <description>NFSD线程池接收的网络包数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD thread pool queues</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[th,sockets.enqueued]</key>
+                    <delay>30s</delay>
+                    <description>NFSD线程池队列数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD threads</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[th,sum]</key>
+                    <delay>30s</delay>
+                    <description>NFSD线程数量</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>NFSD thread pool idle timeout count</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[th,timedout]</key>
+                    <delay>30s</delay>
+                    <description>NFSD线程池空闲超时次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Number of NFSD thread pool wakes</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>nfsd[th,woken]</key>
+                    <delay>30s</delay>
+                    <description>NFSD线程池唤醒次数</description>
+                    <applications>
+                        <application>
+                            <name>NFS Server</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
                 </item>
             </items>
+            <screens>
+                <screen>
+                    <name>NFSD monitoring</name>
+                    <hsize>2</hsize>
+                    <vsize>2</vsize>
+                    <screen_items>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>NFSD IO monitoring</name>
+                                <host>Template App NFS Service</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>NFSD thread pool monitoring</name>
+                                <host>Template App NFS Service</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>NFSD network monitoring</name>
+                                <host>Template App NFS Service</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>NFSD cache monitoring</name>
+                                <host>Template App NFS Service</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                    </screen_items>
+                </screen>
+            </screens>
         </template>
     </templates>
+    <graphs>
+        <graph>
+            <name>NFSD cache monitoring</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[rc,nocache]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[rc,hits]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[rc,misses]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>NFSD IO monitoring</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[io,read]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[io,write]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>NFSD network monitoring</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[net,packets]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[net,tcpconn]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[net,tcp.packets]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[net,udp.packets]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>NFSD thread pool monitoring</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[th,timedout]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[th,sockets.enqueued]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[th,woken]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>Template App NFS Service</host>
+                        <key>nfsd[th,sum]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
 </zabbix_export>

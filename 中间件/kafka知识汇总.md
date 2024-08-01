@@ -79,6 +79,9 @@
   bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
   ##（支持0.9版本）
   bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+  
+  #删除topic
+  bin/kafka-topics.sh --delete --topic acc-backend-java --bootstrap-server localhost:9092
   ```
 
 - 生产消息
