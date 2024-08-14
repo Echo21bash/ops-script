@@ -223,7 +223,42 @@ ENGINE = Distributed(default_cluster_1, default, test, rand())
 
 ## 参数优化
 
+### 批量插入
+
+> 在单次Insert写入的时候，限制创建的最大分区个数，默认值为100个，如果超出阈值，会出现异常。
+>
 > 在/etc/clickhouse-server/users.xml中修改调整max_partitions_per_insert_block
+
+```xml
+<max_partitions_per_insert_block>600</max_partitions_per_insert_block>
+```
+
+> 会话临时生效
+
+```sql
+SET max_partitions_per_insert_block=1000
+```
+
+### 数据库引擎
+
+> 在`DROP TABLE`上，不删除任何数据，数据库`Atomic`只是通过将元数据移动到`/clickhouse_path/metadata_dropped/`将表标记为已删除，并通知后台线程。最终表数据删除前的延迟由[database_atomic_delay_before_drop_table_sec](https://clickhouse.com/docs/zh/operations/server-configuration-parameters/settings#database_atomic_delay_before_drop_table_sec)设置指定。
+>
+> 可以使用`SYNC`修饰符指定同步模式。使用[database_atomic_wait_for_drop_and_detach_synchronously](https://clickhouse.com/docs/zh/operations/settings/settings#database_atomic_wait_for_drop_and_detach_synchronously)设置执行此操作。在本例中，`DROP`等待运行 `SELECT`, `INSERT`和其他使用表完成的查询。表在不使用时将被实际删除。
+
+#### Atomic
+
+```xml
+cat /etc/clickhouse-server/config.d/database_atomic.xml
+<clickhouse>
+    <database_atomic_delay_before_drop_table_sec>0</database_atomic_delay_before_drop_table_sec>
+    <!-- Aggressive cleanup for tests to catch more issues -->
+    <database_catalog_unused_dir_hide_timeout_sec>0</database_catalog_unused_dir_hide_timeout_sec>
+    <database_catalog_unused_dir_rm_timeout_sec>5</database_catalog_unused_dir_rm_timeout_sec>
+    <database_catalog_unused_dir_cleanup_period_sec>10</database_catalog_unused_dir_cleanup_period_sec>
+</clickhouse>
+```
+
+
 
 ## 集群维护
 
@@ -260,7 +295,7 @@ GROUP BY partition
 ORDER BY partition ASC
 
 
-
+---查看表复制信息
 SELECT *
 FROM
     system.replicas
