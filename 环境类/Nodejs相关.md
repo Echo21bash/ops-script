@@ -84,3 +84,36 @@ pm2 set pm2-logrotate:rotateInterval 0 0 * * *
 pm2 set pm2-logrotate:TZ Asia/Shanghai
 ```
 
+## Cypress安装问题
+
+### 问题描述
+
+> 在使用npm或yarn安装时，已经正确配置NPM源，但是还是报错。
+
+```shell
+#由于网络问题使用npm或者yarn安装依赖时报如下错误
+[05:24:51]  Downloading Cypress     [started]
+[05:25:02]  Downloading Cypress     [failed]
+The Cypress App could not be downloaded.
+
+Does your workplace require a proxy to be used to access the Internet? If so, you must configure the HTTP_PROXY environment variable before downloading Cypress. Read more: https://on.cypress.io/proxy-configuration
+
+Otherwise, please check network connectivity and try again:
+
+----------
+
+URL: https://download.cypress.io/desktop/3.8.3?platform=linux&arch=x64
+Error: read ECONNRESET
+```
+
+### 处理方案
+
+```shell
+#在使用npm或yarn安装时，除了NPM源，还需要一个URL下载二进制文件
+export CYPRESS_INSTALL_BINARY=https://repo.huaweicloud.com/cypress/3.8.3/linux-x64/cypress.zip
+#或者使用本地文件
+export CYPRESS_INSTALL_BINARY=/path/to/your/cypress.zip
+##最后重新安装cypress
+npm install cypress@3.8.3
+```
+
