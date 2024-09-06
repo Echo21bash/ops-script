@@ -244,3 +244,31 @@ xpack.security.transport.ssl.verification_mode: certificate	xpack.security.trans
 ./bin/elasticsearch-setup-passwords interactive
 ```
 
+## 问题处理
+
+### 权限问题
+
+> 在删除kibana相关系统索引时报无权限
+
+```shell
+### 使用管理员创建角色
+curl -XPUT -u "elastic:4J0e08cHe6x7On97Q2crm6fK"  -H 'Content-Type: application/json' -k 'http://20.9.201.15:30920/_security/role/grant_kibana_system_indices' -d '
+{
+  "indices": [{
+    "names": [".kibana*"],
+    "privileges": ["all"],
+    "allow_restricted_indices": true
+  }]
+}'
+
+###为该角色创建用户
+curl -XPUT -u "elastic:4J0e08cHe6x7On97Q2crm6fK"  -H 'Content-Type: application/json' -k 'http://20.9.201.15:30920/_security/user/temporarykibanasuperuser' -d '
+{
+  "password" : "l0ng-r4nd0m-p@ssw0rd",
+  "roles" : [ "superuser", "grant_kibana_system_indices" ]
+}'
+
+###再次删除
+curl -X DELETE -H "Content-Type: application/json" -u "temporarykibanasuperuser:l0ng-r4nd0m-p@ssw0rd" -k http://20.9.201.15:30920/.kibana_task_manager_8.2.3_001
+```
+
