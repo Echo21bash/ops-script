@@ -117,3 +117,30 @@ export CYPRESS_INSTALL_BINARY=/path/to/your/cypress.zip
 npm install cypress@3.8.3
 ```
 
+# Golang
+
+## 代理配置
+
+```shell
+# Go 1.13 and above (RECOMMENDED)
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+
+# macOS or Linux
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn
+
+echo "export GO111MODULE=on" >> ~/.profile
+echo "export GOPROXY=https://goproxy.cn" >> ~/.profile
+source ~/.profile
+```
+
+# Ruby
+
+## 源替换
+
+```shell
+gem sources --remove https://rubygems.org/
+gem sources -a https://mirrors.aliyun.com/rubygems/ 
+```
+

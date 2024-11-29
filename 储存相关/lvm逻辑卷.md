@@ -1,4 +1,7 @@
+# LVM手册
+
 ## 基本概念 ##
+
 1、 物理卷-----PV（Physical Volume）
 物理卷在逻辑卷管理中处于最底层，它可以是实际物理硬盘上的分区，也可以是整个物理硬盘。
 
@@ -51,6 +54,62 @@
    ```shell
    lvextend -l +100%FREE /dev/centos/home
    ```
+
+## lvm条带卷
+
+> LVM 逻辑卷有两种读写策略：线性和条带，默认为线性方式
+>
+> 线性方式（linear）：以一块盘为基础进行读写。当数据写入到一个物理卷（盘）时，写满后才会开始写入下一个物理卷。这种方式的性能较低，因为它无法充分利用多个盘的并行读写能力。
+>
+> 条带方式（striped）：以多块盘并行读写数据。数据被分成大小相等的条带，然后同时写入到多个物理卷中的相应条带位置。这样可以充分利用多个盘的并行读写能力，从而提高读写性能。
+
+### 创建PV
+
+```shell
+[root@itp-mysql-1 ~]# pvcreate /dev/vdb /dev/vdc 
+  Physical volume "/dev/vdb" successfully created.
+  Physical volume "/dev/vdc" successfully created.
+[root@itp-mysql-1 ~]# vgcreate mysqldata /dev/vdb /dev/vdc
+  Volume group "mysqldata" successfully created.
+```
+
+### 创建条带卷
+
+> -i 条带磁盘数量 -I单次io大小 。类型为striped即可。
+
+```shell
+[root@itp-mysql-1 ~]# lvcreate -i 2 -I 64 -l 100%FREE -n mysqldata mysqldata
+  Logical volume "mysqldata" created.
+[root@itp-mysql-1 ~]# lvdisplay -m  /dev/mysqldata/mysqldata 
+  --- Logical volume ---
+  LV Path                /dev/mysqldata/mysqldata
+  LV Name                mysqldata
+  VG Name                mysqldata
+  LV UUID                dn20Jb-rdNc-Pnub-Ajnz-n5Up-rxxO-kh77II
+  LV Write Access        read/write
+  LV Creation host, time itp-mysql-1, 2024-10-15 11:26:48 +0800
+  LV Status              available
+  # open                 1
+  LV Size                <2.93 TiB
+  Current LE             767998
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:2
+   
+  --- Segments ---
+  Logical extents 0 to 767997:
+    Type		striped
+    Stripes		2
+    Stripe size		64.00 KiB
+    Stripe 0:
+      Physical volume	/dev/vdb
+      Physical extents	0 to 383998
+    Stripe 1:
+      Physical volume	/dev/vdc
+      Physical extents	0 to 383998
+```
 
 ## KVM虚拟机扩容
 
@@ -243,6 +302,8 @@
    输入p 选择主分区
    输入2 创建分区2
    查看默认分区起始值是否为原分区起始分值，如果是直接回车，如果不是输入原起始值
+   输入t 选择分区2
+   输入8e 设置分区类型为lvm
    继续回车
    输入w 保存
    ```
@@ -256,52 +317,47 @@
 10. 查看分区大小
 
     ```shell
+    #分区大小改为新的大小
     lsblk
     ```
 
 11. 查看物理卷大小
 
     ```shell
+    #查看pv大小
     pvdisplay
-    ```
-
-12. 调整物理卷大小
-
-    ```shell
     pvresize /dev/vda2
     ```
 
-13. 再次查看物理卷大小
+12. 再次查看物理卷大小
 
     ```shell
+    #pv大小应该变成新的容量
     pvdisplay
     ```
 
-14. 扩容逻辑卷
+13. 扩容逻辑卷
 
     ```shell
     lvextend -l +100%FREE /dev/centos/home
     ```
 
-15. 查看扩容情况
+14. 查看扩容情况
 
     ```shell
     lsblk
     ```
 
-16. 查看文件情况
+15. 调整文件系统大小
 
     ```shell
-    df -h
-    ```
-
-17. 调整文件系统大小
-
-    ```shell
+    #xfs格式使用
     xfs_growfs /dev/mapper/centos-home
+    #ext2/ext3/ext4格式使用
+    resize2fs /dev/mapper/centos-home
     ```
 
-18. 查看调整情况
+16. 查看调整情况
 
     ```shell
     df -h

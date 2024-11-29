@@ -81,9 +81,10 @@
 * 拉取github错误处理
 
   ```shell
-  #替换为https
-  git config --global url."https://github.com/".insteadOf git@github.com:
-  git config --global url."https://".insteadOf git://
+  #将git、ssh协议替换为https协议并且配置githubfast.com镜像站，解决github拉取失败的问题
+  git config --global url.https://githubfast.com.insteadOf git://github.com
+  git config --global --add url.https://githubfast.com.insteadOf https://github.com
+  git config --global --add url.https://githubfast.com.insteadOf ssh://git@github.com
   ```
 
 # Gitlab维护
