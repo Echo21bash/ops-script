@@ -169,6 +169,32 @@ bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --e
 bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type brokers --entity-default --describe
 ```
 
+## Kafka认证
+
+### 服务端配置
+
+### 客户端配置
+
+> 创建sasl配置文件
+
+```shell
+echo 'default.api.timeout.ms=600000
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=SCRAM-SHA-256
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password="Gioneco@2023Abc";
+' >client.properties
+```
+
+> 命令行添加参数指定配置文件--command-config
+
+```shell
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092 --command-config ./client.properties
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --command-config ./client.properties --list
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --command-config ./client.properties --describe --group test
+```
+
+
+
 ## Kafka常见问题
 
 ### 日志保留时间设置无效问题
