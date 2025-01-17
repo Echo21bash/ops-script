@@ -182,7 +182,7 @@ echo 'default.api.timeout.ms=600000
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=SCRAM-SHA-256
 sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password="Gioneco@2023Abc";
-' >client.properties
+' > client.properties
 ```
 
 > 命令行添加参数指定配置文件--command-config
