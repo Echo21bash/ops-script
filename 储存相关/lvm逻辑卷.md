@@ -192,38 +192,42 @@
 12. 扩展卷组
 
     ```shell
+    #加入卷组
     vgextend centos /dev/vda3
     ```
-
-    
 
 13. 查看卷组容量
 
     ```shell
+    #此时卷组容量会增加
     vgdisplay
     ```
 
 14. 查看当前卷容量
 
     ```shell
+    #磁盘的容量还是原来的大小
     lvdisplay
     ```
 
 15. 扩展LVM卷
 
     ```shell
+    #扩展lvm磁盘
     lvextend -l +100%FREE /dev/centos/home
     ```
 
 16. 再次查看卷容量
 
     ```shell
+    #此时lvm磁盘容量已经增加
     lvdisplay
     ```
 
 17. 查看扩容情况
 
     ```shell
+    #此时磁盘已经加入lvm磁盘
     lsblk
     ```
 
@@ -236,7 +240,10 @@
 19. 调整文件系统大小
 
     ```shell
+    #xfs使用xfs_growfs
+    #ext4使用resize2fs
     xfs_growfs /dev/mapper/centos-home
+    resize2fs /dev/mapper/centos-home
     ```
 
 20. 查看调整情况

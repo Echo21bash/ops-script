@@ -62,7 +62,10 @@
 
 * 新建分支并切换到指定分支
 
+  > 基于远端分支创建新的dev分支
+
   ```shell
+  git checkout -b dev origin/master
   git checkout -b dev origin/release/caigou_v1.0
   ```
 
@@ -72,7 +75,16 @@
   git checkout master
   ```
 
+* 提交代码
+
+  ```shell
+  git add .
+  git commit -m "Your commit message"
+  ```
+
 * 将本地分支推送到远程
+
+  > 将本地dev分支推送到远端分支
 
   ```shell
   git push -u origin dev:release/caigou_v1.0

@@ -38,3 +38,24 @@
 
    ```sql
    mysql > show processlist;
+
+## 安全配置
+
+### 安全登录
+
+* 通过mysql_config_editor命令
+
+```shell
+#通过mysql_config_editor配置登录方式
+mysql_config_editor set -G itp -udba -h 172.16.2.204 -P 8066 -p
+#查看配置内容，密码为隐藏增加安全性
+[root ~]# mysql_config_editor print --all
+[itp]
+user = "dba"
+password = *****
+host = "172.16.2.204"
+port = 8066
+#通过--login-path参数快捷登录密码不会留痕
+mysql --login-path=itp
+```
+
