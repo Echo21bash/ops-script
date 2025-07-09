@@ -512,6 +512,64 @@ LIMIT
   20;
 ```
 
+### 数据表年龄
+
+> 数据库用txid来记录事务,目前使用GP版本txid类型是int2，所以txid最大值是2^31=2147483648，每个表里都有xmin和xmax来记录当前的事务,事务号到2147483648就会用尽，有两个参数xid_stop_limit,xid_warn_limit控制告警和停止服务。
+
+```sql
+---查询现在的各个数据库的年龄
+SELECT datname, datfrozenxid ,age(datfrozenxid) FROM pg_database ORDER BY 3 DESC ;
+---检查segment数据库年龄
+SELECT gp_segment_id,datname, age(datfrozenxid) FROM gp_dist_random('pg_database') ORDER BY 3 DESC;
+---表级年龄查询
+SELECT 
+    n.nspname AS schema_name,
+    c.relname AS table_name,
+    MAX(age(c.relfrozenxid)) AS max_xid_age,
+    pg_size_pretty(pg_total_relation_size(c.oid)) AS table_size,
+    CASE 
+        WHEN MAX(age(c.relfrozenxid)) > 1000000000 THEN '紧急冻结'
+        WHEN MAX(age(c.relfrozenxid)) > 500000000 THEN '优先冻结'
+        WHEN MAX(age(c.relfrozenxid)) > 100000000 THEN '计划冻结'
+        ELSE '正常'
+    END AS action
+FROM 
+    gp_dist_random('pg_class') AS c
+JOIN 
+    pg_namespace n ON n.oid = c.relnamespace
+WHERE 
+    c.relkind = 'r'
+    ---默认处理堆表
+	AND c.relstorage in ('h')
+GROUP BY 
+    n.nspname, c.relname, c.oid
+ORDER BY 
+    MAX(age(c.relfrozenxid)) DESC
+    
+---生成命令
+SELECT 'VACUUM FREEZE VERBOSE ' || quote_ident(nspname) || '.' || quote_ident(relname) || ';'
+FROM (
+    SELECT n.nspname, c.relname
+    FROM gp_dist_random('pg_class') AS c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind = 'r' AND c.relstorage in ('h') AND age(c.relfrozenxid) > 1000000000
+) AS critical_tables;
+```
+
+> 临时库处理，临时库不允许登录
+
+```sql
+SELECT datallowconn from pg_database where datname='template0';
+
+set allow_system_table_mods='DML';
+update pg_database set datallowconn='t' where datname='template0';
+\c template0
+vacuum freeze;
+\c postgres gpadmin
+set allow_system_table_mods='DML';
+update pg_database set datallowconn='f' where datname='template0';
+```
+
 
 
 ## 集群维护
