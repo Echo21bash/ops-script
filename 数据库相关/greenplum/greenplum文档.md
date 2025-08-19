@@ -519,7 +519,7 @@ LIMIT
 ```sql
 ---查询现在的各个数据库的年龄
 SELECT datname, datfrozenxid ,age(datfrozenxid) FROM pg_database ORDER BY 3 DESC ;
----检查segment数据库年龄
+---检查segment数据库年龄，执行VACUUM ANALYZE后再查询
 SELECT gp_segment_id,datname, age(datfrozenxid) FROM gp_dist_random('pg_database') ORDER BY 3 DESC;
 ---表级年龄查询
 SELECT 

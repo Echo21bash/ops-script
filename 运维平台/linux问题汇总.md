@@ -335,3 +335,226 @@ lrwx------ 1 root root 64 Aug 22 13:24 /proc/1398234/fd/11 -> /var/lib/filebeat/
 ```
 
 > 持续观察该目录发现checkpoint.new频繁创建删除，最后定位到filebeat的异常导致io高。重启filebeat后恢复。正常情况checkpoint.new文件只会创建一次，不会频繁创建删除。具体原因还不清楚发生这种情况的问题。
+
+
+
+# TLS  指南
+
+本文档汇总了与 Kubernetes Ingress 环境中 Transport Layer Security (TLS) 相关的关键概念和故障排查步骤，重点涵盖证书管理、服务器名称指示（SNI）、以及使用 Wireshark 等工具进行数据包捕获和解密。文档基于特定场景解决证书不匹配、SNI 处理和解密失败等问题。
+
+## 1. TLS 基础知识
+
+### 1.1 TLS 协议
+- **用途**：TLS（传输层安全协议）通过加密数据和验证身份保护客户端与服务器之间的通信。
+- **版本**：常用版本包括 TLS 1.2 和 TLS 1.3。TLS 1.2 广泛使用，但由于使用了如 SHA-1 的过时加密算法，安全性低于 TLS 1.3。
+- **加密套件**：定义使用的加密算法，例如 `TLS_RSA_WITH_AES_128_CBC_SHA`（RSA 密钥交换，AES-128 加密，SHA-1 哈希）。
+  - 示例：`AES128-SHA` 是一个较弱的加密套件，推荐使用现代套件如 `TLS_AES_256_GCM_SHA384`。
+- **密钥交换**：常见方法包括 RSA（使用服务器私钥）和 ECDHE（椭圆曲线 Diffie-Hellman 临时密钥，提供前向保密）。
+
+### 1.2 证书和私钥
+- **证书**：包含公钥和身份信息（例如 `CN=*.app.com`）。可以是自签名证书或由证书颁发机构（CA）签发。
+- **私钥**：用于解密流量或签名数据，必须与证书的公钥匹配。
+- **自签名证书**：默认不受信任，常用于内部系统，但会触发验证错误（例如 `self signed certificate`）。
+
+### 1.3 服务器名称指示（SNI）
+- **用途**：SNI 允许客户端在 TLS 握手中指定请求的域名（例如 `api.app.com`），使服务器能在单一 IP 上为多个域名选择正确的证书。
+- **在 Kubernetes 中的重要性**：NGINX Ingress Controller 依赖 SNI 匹配请求域名与正确的 TLS Secret。
+
+## 2. Kubernetes Ingress 和 TLS
+
+### 2.1 NGINX Ingress Controller
+- **作用**：根据 Ingress 资源管理 HTTP/HTTPS 流量路由到后端服务。
+- **TLS 配置**：在 Ingress 资源的 `spec.tls` 部分定义，引用包含证书（`tls.crt`）和私钥（`tls.key`）的 Kubernetes Secret。
+- **默认证书**：NGINX Ingress Controller 为未匹配或配置错误的请求生成一个自签名的“伪证书”（`Kubernetes Ingress Controller Fake Certificate`）。
+
+### 2.2 Kubernetes Secret 用于 TLS
+- **类型**：`kubernetes.io/tls`
+- **结构**：
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: app.com
+    namespace: test
+  type: kubernetes.io/tls
+  data:
+    tls.crt: <base64-encoded-certificate>
+    tls.key: <base64-encoded-private-key>
+  ```
+- **验证**：
+  - 提取并解码：
+    ```bash
+    kubectl get secret app.com -n test -o jsonpath="{.data.tls\.crt}" | base64 -d > tls.crt
+    kubectl get secret app.com -n test -o jsonpath="{.data.tls\.key}" | base64 -d > tls.key
+    ```
+  - 检查证书：
+    ```bash
+    openssl x509 -in tls.crt -noout -text
+    ```
+    - 确认 `Subject: CN=*.app.com`。
+  - 检查私钥：
+    ```bash
+    openssl rsa -in tls.key -check
+    ```
+  - 验证证书和私钥匹配：
+    ```bash
+    openssl x509 -noout -modulus -in tls.crt | openssl md5
+    openssl rsa -noout -modulus -in tls.key | openssl md5
+    ```
+
+### 2.3 Ingress 配置
+- **示例**：
+  
+  ```yaml
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: api.app.com
+    namespace: test
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/client_body_timeout: "180"
+      nginx.ingress.kubernetes.io/client_header_timeout: "180"
+      nginx.ingress.kubernetes.io/proxy-body-size: "32m"
+      nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  spec:
+    tls:
+    - hosts:
+      - api.app.com
+      secretName: app.com
+    rules:
+    - host: api.app.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: client-program-svc
+              port:
+                number: 7777
+  ```
+- **关键点**：
+  - `spec.tls.hosts` 必须匹配请求的域名（`api.app.com`）。
+  - `secretName` 引用 TLS Secret（`app.com`）。
+  - `spec.rules.host` 确保域名路由正确。
+
+## 3. TLS 问题排查
+
+### 3.1 证书不匹配
+- **症状**：`openssl s_client -connect 172.26.67.9:32443 -servername api.app.com` 显示 `*.app.com` 证书，但 Wireshark 抓包检查`Server Hello`的Protocol: Certificate字段显示`Kubernetes Ingress Controller Fake Certificate`。
+- **原因**：
+  - **缺少 SNI**：客户端未在 `Client Hello` 中发送 `server_name` 扩展，导致 NGINX 回退到默认证书。
+  - **默认证书覆盖**：NGINX Ingress 配置了默认证书（`--default-ssl-certificate`）。
+
+### 3.2 验证 SNI
+- **检查 Wireshark 中的 Client Hello**：
+  - 过滤器：`tls.handshake.type == 1`
+  - 检查 `Extension: server_name` 是否包含 `api.app.com`。
+  - 如果缺失，客户端未发送 SNI。
+
+### 3.3 检查 Ingress Controller
+- **默认证书**：
+
+  ```bash
+  kubectl describe deployment -n <ingress-namespace> -l app.kubernetes.io/name=ingress-nginx
+  ##helm配置，配置默认证书为目标证书
+  controller:
+    config:
+      ssl-ciphers: "AES128-SHA:AES256-SHA:AES128-SHA256:AES256-SHA256"
+      ssl-protocols: "TLSv1.1 TLSv1.2 TLSv1.3"
+      ssl-prefer-server-ciphers: "on"
+      use-http2: "false"
+    extraArgs:
+      default-ssl-certificate: "ingress-nginx/tls-secret"
+  ```
+
+## 4. 抓包和解密 TLS 流量
+
+### 4.1 抓包
+- **抓取节点端口流量**（`172.26.67.9:32443`）：
+  ```bash
+  tcpdump -i <interface> host 172.26.67.9 and port 32443 -w new_capture.pcap
+  ```
+
+### 4.2 配置 Wireshark 解密
+
+**适用于RSA（使用服务器私钥）密钥交换方式**
+
+> RSA 密钥交换是一种传统的 TLS 密钥交换机制，广泛用于 TLS 1.2 及更早版本（TLS 1.3 已移除 RSA 密钥交换)，RSA 通常与以下 TLS 加密套件结合使用：
+>
+> TLS_RSA_WITH_AES_128_CBC_SHA（0x002f）：RSA 密钥交换，AES-128-CBC 加密，SHA-1 哈希。
+>
+> TLS_RSA_WITH_AES_256_CBC_SHA（0x0035）：RSA 密钥交换，AES-256-CBC 加密，SHA-1 哈希。
+>
+> TLS_RSA_WITH_AES_128_CBC_SHA256（0x003c）：RSA 密钥交换，AES-128-CBC 加密，SHA-256 哈希（更安全）。
+>
+> TLS_RSA_WITH_AES_256_CBC_SHA256（0x003d）：RSA 密钥交换，AES-256-CBC 加密，SHA-256 哈希。
+>
+> TLS_RSA_WITH_AES_128_GCM_SHA256（0x009c）：RSA 密钥交换，AES-128-GCM 加密，SHA-256 哈希（更现代）。
+>
+> TLS_RSA_WITH_AES_256_GCM_SHA384（0x009d）：RSA 密钥交换，AES-256-GCM 加密，SHA-384 哈希。
+>
+> TLS_RSA_WITH_3DES_EDE_CBC_SHA（0x000a）：RSA 密钥交换，3DES 加密，SHA-1 哈希（已过时，不推荐）。
+
+- **提取私钥**：
+  
+  ```bash
+  kubectl get secret app.com -n test -o jsonpath="{.data.tls\.key}" | base64 -d > tls.key
+  ```
+  
+- **Wireshark 配置**：
+  
+  - 打开 `Preferences -> Protocols -> TLS -> RSA keys list`。
+  - 添加：
+    - IP:  `172.26.67.9`
+    - Port:  `32443`
+    - Protocol: `http`
+    - Key File: `tls.key`
+  
+- **验证解密**：
+  
+  - 加载 `.pcap` 文件，检查 `http` 过滤器是否显示解密后的 HTTP 流量。
+  - 启用 TLS 调试日志（`Preferences -> Protocols -> TLS -> Debug file`）查看错误。
+
+**适用于ECDHE（椭圆曲线 Diffie-Hellman 临时密钥，提供前向保密）**
+
+> ECDHE 通常与以下 TLS 加密套件结合使用：
+>
+> TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384（0xc030）：ECDHE 密钥交换，RSA 签名，AES-256-GCM 加密。
+>
+> TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384（0xc02c）：ECDHE 密钥交换，ECDSA 签名，AES-256-GCM 加密。
+>
+> TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256（0xc02f）：ECDHE 密钥交换，RSA 签名，AES-128-GCM 加密。
+>
+> TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256（0xcca9）：ECDHE 密钥交换，ECDSA 签名，ChaCha20-Poly1305 加密。
+>
+> TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA（0xc014）：ECDHE 密钥交换，RSA 签名，AES-256-CBC 加密（较老）
+
+- **配置*SSLKEYLOGFILE***：
+
+  ```bash
+  ##客户端或者服务端配置SSLKEYLOGFILE环境变量，配置完成后抓包
+  SSLKEYLOGFILE=/var/log/sslkeylog.txt
+  ##服务端暂时没有测试
+  
+  ```
+
+- **Wireshark 配置**：
+
+  > 选择sslkeylog.txt文件
+
+  - 打开 `Preferences -> Protocols -> TLS ->  Pre-Master-Secret log filename`。
+
+* **验证解密**：
+  - 加载 `.pcap` 文件，检查 `http` 过滤器是否显示解密后的 HTTP 流量。
+  - 启用 TLS 调试日志（`Preferences -> Protocols -> TLS -> Debug file`）查看错误。
+
+### 4.3 解密失败的原因
+- **私钥不匹配**：抓包中的证书是 `Kubernetes Ingress Controller Fake Certificate`，而 Wireshark 使用了 `app.com` 的私钥。
+- **缺少 SNI**：客户端未发送 `server_name` 扩展，导致返回默认证书。
+- **会话重用**：TLS 会话重用（Session ID 或 Ticket）可能导致缺少完整握手数据。
+
