@@ -17,6 +17,8 @@ MACHINE\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters\EnableForcedLo
 MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\ClearPageFileAtShutdown=4,1
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServer=4,0
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,900
+MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs=4,900
 [System Access]
 MinimumPasswordAge = 0
 MaximumPasswordAge = 60

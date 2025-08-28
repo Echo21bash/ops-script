@@ -4,41 +4,45 @@
 * 以管理员身份运行build_security_Strategy.bat
 * security.inf 文件为windows安全配置内容，可根据具体需求选择配置
 #### 参数说明
-```inf[]
+```ini
 [Unicode]
 Unicode=yes
 [Event Audit]
-审计登录事件，包括成功和失败
+;审计登录事件，包括成功和失败
 AuditLogonEvents = 3
-#审核策略更改，包括成功和失败
+;审核策略更改，包括成功和失败
 AuditPolicyChange = 3
-#审核对象访问，包括成功和失败
+;审核对象访问，包括成功和失败
 AuditObjectAccess = 3
-#审核特权使用，包括成功和失败
+;审核特权使用，包括成功和失败
 AuditDSAccess = 3
-审核过程跟踪，包括失败
+;审核过程跟踪，包括失败
 AuditPrivilegeUse = 2
-审核系统时间，包括成功和失败
+;审核系统时间，包括成功和失败
 AuditSystemEvents = 3
-审核账户管理，包括成功和失败
+;审核账户管理，包括成功和失败
 AuditAccountManage = 3
-审核目录服务访问，包括成功和失败
+;审核目录服务访问，包括成功和失败
 AuditProcessTracking = 2
 [Registry Values]
-不允许SAM账户和共享的匿名连接
+;不允许SAM账户和共享的匿名连接
 MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymous=4,1
-不允许SAM账户的匿名枚举
+;不允许SAM账户的匿名枚举
 MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymousSAM=4,1
-不显示上次登录的用户名
+;不显示上次登录的用户名
 MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\DontDisplayLastUserName=4,1
-当登录时间用完自动注销用户
+;当登录时间用完自动注销用户
 MACHINE\System\CurrentControlSet\Services\LanManServer\Parameters\EnableForcedLogOff=4,1
-清楚虚拟内存页面文件内容
+;清除虚拟内存页面文件内容
 MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management\ClearPageFileAtShutdown=4,1
-关闭磁盘共享
+;关闭磁盘共享
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServer=4,0
-关闭磁盘共享
+;关闭磁盘共享
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
+;远程桌面服务（RDP, Remote Desktop Protocol）会话的空闲超时时间
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,900
+;当本地或远程会话空闲超过 900 秒（15 分钟）后，系统会触发屏幕锁定
+MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs=4,900
 [System Access]
 密码最短使用期限
 MinimumPasswordAge = 0
@@ -59,7 +63,7 @@ EnableGuestAccount = 0
 设置默认管理员账号为Administrator，该字段可自定义
 NewAdministratorName = "Administrator"
 [Privilege Rights]
-远程系统强制关机默认为管理员组
+;远程系统强制关机默认为管理员组
 SeRemoteShutdownPrivilege = *S-1-5-32-544
 取得文件或其他对象所有权配置为管理员组
 SeTakeOwnershipPrivilege = *S-1-5-32-544
