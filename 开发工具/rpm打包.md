@@ -229,6 +229,9 @@ fi
 #### rpm编译
 
 ```shell
+#直接编译
 rpmbuild -ba SPECS/ocfs2.spec
+#传递变量
+rpmbuild -ba --define 'dist .oe2203' SPECS/ocfs2.spec
 ```
 
