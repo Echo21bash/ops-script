@@ -9,21 +9,21 @@
 Unicode=yes
 [Event Audit]
 ;审计登录事件，包括成功和失败
-AuditLogonEvents = 3
+AuditLogonEvents = 1
 ;审核策略更改，包括成功和失败
 AuditPolicyChange = 3
 ;审核对象访问，包括成功和失败
-AuditObjectAccess = 3
+AuditObjectAccess = 0
 ;审核特权使用，包括成功和失败
-AuditDSAccess = 3
+AuditDSAccess = 0
 ;审核过程跟踪，包括失败
-AuditPrivilegeUse = 2
+AuditPrivilegeUse = 0
 ;审核系统时间，包括成功和失败
 AuditSystemEvents = 3
 ;审核账户管理，包括成功和失败
 AuditAccountManage = 3
 ;审核目录服务访问，包括成功和失败
-AuditProcessTracking = 2
+AuditProcessTracking = 0
 [Registry Values]
 ;不允许SAM账户和共享的匿名连接
 MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymous=4,1
@@ -40,9 +40,17 @@ MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServe
 ;关闭磁盘共享
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
 ;远程桌面服务（RDP, Remote Desktop Protocol）会话的空闲超时时间
-MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,900
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,90000
 ;当本地或远程会话空闲超过 900 秒（15 分钟）后，系统会触发屏幕锁定
 MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs=4,900
+;日志覆盖周期180天
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\Retention=4,15552000
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\Retention=4,15552000
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\System\Retention=4,15552000
+;日志覆盖周期大小128M和256M，系统默认是20M
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\MaxSize=4,134217728
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\MaxSize=4,536870912
+MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\System\MaxSize=4,134217728
 [System Access]
 密码最短使用期限
 MinimumPasswordAge = 0
@@ -73,3 +81,4 @@ SeNetworkLogonRight = *S-1-5-32-544,*S-1-5-32-545,*S-1-5-32-551,*S-1-5-32-547
 signature="$CHICAGO$"
 Revision=1
 ```
+
