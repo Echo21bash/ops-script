@@ -59,3 +59,38 @@ port = 8066
 mysql --login-path=itp
 ```
 
+* 通过SSL加密
+
+```sql
+---查看SSL参数状态，查看have_ssl为YES，这表示MySQL已经支持SSL的安全连接
+mysql> show variables like '%ssl%';
+
+---创建强制使用ssl连接的账号
+mysql> create user 'user'@'%' identified by 'Welcome_1';
+mysql> grant all on *.* to 'user'@'%';
+mysql> alter user 'user'@'%' require ssl;
+---查看用户
+mysql> use mysql;
+mysql> select user,host,ssl_type from user ;
++------------------+--------------+----------+
+| user             | host         | ssl_type | 
++------------------+--------------+----------+
+| mycat            | %            |          | 
+| root             | %            |          |
+| user             | %            | ANY      |
+| mysql.infoschema | localhost    |          | 
+| mysql.session    | localhost    |          | 
+| mysql.sys        | localhost    |          |
+| root             | localhost    |          | 
++------------------+--------------+----------+
+
+# 客户端使用“user”通过SSL安全连接方式连接MySQL。
+mysql --ssl-ca=/usr/local/mysql/data/ca.pem \
+--ssl-cert=/usr/local/mysql/data/client-cert.pem \
+--ssl-key=/usr/local/mysql/data/client-key.pem \
+-uuser -p
+
+# 取消ssl验证:
+mysql> alter user 'user'@'%' require none;
+```
+
