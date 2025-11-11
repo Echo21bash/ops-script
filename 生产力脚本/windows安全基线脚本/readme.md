@@ -41,6 +41,8 @@ MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServe
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
 ;远程桌面服务（RDP, Remote Desktop Protocol）会话的空闲超时时间
 MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,90000
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxDisconnectionTime=4,900000
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxConnectionTime=4,0
 ;当本地或远程会话空闲超过 900 秒（15 分钟）后，系统会触发屏幕锁定
 MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs=4,900
 ;日志覆盖周期180天

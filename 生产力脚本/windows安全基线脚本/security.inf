@@ -17,7 +17,9 @@ MACHINE\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters\EnableForcedLo
 MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\ClearPageFileAtShutdown=4,1
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareServer=4,0
 MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters\AutoShareWks=4,0
-MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,90000
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxIdleTime=4,900000
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxDisconnectionTime=4,900000
+MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\MaxConnectionTime=4,0
 MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs=4,900
 MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\Retention=4,15552000
 MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\Retention=4,15552000
