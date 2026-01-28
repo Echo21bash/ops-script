@@ -58,6 +58,11 @@ git branch -a
 git checkout -b dev origin/master
 git checkout -b dev origin/release/caigou_v1.0
 
+## 强制拉取并覆盖本地
+git checkout master
+git fetch --all
+git reset --hard origin/master
+
 ##切换本地分支
 git checkout master
 ##删除本地分支
