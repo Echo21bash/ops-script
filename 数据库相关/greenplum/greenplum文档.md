@@ -625,7 +625,7 @@ LEFT JOIN
     pg_class t ON c.reltoastrelid = t.oid
 WHERE 
     c.relkind IN ('r', 'm') 
-    AND c.relstorage IN ('h') -- 仅处理堆表
+    AND c.relstorage IN ('h','a','c')
     AND n.nspname NOT IN ('pg_catalog', 'information_schema') -- 排除系统内置库
     AND GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 1000000
 ORDER BY 
