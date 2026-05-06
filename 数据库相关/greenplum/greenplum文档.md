@@ -220,6 +220,54 @@ Prometheus+grafana
 
 参考链接https://github.com/tangyibo/greenplum_exporter
 
+
+
+## GPCC
+
+### 安装过程
+
+```shell
+mkdir -p /usr/local/greenplum-cc-6.8.4; chown -R gpadmin:gpadmin /usr/local/greenplum-cc-6.8.4
+ln -s /usr/local/greenplum-cc-6.8.4 /usr/local/greenplum-cc
+su - gpadmin
+source /usr/local/greenplum-db/greenplum_path.sh
+unzip greenplum-cc-web-6.8.4-gp6-rhel7-x86_64.zip
+cd greenplum-cc-web-6.8.4-gp6-rhel7-x86_64/
+./gpccinstall-6.8.4
+echo 'source /usr/local/greenplum-cc/gpcc_path.sh' >> ~/.bashrc
+## 根据版本修改
+cd /usr/local/greenplum-cc-6.8.4/gppkg
+gppkg -i MetricsCollector-6.8.4_gp_6.19.3-rhel7-x86_64.gppkg 
+gpstop -M fast ; gpstart -a
+gpcc start ; gpcc status
+```
+
+### 修改GP配置
+
+```shell
+gpconfig -c shared_preload_libraries -v metrics_collector
+gpconfig -c gp_enable_query_metrics -v on
+gpconfig -c track_activities  -v on
+
+gpconfig -s shared_preload_libraries
+gpconfig -s gp_enable_query_metrics
+gpconfig -s track_activities
+
+gpstop -M fast ; gpstart -a
+gpcc stop ; gpcc start ; gpcc status
+```
+
+### 登录
+
+```shell
+访问http://gp-master:28080
+账号
+cat .pgpass
+*:5432:gpperfmon:gpmon:changeme
+```
+
+
+
 # GreenPlum维护
 
 ## 基础命令
@@ -493,23 +541,49 @@ gprecoverseg -S => 指定输出配置空间文件
 **注意：** *在执行vacuum时如有未释放的事务时垃圾回收会失败，需要将所有事务中断执行，最好在夜晚执行*
 
 ```sql
----查看表膨胀率 脏数据大于1万条按照膨胀率降序打印20条
-SELECT
-  schemaname || '.' || relname as table_name,
-  pg_size_pretty(
-    pg_relation_size('"' || schemaname || '"' || '.' || relname)
-  ) as table_size,
-  n_dead_tup,
-  n_live_tup,
-  round(n_dead_tup * 100 / (n_live_tup + n_dead_tup), 2) AS dead_tup_ratio
-FROM
-  pg_stat_all_tables
-WHERE
-  n_dead_tup >= 10000
-ORDER BY
-  dead_tup_ratio DESC
-LIMIT
-  20;
+---查看表膨胀率 脏数据大于1万条按照膨胀率大于20%降序打印20条
+WITH h AS (
+    SELECT 
+        'HEAP'::text AS type,
+        '"' || schemaname || '"."' || relname || '"' AS table_name,
+        pg_size_pretty(pg_relation_size('"' || schemaname || '"."' || relname || '"')) AS size,
+        n_dead_tup AS dirty,
+        n_live_tup AS live,
+        round(n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS ratio
+    FROM pg_stat_all_tables 
+    WHERE n_dead_tup >= 10000 
+      AND n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0) > 20
+),
+a AS (
+    SELECT 
+        'AO'::text AS type,
+        '"' || t2.nspname || '"."' || t1.relname || '"' AS table_name,
+        pg_size_pretty(pg_relation_size(t1.oid)) AS size,
+        SUM(hidden_tupcount) AS dirty,
+        SUM(total_tupcount) AS live,
+        ROUND(SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0), 2) AS ratio
+    FROM pg_class t1
+    JOIN pg_namespace t2 ON t1.relnamespace = t2.oid
+    CROSS JOIN LATERAL gp_toolkit.__gp_aovisimap_compaction_info(t1.oid) AS info
+    WHERE t1.relstorage IN ('a', 'c')
+      AND hidden_tupcount > 10000
+    GROUP BY t2.nspname, t1.relname, t1.oid
+    HAVING SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0) > 20
+)
+SELECT 
+    type, 
+    table_name, 
+    size, 
+    dirty, 
+    live, 
+    ratio
+FROM (
+    SELECT * FROM h 
+    UNION ALL 
+    SELECT * FROM a
+) t
+ORDER BY ratio DESC
+LIMIT 20;
 ```
 
 ### 数据表年龄
@@ -524,36 +598,38 @@ SELECT gp_segment_id,datname, age(datfrozenxid) FROM gp_dist_random('pg_database
 ---表级年龄查询
 SELECT 
     n.nspname AS schema_name,
-    c.relname AS table_name,
-    MAX(age(c.relfrozenxid)) AS max_xid_age,
-    pg_size_pretty(pg_total_relation_size(c.oid)) AS table_size,
+    c.oid::regclass AS table_name,
+    -- 表存储类型说明
     CASE 
-        WHEN MAX(age(c.relfrozenxid)) > 1000000000 THEN '紧急冻结'
-        WHEN MAX(age(c.relfrozenxid)) > 500000000 THEN '优先冻结'
-        WHEN MAX(age(c.relfrozenxid)) > 100000000 THEN '计划冻结'
-        ELSE '正常'
-    END AS action
+        WHEN c.relstorage = 'h' THEN '堆表 (Heap)'
+        WHEN c.relstorage = 'a' THEN 'AO行存 (Row-oriented AO)'
+        WHEN c.relstorage = 'c' THEN 'AO列存 (Column-oriented AO)'
+        WHEN c.relstorage = 'x' THEN '外部表 (External)'
+        ELSE '其他(' || c.relstorage || ')'
+    END AS storage_type,
+    -- 综合考虑主表和 TOAST 表的年龄
+    GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) AS age,
+    CASE 
+        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 500000000 THEN '🔴 紧急冻结'
+        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 300000000 THEN '🟠 优先冻结'
+        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 100000000 THEN '🟡 计划冻结'
+        ELSE '🟢 正常'
+    END AS action,
+    -- 核心修复：对模式名和表名同时进行标识符转义处理
+    'VACUUM FREEZE VERBOSE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) || ';' AS vacuum_sql
 FROM 
-    gp_dist_random('pg_class') AS c
+    pg_class c
 JOIN 
-    pg_namespace n ON n.oid = c.relnamespace
+    pg_namespace n ON c.relnamespace = n.oid
+LEFT JOIN 
+    pg_class t ON c.reltoastrelid = t.oid
 WHERE 
-    c.relkind = 'r'
-    ---默认处理堆表
-	AND c.relstorage in ('h')
-GROUP BY 
-    n.nspname, c.relname, c.oid
+    c.relkind IN ('r', 'm') 
+    AND c.relstorage IN ('h') -- 仅处理堆表
+    AND n.nspname NOT IN ('pg_catalog', 'information_schema') -- 排除系统内置库
+    AND GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 1000000
 ORDER BY 
-    MAX(age(c.relfrozenxid)) DESC
-    
----生成命令
-SELECT 'VACUUM FREEZE VERBOSE ' || quote_ident(nspname) || '.' || quote_ident(relname) || ';'
-FROM (
-    SELECT n.nspname, c.relname
-    FROM gp_dist_random('pg_class') AS c
-    JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE c.relkind = 'r' AND c.relstorage in ('h') AND age(c.relfrozenxid) > 1000000000
-) AS critical_tables;
+    age DESC;
 ```
 
 > 临时库处理，临时库不允许登录
@@ -603,9 +679,8 @@ update pg_database set datallowconn='f' where datname='template0';
    20180211:15:19:48:016771 gpactivatestandby:l-test6:gpadmin-[INFO]:-Force standby activation  = no
    .
    .
-   .
    ```
-
+   
  3. 切换服务器vip
 
       ```shell

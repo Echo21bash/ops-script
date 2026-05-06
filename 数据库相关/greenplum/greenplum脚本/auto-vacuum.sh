@@ -1,24 +1,20 @@
 #!/bin/bash
 #auto exec vacuum full
 #do not echo command, just get a list of db
-#刷新环境变量
 source /usr/local/greenplum-db/greenplum_path.sh
-#工作目录
-work_dir=`cd $(dirname $0);pwd`
-#星期几
 week=`date +%w`
-#日志
+work_dir='/home/gpadmin/itp_tool'
 log_file="${work_dir}/vacuum.log"
-#数据库名
-dblist=('lcdb' 'tyacc_production')
+dblist=`psql -d postgres -c "copy (select datname from pg_stat_database) to stdout"`
+dblist=($dblist)
+dblist=('lcdb' 'tyacc_tytest')
 #申明关联数组
 declare -A schema_name
-#模式名称
-schema_name=([tyacc_production]='AFC_ITP_BUSINESS AFC_ITP_SDK AFC_ITP_BIZ_COL AFC_ITP_FACE' [lcdb]='afc_txn')
+schema_name=([tyacc_tytest]='AFC_ITP_BUSINESS AFC_ITP_SDK AFC_ITP_BIZ_COL AFC_ITP_FACE' [lcdb]='afc_txn')
 
 kill_transaction(){
 	###杀掉超过一天的事务
-	psql <<-EOF
+	psql  <<-EOF
 	\timing
 	SELECT pg_terminate_backend(pid)
 	FROM 
@@ -56,7 +52,7 @@ run_analyze(){
 		#some table name may contain the $ sign, so escape it
 		line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
 		#vacuum full this table, which will lock the table
-		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';ANALYZE $line;" &
+		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
 	done <${tables_file}
 	
 	while true; do
@@ -74,7 +70,7 @@ run_analyze(){
 		#some table name may contain the $ sign, so escape it
 		line=`echo $line |sed 's/\\\$/\\\\\\\$/g'`
 		#vacuum full this table, which will lock the table
-		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';ANALYZE $line;" &
+		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
 	done <${system_tables_file}
 	
 	while true; do
@@ -92,9 +88,34 @@ get_vacuum_table(){
 	vacuum_tables_detail="${work_dir}/${db}_vacuum_tables_detail.txt"
 	vacuum_tables="${work_dir}/${db}_vacuum_tables.txt"
 	###将过期数据大于10000条的表筛选出来
-	psql -d $db -c "copy (SELECT schemaname || '.' || relname as table_name, pg_size_pretty( pg_relation_size('\"' || schemaname || '\"' || '.' || relname) ) as table_size, n_dead_tup, n_live_tup, round(n_dead_tup * 100 / (n_live_tup + n_dead_tup), 2) AS dead_tup_ratio FROM pg_stat_all_tables WHERE n_dead_tup >= 10000 ORDER BY dead_tup_ratio DESC) to stdout;" >${vacuum_tables_detail}
+	psql -d $db -c "copy (WITH h AS (
+    SELECT '\"' || schemaname || '\".\"' || relname || '\"' AS table_name,
+           round(n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS ratio
+    FROM pg_stat_all_tables 
+    WHERE n_dead_tup >= 10000
+      AND n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0) > 20
+),
+a AS (
+    SELECT '\"' || t2.nspname || '\".\"' || t1.relname || '\"' AS table_name,
+           ROUND(SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0), 2) AS ratio
+    FROM pg_class t1
+    JOIN pg_namespace t2 ON t1.relnamespace = t2.oid
+    CROSS JOIN LATERAL gp_toolkit.__gp_aovisimap_compaction_info(t1.oid) AS info
+    WHERE t1.relstorage IN ('a', 'c')
+      AND hidden_tupcount > 10000
+    GROUP BY t2.nspname, t1.relname, t1.oid
+    HAVING SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0) > 20
+)
+SELECT table_name
+FROM (
+    SELECT table_name, ratio FROM h 
+    UNION ALL 
+    SELECT table_name, ratio FROM a
+) t
+ORDER BY ratio DESC
+LIMIT 30) to stdout;" >${vacuum_tables_detail}
 	###提取表名并加双引号
-	awk '{print$1}' ${vacuum_tables_detail} |  awk -F '.' '{print "\"" $1 "\"" "." "\""$2"\""}' >${vacuum_tables}
+	#awk '{print$1}' ${vacuum_tables_detail} |  awk -F '.' '{print "\"" $1 "\"" "." "\""$2"\""}' >${vacuum_tables}
 }
 
 run_table_vacuum(){
@@ -108,7 +129,7 @@ run_table_vacuum(){
 		psql -d $db -L ${log_file} -e -a -c "$exec $line;" && \
 		psql -d $db -L ${log_file} -e -a -c "set lock_timeout = '1s';REINDEX TABLE $line;" && \
 		psql -d $db -L ${log_file} -e -a -c "ANALYZE $line;" &
-	done <${vacuum_tables}
+	done <${vacuum_tables_detail}
 	
 	while true; do
 		sleep 10
@@ -144,7 +165,7 @@ main(){
 	if [[ ${week} = '5' ]];then
 		exec='VACUUM FULL VERBOSE'
 	else
-		exec='VACUUM VERBOSE'
+		exec='VACUUM FREEZE VERBOSE'
 	fi
 	start_run_time=`date +'%Y-%m-%d %H:%M:%S'`
 	echo "开始处理表膨胀${start_run_time}" >>${log_file}
@@ -157,4 +178,4 @@ main(){
 
 }
 
-main
+main	
