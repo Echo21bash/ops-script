@@ -542,46 +542,65 @@ gprecoverseg -S => 指定输出配置空间文件
 
 ```sql
 ---查看表膨胀率 脏数据大于1万条按照膨胀率大于20%降序打印20条
-WITH h AS (
+---堆表查询
+SELECT 
+    'HEAP'::text AS type,
+    table_name,
+    pg_size_pretty(total_size) AS size,
+    dirty,
+    live,
+    ratio
+FROM (
     SELECT 
-        'HEAP'::text AS type,
         '"' || schemaname || '"."' || relname || '"' AS table_name,
-        pg_size_pretty(pg_relation_size('"' || schemaname || '"."' || relname || '"')) AS size,
-        n_dead_tup AS dirty,
-        n_live_tup AS live,
-        round(n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS ratio
-    FROM pg_stat_all_tables 
-    WHERE n_dead_tup >= 10000 
-      AND n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0) > 20
-),
-a AS (
+        SUM(relsize) AS total_size,
+        SUM(n_dead_tup)::bigint AS dirty,
+        SUM(n_live_tup)::bigint AS live,
+        ROUND(SUM(n_dead_tup) * 100.0 / NULLIF(SUM(n_live_tup + n_dead_tup), 0), 2) AS ratio
+    FROM (
+        -- 从所有 Segment 节点抓取实时统计信息
+        SELECT 
+            s.schemaname, 
+            s.relname, 
+            pg_relation_size(s.relid) AS relsize,
+            pg_stat_get_dead_tuples(s.relid) AS n_dead_tup,
+            pg_stat_get_live_tuples(s.relid) AS n_live_tup
+        FROM gp_dist_random('pg_stat_all_tables') s 
+        JOIN pg_class c ON s.relid = c.oid
+        WHERE c.relkind = 'r' 
+          AND c.relstorage = 'h' -- 仅限堆表
+    ) all_segments
+    GROUP BY schemaname, relname
+) t
+WHERE dirty >= 10000 
+  AND ratio > 20
+ORDER BY ratio DESC
+LIMIT 20;
+
+---AO表查询
+SELECT 
+    'AO'::text AS type,
+    table_name,
+    pg_size_pretty(total_size) AS size,
+    dirty,
+    live,
+    ratio
+FROM (
     SELECT 
-        'AO'::text AS type,
         '"' || t2.nspname || '"."' || t1.relname || '"' AS table_name,
-        pg_size_pretty(pg_relation_size(t1.oid)) AS size,
-        SUM(hidden_tupcount) AS dirty,
-        SUM(total_tupcount) AS live,
+        pg_relation_size(t1.oid) AS total_size,
+        SUM(hidden_tupcount)::bigint AS dirty,
+        SUM(total_tupcount)::bigint AS live,
         ROUND(SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0), 2) AS ratio
     FROM pg_class t1
     JOIN pg_namespace t2 ON t1.relnamespace = t2.oid
     CROSS JOIN LATERAL gp_toolkit.__gp_aovisimap_compaction_info(t1.oid) AS info
     WHERE t1.relstorage IN ('a', 'c')
-      AND hidden_tupcount > 10000
+      AND hidden_tupcount > 10000 -- 对应您原语句的过滤条件
     GROUP BY t2.nspname, t1.relname, t1.oid
-    HAVING SUM(hidden_tupcount) * 100.0 / NULLIF(SUM(total_tupcount), 0) > 20
-)
-SELECT 
-    type, 
-    table_name, 
-    size, 
-    dirty, 
-    live, 
-    ratio
-FROM (
-    SELECT * FROM h 
-    UNION ALL 
-    SELECT * FROM a
 ) t
+WHERE dirty >= 10000
+  AND ratio > 20
 ORDER BY ratio DESC
 LIMIT 20;
 ```
@@ -591,15 +610,16 @@ LIMIT 20;
 > 数据库用txid来记录事务,目前使用GP版本txid类型是int2，所以txid最大值是2^31=2147483648，每个表里都有xmin和xmax来记录当前的事务,事务号到2147483648就会用尽，有两个参数xid_stop_limit,xid_warn_limit控制告警和停止服务。
 
 ```sql
----查询现在的各个数据库的年龄
+---查询现在的各个数据库的年龄只是主库
 SELECT datname, datfrozenxid ,age(datfrozenxid) FROM pg_database ORDER BY 3 DESC ;
 ---检查segment数据库年龄，执行VACUUM ANALYZE后再查询
 SELECT gp_segment_id,datname, age(datfrozenxid) FROM gp_dist_random('pg_database') ORDER BY 3 DESC;
----表级年龄查询
+
+---各个数据节点表年龄包含AO表、分区表、堆表
 SELECT 
+    c.gp_segment_id, -- 关键：标识是哪个数据节点老
     n.nspname AS schema_name,
     c.oid::regclass AS table_name,
-    -- 表存储类型说明
     CASE 
         WHEN c.relstorage = 'h' THEN '堆表 (Heap)'
         WHEN c.relstorage = 'a' THEN 'AO行存 (Row-oriented AO)'
@@ -607,34 +627,69 @@ SELECT
         WHEN c.relstorage = 'x' THEN '外部表 (External)'
         ELSE '其他(' || c.relstorage || ')'
     END AS storage_type,
-    -- 综合考虑主表和 TOAST 表的年龄
-    GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) AS age,
+    -- 在分布式查询中，TOAST 表的关联需要小心，这里先聚焦主表年龄
+    age(c.relfrozenxid) AS age,
     CASE 
-        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 500000000 THEN '🔴 紧急冻结'
-        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 300000000 THEN '🟠 优先冻结'
-        WHEN GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 100000000 THEN '🟡 计划冻结'
-        ELSE '🟢 正常'
+        WHEN age(c.relfrozenxid) > 1500000000 THEN '紧急冻结'
+        WHEN age(c.relfrozenxid) > 1000000000 THEN '优先冻结'
+        WHEN age(c.relfrozenxid) > 500000000 THEN '计划冻结'
+        ELSE '正常'
     END AS action,
-    -- 核心修复：对模式名和表名同时进行标识符转义处理
     'VACUUM FREEZE VERBOSE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) || ';' AS vacuum_sql
 FROM 
-    pg_class c
+    gp_dist_random('pg_class') c
 JOIN 
     pg_namespace n ON c.relnamespace = n.oid
-LEFT JOIN 
-    pg_class t ON c.reltoastrelid = t.oid
 WHERE 
-    c.relkind IN ('r', 'm') 
+    c.relkind= 'r' 
     AND c.relstorage IN ('h','a','c')
-    AND n.nspname NOT IN ('pg_catalog', 'information_schema') -- 排除系统内置库
-    AND GREATEST(age(c.relfrozenxid), COALESCE(age(t.relfrozenxid), 0)) > 1000000
+    AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'gp_toolkit') 
+    AND age(c.relfrozenxid) > 300000000
 ORDER BY 
-    age DESC;
+    age DESC, c.gp_segment_id;
+    
+
+---整体表级年龄查询取各节点最大值汇总需要处理的表
+SELECT 
+    n.nspname AS schema_name,
+    c.oid::regclass AS table_name, -- 在最终输出层转换，避免传输类型冲突
+    CASE 
+        WHEN c.relstorage = 'h' THEN '堆表 (Heap)'
+        WHEN c.relstorage = 'a' THEN 'AO行存 (Row-oriented AO)'
+        WHEN c.relstorage = 'c' THEN 'AO列存 (Column-oriented AO)'
+        WHEN c.relstorage = 'x' THEN '外部表 (External)'
+        ELSE '其他(' || c.relstorage || ')'
+    END AS storage_type,
+    MAX(age(c.relfrozenxid)) AS age,
+    CASE 
+        WHEN MAX(age(c.relfrozenxid)) > 1500000000 THEN '紧急冻结'
+        WHEN MAX(age(c.relfrozenxid)) > 1000000000 THEN '优先冻结'
+        WHEN MAX(age(c.relfrozenxid)) > 500000000 THEN '计划冻结'
+        ELSE '正常'
+    END AS action,
+    'VACUUM FREEZE VERBOSE ' || c.oid::regclass || ';' AS vacuum_sql
+FROM 
+    gp_dist_random('pg_class') c
+JOIN 
+    pg_namespace n ON c.relnamespace = n.oid
+WHERE 
+    c.relkind = 'r' 
+    AND c.relstorage IN ('h','a','c')
+    AND c.relhassubclass = false 
+    AND age(c.relfrozenxid) > 300000000
+GROUP BY 
+    n.nspname, c.oid, c.relstorage -- 使用原始字段进行分组
+ORDER BY 
+    4 DESC;
 ```
 
 > 临时库处理，临时库不允许登录
 
 ```sql
+--其他数据节点分别登录处理
+PGOPTIONS="-c gp_session_role=utility" psql -h（hostname） gp-master -d（database） postgres -p 5432
+
+
 SELECT datallowconn from pg_database where datname='template0';
 
 set allow_system_table_mods='DML';
